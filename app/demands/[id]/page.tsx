@@ -485,7 +485,7 @@ export default function DemandDetailPage() {
         <div className="border-border bg-card rounded-[2.5rem] border p-6 sm:p-8 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold tracking-wider text-orange-600 dark:text-orange-400 uppercase">
+              <span className="text-[11px] font-bold tracking-wider text-orange-600 dark:text-orange-400 ">
                 Tiến trình dự án livestream
               </span>
               <h1 className="text-xl sm:text-2xl font-bold text-foreground">
@@ -661,7 +661,7 @@ export default function DemandDetailPage() {
         </div>
 
         {/* 2. MAIN DETAILS & PROPOSALS HUB GRID */}
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-8 lg:grid-cols-3 items-start">
           {/* Main Demand Specs (2 cols) */}
           <div className="lg:col-span-2 space-y-8">
             <div className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
@@ -1020,9 +1020,9 @@ export default function DemandDetailPage() {
             </div>
           </div>
 
-          {/* Right Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-28 rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6">
+          {/* Right Sidebar (Sticky on Scroll) */}
+          <div className="lg:col-span-1 sticky top-28 self-start z-20">
+            <div className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6">
               <div className="border-b border-border pb-5">
                 <span className="text-xs text-muted-foreground">Ngân sách dự kiến của dự án</span>
                 <p className="mt-1 text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400">
