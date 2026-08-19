@@ -654,11 +654,14 @@ export default function ServiceDetailPage() {
                   Giá thuê theo ngày
                 </p>
                 <div className="mt-1 flex items-baseline gap-1">
-                  <span className="text-3xl font-bold tracking-tight">
+                  <span className="text-3xl font-extrabold tracking-tight text-orange-600 dark:text-orange-500">
                     {service.price_per_day.toLocaleString("vi-VN")}
                   </span>
+                  <span className="text-base font-bold text-orange-600 dark:text-orange-500">
+                    đ
+                  </span>
                   <span className="text-muted-foreground text-xs font-medium">
-                    đ / ngày
+                    / ngày
                   </span>
                 </div>
               </div>
