@@ -27,6 +27,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { SafeImage } from "@/components/ui/safe-image";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -672,7 +673,7 @@ export default function DemandDetailPage() {
                 return (
                   <div className="space-y-3">
                     <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-muted shadow-md">
-                      <Image
+                      <SafeImage
                         src={detailImages[0]!}
                         alt={demand.title}
                         fill
@@ -687,7 +688,7 @@ export default function DemandDetailPage() {
                             key={idx}
                             className="relative aspect-square overflow-hidden rounded-xl border border-border bg-muted shadow-xs hover:border-orange-500 transition-colors"
                           >
-                            <Image src={img} alt="" fill className="object-cover" />
+                            <SafeImage src={img} alt="" fill className="object-cover" />
                           </div>
                         ))}
                       </div>

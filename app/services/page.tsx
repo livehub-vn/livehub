@@ -98,8 +98,9 @@ function ServicesContent() {
       try {
         const supabase = createClient();
         const {
-          data: { user },
-        } = await supabase.auth.getUser();
+          data: { session },
+        } = await supabase.auth.getSession();
+        const user = session?.user;
 
         let userRole = "customer";
         if (user) {

@@ -22,7 +22,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/safe-image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -41,8 +41,9 @@ export default function DemandsPage() {
       try {
         const supabase = createClient();
         const {
-          data: { user },
-        } = await supabase.auth.getUser();
+          data: { session },
+        } = await supabase.auth.getSession();
+        const user = session?.user;
 
         let userRole = "customer";
         if (user) {
@@ -384,7 +385,7 @@ export default function DemandsPage() {
                   >
                     <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
                       {service.images && service.images.length > 0 ? (
-                        <Image
+                        <SafeImage
                           src={service.images[0]!}
                           alt={service.title}
                           fill
@@ -498,7 +499,7 @@ export default function DemandsPage() {
                       if (dImages.length === 0) return null;
                       return (
                         <div className="relative mt-3.5 h-36 w-full overflow-hidden rounded-2xl bg-muted">
-                          <Image
+                          <SafeImage
                             src={dImages[0]!}
                             alt={demand.title}
                             fill

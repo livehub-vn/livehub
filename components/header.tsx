@@ -67,21 +67,31 @@ export function Header(): ReactNode {
   useEffect(() => {
     const supabase = createClient();
 
-    async function loadProfile(userId: string) {
+    async function loadProfileForUser(user: { id: string; email?: string | null; user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> }) {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        // 1. Immediately set instant profile from session metadata (0ms UI render)
+        setProfile((prev) => prev || withResolvedMembership(
+          {
+            id: user.id,
+            email: user.email ?? "",
+            full_name:
+              (user.user_metadata?.full_name as string) ??
+              user.email?.split("@")[0] ??
+              "Người dùng LiveHub",
+            phone: (user.user_metadata?.phone as string) ?? null,
+            avatar_url: (user.user_metadata?.avatar_url as string) ?? null,
+            role: isAdminEmail(user.email) ? "admin" : "customer",
+            bio: null,
+            created_at: new Date().toISOString(),
+          },
+          user.app_metadata
+        ));
 
-        if (!user || user.id !== userId) {
-          setProfile(null);
-          return;
-        }
-
+        // 2. Fetch latest data from database in background
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", userId)
+          .eq("id", user.id)
           .maybeSingle();
 
         if (data && !error) {
@@ -95,54 +105,36 @@ export function Header(): ReactNode {
               user.app_metadata
             )
           );
-          return;
         }
-
-        setProfile(
-          withResolvedMembership(
-            {
-              id: user.id,
-              email: user.email ?? "",
-              full_name:
-                user.user_metadata?.full_name ??
-                user.email?.split("@")[0] ??
-                "Người dùng LiveHub",
-              phone: user.user_metadata?.phone ?? null,
-              avatar_url: user.user_metadata?.avatar_url ?? null,
-              role: isAdminEmail(user.email) ? "admin" : "customer",
-              bio: null,
-              created_at: new Date().toISOString(),
-            },
-            user.app_metadata
-          )
-        );
       } catch {
         // Fallback silently
       }
     }
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        loadProfile(user.id);
+    // 1. Instant local session check (0ms)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadProfileForUser(session.user);
       }
     });
 
+    // 2. Subscribe to auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (
-        (event === "SIGNED_IN" || event === "USER_UPDATED") &&
+        (event === "SIGNED_IN" || event === "USER_UPDATED" || event === "INITIAL_SESSION") &&
         session?.user
       ) {
-        loadProfile(session.user.id);
+        loadProfileForUser(session.user);
       } else if (event === "SIGNED_OUT") {
         setProfile(null);
       }
     });
 
     const handleProfileUpdated = () => {
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (user) loadProfile(user.id);
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) loadProfileForUser(session.user);
       });
     };
     window.addEventListener("livehub:profile-updated", handleProfileUpdated);
