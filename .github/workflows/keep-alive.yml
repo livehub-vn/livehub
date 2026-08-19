@@ -2,8 +2,8 @@ name: LiveHub & Supabase Keep-Alive
 
 on:
   schedule:
-    # Chạy mỗi 6 tiếng một lần (00:00, 06:00, 12:00, 18:00 UTC)
-    # Đảm bảo Supabase (7 ngày không hoạt động sẽ bị pause) và Vercel/Render luôn active 24/7
+    # Chạy tự động mỗi 6 tiếng một lần (00:00, 06:00, 12:00, 18:00 UTC)
+    # Đảm bảo Supabase (7 ngày không hoạt động sẽ bị pause) và LiveHub luôn active 24/7
     - cron: '0 */6 * * *'
   workflow_dispatch:
     # Cho phép bấm nút "Run workflow" thủ công trên GitHub bất kỳ lúc nào để kiểm tra
@@ -20,74 +20,18 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: 🕒 Khởi tạo thời gian Heartbeat
-        run: |
-          echo "START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
-          echo "Keep-Alive trigger initiated at $(date -u)"
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: 🗄️ Trigger Direct Supabase Database Activity
-        id: ping_supabase
+      - name: ⚙️ Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 🚀 Run Keep-Alive Trigger Script
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://pabomqopgvaekbrblcnk.supabase.co' }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhYm9tcW9wZ3ZhZWticmJsY25rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MTA2MzEsImV4cCI6MjA2MDQ4NjYzMX0.bGyca7srUEAcpjdFQ2Xv7hCI7BH8x9Lt0H7duCC1bG0' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          LIVEHUB_APP_URL: ${{ github.event.inputs.custom_url || secrets.LIVEHUB_APP_URL }}
         run: |
-          echo "Calling Supabase PostgREST API to register database activity..."
-          HTTP_RESPONSE=$(curl -s -w "\n%{http_code}\n%{time_total}" -X GET \
-            "${SUPABASE_URL}/rest/v1/profiles?select=id&limit=1" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-            -H "Content-Type: application/json")
-
-          BODY=$(echo "$HTTP_RESPONSE" | sed '$d' | sed '$d')
-          TIME=$(echo "$HTTP_RESPONSE" | tail -n 1)
-          STATUS=$(echo "$HTTP_RESPONSE" | tail -n 2 | head -n 1)
-
-          echo "Supabase Response Status: $STATUS (Time: ${TIME}s)"
-          echo "Supabase Body: $BODY"
-
-          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
-            echo "✅ Supabase is ACTIVE and Healthy!"
-            echo "supabase_status=OK ($STATUS - ${TIME}s)" >> $GITHUB_ENV
-          else
-            echo "⚠️ Supabase returned status code: $STATUS"
-            echo "supabase_status=WARNING ($STATUS)" >> $GITHUB_ENV
-          fi
-
-      - name: 🌐 Ping LiveHub Production / Staging Web App
-        id: ping_livehub
-        env:
-          INPUT_URL: ${{ github.event.inputs.custom_url }}
-          APP_URL: ${{ secrets.LIVEHUB_APP_URL || 'https://livehub.vn' }}
-        run: |
-          TARGET_URL="${INPUT_URL:-$APP_URL}"
-          HEALTH_URL="${TARGET_URL%/}/api/health"
-          echo "Pinging LiveHub App Health Endpoint: $HEALTH_URL"
-
-          HTTP_RESPONSE=$(curl -s -w "\n%{http_code}\n%{time_total}" --max-time 20 -X GET "$HEALTH_URL" || true)
-
-          BODY=$(echo "$HTTP_RESPONSE" | sed '$d' | sed '$d')
-          TIME=$(echo "$HTTP_RESPONSE" | tail -n 1)
-          STATUS=$(echo "$HTTP_RESPONSE" | tail -n 2 | head -n 1)
-
-          echo "App Response Status: $STATUS (Time: ${TIME}s)"
-          echo "App Body: $BODY"
-
-          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
-            echo "✅ LiveHub Web App is Healthy!"
-            echo "app_status=OK ($STATUS - ${TIME}s)" >> $GITHUB_ENV
-          else
-            echo "ℹ️ LiveHub Web App Ping Note (Status: $STATUS). Direct Supabase keep-alive already ensured DB active."
-            echo "app_status=Checked ($STATUS)" >> $GITHUB_ENV
-          fi
-
-      - name: 📋 Ghi báo cáo Step Summary
-        if: always()
-        run: |
-          echo "### 💓 LiveHub Keep-Alive Heartbeat Report" >> $GITHUB_STEP_SUMMARY
-          echo "| Dịch vụ | Trạng thái | Ghi chú |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🗄️ **Supabase Database** | \`${{ env.supabase_status || 'Unknown' }}\` | Reset 7-day auto-pause timer thành công |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🌐 **LiveHub Web Health** | \`${{ env.app_status || 'Skipped' }}\` | Endpoint: \`/api/health\` |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📅 **Thời gian kích hoạt:** \`$START_TIME\`" >> $GITHUB_STEP_SUMMARY
-          echo "🔄 **Lịch chạy tự động:** Mỗi 6 tiếng một lần (Cron \`0 */6 * * *\`)" >> $GITHUB_STEP_SUMMARY
+          node scripts/keep-alive.mjs
