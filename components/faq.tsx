@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
 const faqs = [
@@ -110,26 +111,18 @@ export function FAQ(): ReactNode {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <motion.a
-              href="https://livehub-main.vercel.app/services"
-              target="_blank"
-              rel="noreferrer"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <Link
+              href="/services"
               className="bg-foreground text-background hover:bg-foreground/90 inline-flex items-center rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
             >
               Xem dịch vụ
-            </motion.a>
-            <motion.a
-              href="https://livehub-main.vercel.app/contact"
-              target="_blank"
-              rel="noreferrer"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            </Link>
+            <Link
+              href="/pricing"
               className="border-border bg-frame text-foreground inline-flex items-center rounded-xl border px-6 py-2.5 text-sm font-semibold transition-colors"
             >
-              Liên hệ
-            </motion.a>
+              Xem bảng giá
+            </Link>
           </div>
         </motion.div>
 

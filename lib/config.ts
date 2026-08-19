@@ -15,17 +15,17 @@ export const siteConfig = {
     "LiveHub kết nối khách hàng với nhà cung cấp dịch vụ livestream có kiểm duyệt.",
 
   // Đường dẫn
-  url: "https://livehub-main.vercel.app",
+  url: "https://we-livehub.vercel.app",
 
   // Điều hướng
   nav: {
     cta: {
       text: "Xem dịch vụ",
-      href: "https://livehub-main.vercel.app/services",
+      href: "/services",
     },
     signIn: {
       text: "Đăng nhập",
-      href: "https://livehub-main.vercel.app/login",
+      href: "/login",
     },
   },
 };
@@ -41,7 +41,7 @@ export const heroConfig = {
     "Khách hàng tìm dịch vụ hoặc đăng nhu cầu. Nhà cung cấp đăng dịch vụ và ứng tuyển dự án.",
   cta: {
     text: "Xem dịch vụ",
-    href: "https://livehub-main.vercel.app/services",
+    href: "/services",
   },
 };
 
@@ -60,7 +60,7 @@ export const howItWorksConfig = {
     "Tạo tin dịch vụ hoặc nhu cầu. LiveHub duyệt trước khi hai bên kết nối.",
   cta: {
     text: "Xem dịch vụ",
-    href: "https://livehub-main.vercel.app/services",
+    href: "/services",
   },
 };
 
@@ -75,11 +75,11 @@ export const faqConfig = {
   cta: {
     primary: {
       text: "Xem dịch vụ",
-      href: "https://livehub-main.vercel.app/services",
+      href: "/services",
     },
     secondary: {
       text: "Liên hệ LiveHub",
-      href: "https://livehub-main.vercel.app/contact",
+      href: "/pricing",
     },
   },
 };

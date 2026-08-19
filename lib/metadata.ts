@@ -4,13 +4,13 @@ export const siteConfig = {
   name: "LiveHub",
   description:
     "LiveHub kết nối khách hàng với nhà cung cấp dịch vụ livestream có kiểm duyệt.",
-  url: "https://livehub-main.vercel.app",
+  url: "https://we-livehub.vercel.app",
   ogImage: "/brand/livehub-social-card.jpg",
   creator: "LiveHub",
   authors: [
     {
       name: "LiveHub",
-      url: "https://livehub-main.vercel.app",
+      url: "https://we-livehub.vercel.app",
     },
   ],
   keywords: [
