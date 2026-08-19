@@ -81,13 +81,22 @@ export default function MyDemandsPage() {
   return (
     <div className="bg-background text-foreground min-h-screen px-4 pt-28 pb-14 sm:px-0 sm:pt-32">
       <div className="mx-auto w-full max-w-6xl px-4 xl:px-0">
-        <Link
-          href="/"
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-2 text-xs font-semibold transition-colors"
-        >
-          <ArrowLeft className="size-3.5" />
-          <span>Trở về Trang chủ</span>
-        </Link>
+        <div className="mb-6 flex items-center gap-3">
+          <Link
+            href="/demands"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-xs font-semibold transition-colors"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span>Trở về Sàn nhu cầu</span>
+          </Link>
+          <span className="text-muted-foreground/40">•</span>
+          <Link
+            href="/"
+            className="text-muted-foreground/70 hover:text-foreground inline-flex items-center text-xs transition-colors"
+          >
+            <span>Trang chủ</span>
+          </Link>
+        </div>
 
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>

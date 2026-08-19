@@ -1,31 +1,44 @@
 "use client";
 
-import { ImageUploaderDialog } from "@/components/image-uploader-dialog";
+import { DirectImageUploader, type PreviewItem } from "@/components/direct-image-uploader";
+import { LocationPickerDialog } from "@/components/location-picker-dialog";
 import { AuroraText } from "@/components/ui/aurora-text";
-import { DatePicker } from "@/components/ui/date-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
+import { uploadPendingImages } from "@/lib/storage-helper";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, ImageIcon, Plus, Trash2, Upload } from "lucide-react";
-import Image from "next/image";
+import { ArrowLeft, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const DEMAND_BUDGET_PRESETS = [3000000, 5000000, 10000000, 20000000, 50000000];
 
 export default function PostNewDemandPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
 
   const [title, setTitle] = useState("");
-  const [budget, setBudget] = useState("");
+  const [budget, setBudget] = useState("5000000");
   const [location, setLocation] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [description, setDescription] = useState("");
-  const [imageList, setImageList] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<PreviewItem[]>([]);
 
-  const handleRemoveImage = (index: number) => {
-    setImageList((prev) => prev.filter((_, i) => i !== index));
-  };
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace("/login?next=/demands/new");
+      }
+    }
+    checkAuth();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,29 +62,37 @@ export default function PostNewDemandPage() {
       return;
     }
 
-    const { data: newDemand, error } = await supabase
-      .from("demands")
-      .insert({
-        customer_id: user.id,
-        title,
-        budget: budgetVal,
-        location,
-        event_date: eventDate,
-        description,
-        images: imageList,
-        status: "pending",
-      })
-      .select()
-      .single();
+    try {
+      // 1. Upload any pending local image files to Supabase Storage
+      const uploadedUrls = await uploadPendingImages(imagePreviews, "demands");
 
-    if (error) {
-      setErrorMsg(error.message);
+      // 2. Insert demand record into database
+      const { data: newDemand, error } = await supabase
+        .from("demands")
+        .insert({
+          customer_id: user.id,
+          title,
+          budget: budgetVal,
+          location,
+          event_date: eventDate,
+          description,
+          images: uploadedUrls,
+          status: "pending",
+        })
+        .select()
+        .single();
+
+      if (error) {
+        setErrorMsg(error.message);
+        setLoading(false);
+      } else if (newDemand) {
+        router.push(`/demands/${newDemand.id}`);
+      } else {
+        router.push("/demands");
+      }
+    } catch (err: unknown) {
+      setErrorMsg((err as Error).message || "Đã xảy ra lỗi khi tạo nhu cầu.");
       setLoading(false);
-    } else if (newDemand) {
-      // Redirect straight to the created demand detail page as requested!
-      router.push(`/demands/${newDemand.id}`);
-    } else {
-      router.push("/demands");
     }
   };
 
@@ -120,15 +141,12 @@ export default function PostNewDemandPage() {
                 <label className="mb-2 block text-xs font-semibold">
                   Ngân sách dự kiến (VNĐ) <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  required
-                  min={100000}
-                  step={50000}
+                <FormattedCurrencyInput
                   value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                  placeholder="VD: 5000000"
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none"
+                  onChange={setBudget}
+                  placeholder="VD: 5.000.000"
+                  presetAmounts={DEMAND_BUDGET_PRESETS}
+                  required
                 />
               </div>
 
@@ -136,14 +154,24 @@ export default function PostNewDemandPage() {
                 <label className="mb-2 block text-xs font-semibold">
                   Địa điểm thực hiện <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="VD: Quận 1, TP. Hồ Chí Minh"
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="VD: Quận 1, TP. Hồ Chí Minh"
+                    className="flex-1 rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMapDialogOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3 py-3 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors cursor-pointer shrink-0"
+                  >
+                    <MapPin className="size-4" />
+                    <span>Chọn trên bản đồ</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -151,10 +179,10 @@ export default function PostNewDemandPage() {
               <label className="mb-2 block text-xs font-semibold">
                 Ngày dự kiến diễn ra
               </label>
-              <DatePicker
+              <DateRangePicker
                 value={eventDate}
-                onChange={(d: string) => setEventDate(d)}
-                placeholder="Chọn ngày tổ chức sự kiện livestream..."
+                onChange={setEventDate}
+                placeholder="Chọn ngày hoặc khoảng thời gian tổ chức..."
               />
             </div>
 
@@ -172,100 +200,34 @@ export default function PostNewDemandPage() {
               />
             </div>
 
-            {/* Premium Image Uploader Dialog Trigger */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-semibold">
-                  Hình ảnh tham khảo / Kịch bản ({imageList.length} ảnh)
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setUploadDialogOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors"
-                >
-                  <Upload className="size-3.5" />
-                  <span>Tải ảnh lên (Không cần link)</span>
-                </button>
-              </div>
-
-              {imageList.length === 0 ? (
-                <div
-                  onClick={() => setUploadDialogOpen(true)}
-                  className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border p-8 text-center cursor-pointer hover:border-orange-500/50 hover:bg-muted/20 transition-all space-y-2"
-                >
-                  <div className="flex size-11 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500 shadow-xs">
-                    <ImageIcon className="size-5" />
-                  </div>
-                  <p className="text-xs font-bold text-foreground">
-                    Chưa có hình ảnh tham khảo
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Nhấp vào đây để mở hộp thoại tải ảnh lên trực tiếp từ thiết bị của bạn
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-1">
-                  {imageList.map((imgSrc, i) => (
-                    <div
-                      key={i}
-                      className="group relative aspect-video overflow-hidden rounded-xl border border-border bg-muted shadow-xs"
-                    >
-                      <Image
-                        src={imgSrc}
-                        alt=""
-                        fill
-                        className="object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(i)}
-                        className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-black/70 text-white hover:bg-rose-600 transition-colors shadow-sm"
-                        title="Xóa ảnh này"
-                      >
-                        <Trash2 className="size-3" />
-                      </button>
-                      <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-white backdrop-blur-xs">
-                        #{i + 1}
-                      </span>
-                    </div>
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={() => setUploadDialogOpen(true)}
-                    className="flex aspect-video flex-col items-center justify-center rounded-xl border border-dashed border-border hover:border-orange-500/50 hover:bg-muted/20 text-muted-foreground transition-all"
-                  >
-                    <Plus className="size-5 text-orange-500" />
-                    <span className="text-[10px] font-semibold mt-1">Thêm ảnh</span>
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Direct Image Uploader (Zero modal dialog, direct upload on submit) */}
+            <DirectImageUploader
+              items={imagePreviews}
+              onChange={setImagePreviews}
+              maxImages={6}
+              label="Hình ảnh tham khảo / Kịch bản"
+              description="Thêm ảnh hoặc sơ đồ sân khấu trực tiếp từ thiết bị (ảnh sẽ được lưu khi bấm Đăng)"
+            />
 
             <div className="pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl bg-orange-500 py-3.5 text-xs font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 disabled:opacity-50"
+                className="w-full rounded-xl bg-orange-500 py-3.5 text-xs font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 disabled:opacity-50 cursor-pointer"
               >
-                {loading ? "Đang tạo nhu cầu..." : "Hoàn tất & Chuyển tới trang chi tiết nhu cầu"}
+                {loading ? "Đang tải ảnh & đăng nhu cầu..." : "Hoàn tất & Chuyển tới trang chi tiết nhu cầu"}
               </button>
             </div>
           </form>
         </div>
       </div>
 
-      {/* Image Uploader Modal Dialog */}
-      <ImageUploaderDialog
-        open={uploadDialogOpen}
-        onClose={() => setUploadDialogOpen(false)}
-        onImagesSelected={(urls) => {
-          setImageList(urls);
-        }}
-        initialImages={imageList}
-        bucketName="demands"
-        title="Tải lên hình ảnh nhu cầu dự án"
-        maxImages={6}
+      {/* Goong Map Location Picker Modal Dialog */}
+      <LocationPickerDialog
+        open={mapDialogOpen}
+        onClose={() => setMapDialogOpen(false)}
+        initialLocation={location}
+        onSelectLocation={(addr) => setLocation(addr)}
       />
     </div>
   );

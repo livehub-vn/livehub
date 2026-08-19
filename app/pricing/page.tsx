@@ -3,6 +3,7 @@
 import { MembershipBadge } from "@/components/membership-badge";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { Skeleton } from "@/components/ui/skeleton";
+import { loginWithGoogle } from "@/lib/auth-client";
 import { isAdminEmail } from "@/lib/auth";
 import {
   getMembershipPlanAction,
@@ -207,13 +208,14 @@ function CurrentPlanPanel({
               </p>
             </div>
           </div>
-          <Link
-            href="/login?next=%2Fpricing"
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 text-xs font-bold text-white transition-colors hover:bg-orange-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400"
+          <button
+            type="button"
+            onClick={() => loginWithGoogle("/pricing")}
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 text-xs font-bold text-white transition-colors hover:bg-orange-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400 cursor-pointer"
           >
-            Đăng nhập
+            Đăng nhập với Google
             <ArrowRight className="size-3.5" aria-hidden="true" />
-          </Link>
+          </button>
         </div>
       </div>
     );

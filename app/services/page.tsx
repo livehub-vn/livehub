@@ -3,6 +3,7 @@
 import { GoldenTicketBadge, getTierPriorityWeight, getTierCardStyle } from "@/components/golden-ticket-badge";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { Skeleton } from "@/components/ui/skeleton";
+import { loginWithGoogle } from "@/lib/auth-client";
 import { SEED_SERVICES } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/client";
 import type { Service, ServiceCategory } from "@/lib/types/database";
@@ -41,8 +42,6 @@ function normalizeSearchTerm(value: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d");
 }
-
-import { UnauthenticatedBlurOverlay } from "@/components/unauthenticated-blur-overlay";
 
 function ServicesContent() {
   const router = useRouter();
@@ -213,6 +212,12 @@ function ServicesContent() {
     });
   }, [normalizedSearchQuery, selectedCategory, services, vipOnly]);
 
+  // For unauthenticated guests, limit the displayed services to top 3 demo items to keep page concise & focused
+  const displayedServices = useMemo(() => {
+    if (currentUser) return filteredServices;
+    return filteredServices.slice(0, 3);
+  }, [currentUser, filteredServices]);
+
   const selectedCategoryLabel = categories.find(
     (category) => category.value === selectedCategory
   )?.label;
@@ -226,51 +231,82 @@ function ServicesContent() {
   };
 
   return (
-    <div className="bg-background text-foreground min-h-screen">
-      {/* Header Banner with generous top spacing */}
-      <header className="border-border bg-card/60 border-b px-4 pt-28 pb-10 backdrop-blur-sm xl:px-0 sm:pt-32">
-        <div className="mx-auto w-full max-w-6xl">
-          <Link
-            href="/"
-            className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2 text-xs font-semibold transition-colors"
-          >
-            <ArrowLeft className="size-3.5" />
-            <span>Trở về Trang chủ</span>
-          </Link>
+    <div className="bg-background text-foreground min-h-screen relative">
+      {/* 1. THE ENTIRE PAGE - Blurred & unclickable for unauthenticated guests */}
+      <div
+        className={
+          !currentUser
+            ? "pointer-events-none select-none filter blur-[4px] opacity-70 transition-all"
+            : ""
+        }
+        aria-hidden={!currentUser}
+      >
+        {/* Header Banner */}
+        <header className="border-border bg-card/60 border-b px-4 pt-28 pb-10 backdrop-blur-sm xl:px-0 sm:pt-32">
+          <div className="mx-auto w-full max-w-6xl">
+            <Link
+              href="/"
+              className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2 text-xs font-semibold transition-colors"
+            >
+              <ArrowLeft className="size-3.5" />
+              <span>Trở về Trang chủ</span>
+            </Link>
 
-          <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400">
-                  <Zap className="size-3 text-amber-500 fill-amber-500" />
-                  <span>Đối tác Golden Ticket VIP & Standard Partner</span>
-                </span>
+            <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400">
+                    <Zap className="size-3 text-amber-500 fill-amber-500" />
+                    <span>Đối tác Golden Ticket VIP & Standard Partner</span>
+                  </span>
+                </div>
+                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  Sàn dịch vụ <AuroraText>LiveHub</AuroraText>
+                </h1>
+                <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-relaxed">
+                  Tra cứu thiết bị chuyên nghiệp, phòng quay studio và ekip kỹ
+                  thuật viên livestream được kiểm duyệt chất lượng.
+                </p>
               </div>
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Sàn dịch vụ <AuroraText>LiveHub</AuroraText>
-              </h1>
-              <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-relaxed">
-                Tra cứu thiết bị chuyên nghiệp, phòng quay studio và ekip kỹ
-                thuật viên livestream được kiểm duyệt chất lượng.
-              </p>
-            </div>
 
-            <div className="flex shrink-0 items-center gap-3">
-              <Link
-                href="/services/my"
-                className="border-border bg-background hover:bg-muted rounded-xl border px-4 py-2.5 text-xs font-semibold transition-colors"
-              >
-                Dịch vụ của tôi
-              </Link>
-              <Link
-                href="/services/new"
-                className="bg-accent inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-orange-600"
-              >
-                <Plus className="size-4" />
-                <span>Đăng dịch vụ</span>
-              </Link>
+              <div className="flex shrink-0 items-center gap-3">
+                {currentUser ? (
+                  <>
+                    <Link
+                      href="/services/my"
+                      className="border-border bg-background hover:bg-muted rounded-xl border px-4 py-2.5 text-xs font-semibold transition-colors"
+                    >
+                      Dịch vụ của tôi
+                    </Link>
+                    <Link
+                      href="/services/new"
+                      className="bg-accent inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-orange-600"
+                    >
+                      <Plus className="size-4" />
+                      <span>Đăng dịch vụ</span>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => loginWithGoogle("/services/my")}
+                      className="border-border bg-background hover:bg-muted rounded-xl border px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      Dịch vụ của tôi
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => loginWithGoogle("/services/new")}
+                      className="bg-accent inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-orange-600 cursor-pointer"
+                    >
+                      <Plus className="size-4" />
+                      <span>Đăng dịch vụ</span>
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
 
           {/* Search & Category Filter Bar */}
           <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -555,182 +591,9 @@ function ServicesContent() {
               </button>
             )}
           </div>
-        ) : !currentUser ? (
-          <div className="space-y-8">
-            {/* 1. Preview: 3 Dịch vụ xem trước rõ nét ở đầu trang */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="size-4 text-orange-500" />
-                  <h2 className="text-sm font-bold text-foreground">
-                    Dịch vụ xem trước ({Math.min(3, filteredServices.length)})
-                  </h2>
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  Đăng nhập để xem đầy đủ {filteredServices.length > 3 ? `+${filteredServices.length - 3}` : "100+"} dịch vụ
-                </span>
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredServices.slice(0, 3).map((service) => {
-                  const tier = service.provider?.membership_tier;
-                  const isVip = tier === "premium" || tier === "standard";
-                  const cardClasses = getTierCardStyle(tier);
-
-                  return (
-                    <Link
-                      key={service.id}
-                      href={`/services/${service.id}`}
-                      className={`group relative flex flex-col rounded-3xl border p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${cardClasses}`}
-                    >
-                      {/* Image */}
-                      <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
-                        {service.images && service.images.length > 0 ? (
-                          <Image
-                            src={service.images[0]!}
-                            alt={service.title}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="text-muted-foreground flex size-full items-center justify-center text-xs">
-                            Chưa có hình ảnh
-                          </div>
-                        )}
-
-                        <div className="absolute top-2.5 left-2.5 rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-md">
-                          {service.category === "equipment"
-                            ? "Thiết bị"
-                            : service.category === "studio"
-                              ? "Studio"
-                              : service.category === "crew"
-                                ? "Ekip"
-                                : "Operator"}
-                        </div>
-
-                        {service.images && service.images.length > 1 && (
-                          <div className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 rounded-lg bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
-                            <Images className="size-3" />
-                            <span>+{service.images.length - 1}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex flex-1 flex-col p-3 pt-3.5">
-                        {isVip && (
-                          <div className="mb-2">
-                            <GoldenTicketBadge
-                              tier={tier}
-                              variant="badge"
-                              showSla={tier === "premium"}
-                            />
-                          </div>
-                        )}
-
-                        <h3 className="group-hover:text-accent line-clamp-1 text-base font-semibold transition-colors">
-                          {service.title}
-                        </h3>
-
-                        <p className="text-muted-foreground mt-1.5 line-clamp-2 text-xs leading-relaxed">
-                          {service.description}
-                        </p>
-
-                        <div className="flex-1 pb-3">
-                          {service.provider?.full_name && (
-                            <p className="mt-2.5 text-[11px] text-muted-foreground truncate">
-                              Bởi: <strong className="text-foreground">{service.provider.full_name}</strong>
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="border-border/60 -mx-3.5 -mb-3.5 mt-auto flex items-center justify-between border-t px-4 py-3.5 bg-muted/20 rounded-b-3xl">
-                          <div>
-                            <span className="text-muted-foreground text-[10px] block font-medium">
-                              Giá thuê
-                            </span>
-                            <p className="text-accent text-sm font-bold">
-                              {Number(service.price_per_day).toLocaleString("vi-VN")}{" "}
-                              đ
-                              <span className="text-muted-foreground text-[11px] font-normal">
-                                /ngày
-                              </span>
-                            </p>
-                          </div>
-
-                          <span className="border-border text-foreground group-hover:bg-accent group-hover:border-accent flex size-8 items-center justify-center rounded-full border transition-all group-hover:text-white shadow-xs">
-                            <ArrowUpRight className="size-3.5" />
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 2. CTA Mở khóa đặt nổi bật ở đầu danh sách bị khóa */}
-            <UnauthenticatedBlurOverlay
-              title="Đăng nhập để xem hơn 100+ dịch vụ & Báo giá"
-              description="Tạo tài khoản hoặc đăng nhập để mở khóa toàn bộ danh sách dịch vụ, xem thông tin liên hệ nhà cung cấp và đặt lịch thuê thiết bị, studio livestream."
-              badgeText="Mở khóa toàn bộ dữ liệu & Báo giá"
-              loginUrl="/login"
-            />
-
-            {/* 3. Phần còn lại của danh mục bị làm mờ nền */}
-            <div className="pointer-events-none select-none filter blur-[5px] opacity-40 transition-all grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredServices.slice(3, 9).map((service) => {
-                const tier = service.provider?.membership_tier;
-                const isVip = tier === "premium" || tier === "standard";
-                const cardClasses = getTierCardStyle(tier);
-
-                return (
-                  <div
-                    key={service.id}
-                    className={`relative flex flex-col rounded-3xl border p-3.5 shadow-sm ${cardClasses}`}
-                  >
-                    <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
-                      {service.images && service.images.length > 0 ? (
-                        <Image
-                          src={service.images[0]!}
-                          alt={service.title}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="text-muted-foreground flex size-full items-center justify-center text-xs">
-                          Chưa có hình ảnh
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-1 flex-col p-3 pt-3.5">
-                      {isVip && (
-                        <div className="mb-2">
-                          <GoldenTicketBadge tier={tier} variant="badge" />
-                        </div>
-                      )}
-                      <h3 className="line-clamp-1 text-base font-semibold">
-                        {service.title}
-                      </h3>
-                      <p className="text-muted-foreground mt-1.5 line-clamp-2 text-xs leading-relaxed">
-                        {service.description}
-                      </p>
-                      <div className="border-border/60 -mx-3.5 -mb-3.5 mt-4 flex items-center justify-between border-t px-4 py-3.5 bg-muted/20 rounded-b-3xl">
-                        <div>
-                          <p className="text-accent text-sm font-bold">
-                            {Number(service.price_per_day).toLocaleString("vi-VN")} đ/ngày
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredServices.map((service) => {
+            {displayedServices.map((service) => {
               const tier = service.provider?.membership_tier;
               const isVip = tier === "premium" || tier === "standard";
               const cardClasses = getTierCardStyle(tier);
@@ -738,8 +601,17 @@ function ServicesContent() {
               return (
                 <Link
                   key={service.id}
-                  href={`/services/${service.id}`}
-                  className={`group relative flex flex-col rounded-3xl border p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${cardClasses}`}
+                  href={currentUser ? `/services/${service.id}` : "#"}
+                  onClick={(e) => {
+                    if (!currentUser) {
+                      e.preventDefault();
+                      loginWithGoogle(`/services/${service.id}`);
+                    }
+                  }}
+                  tabIndex={!currentUser ? -1 : 0}
+                  className={`group relative flex flex-col rounded-3xl border p-3.5 shadow-sm transition-all duration-300 ${
+                    currentUser ? "hover:-translate-y-1 hover:shadow-xl" : ""
+                  } ${cardClasses}`}
                 >
                   {/* Image Aspect Box with inner rounded corners and subtle padding */}
                   <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
@@ -828,6 +700,38 @@ function ServicesContent() {
           </div>
         )}
       </main>
+      </div>
+
+      {/* 2. FULL-SCREEN CENTERED LOCK OVERLAY FOR GUESTS */}
+      {!currentUser && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-background/35 backdrop-blur-[2px]">
+          <div className="w-full max-w-xl rounded-[2.5rem] border border-orange-500/40 bg-card/95 p-8 shadow-2xl backdrop-blur-2xl sm:p-10 text-center ring-1 ring-orange-500/20 animate-in fade-in zoom-in-95 duration-300">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 mb-4 shadow-xs">
+              <Sparkles className="size-4 text-orange-500" />
+              <span>Mở khóa Bảng giá & Nhà cung cấp</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+              <AuroraText>Mở khóa 100+ Thiết bị & Studio Chuyên Nghiệp</AuroraText>
+            </h2>
+
+            <p className="mt-3 text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
+              Đăng nhập để xem đầy đủ báo giá, thông tin liên hệ nhà cung cấp và đặt lịch thuê thiết bị, studio livestream ngay.
+            </p>
+
+            <div className="mt-6 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => loginWithGoogle("/services")}
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-orange-500 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-orange-500/30 transition-all hover:bg-orange-600 hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
+              >
+                <span>Gia nhập LiveHub miễn phí</span>
+                <ArrowRight className="size-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -24,6 +24,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { ImageUploaderDialog } from "@/components/image-uploader-dialog";
+import { LocationPickerDialog } from "@/components/location-picker-dialog";
+import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
 import type { Service } from "@/lib/types/database";
 import { Edit3, ExternalLink, Sparkles, X } from "lucide-react";
 
@@ -51,6 +53,7 @@ export default function DemandDetailPage() {
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [editMapOpen, setEditMapOpen] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editBudget, setEditBudget] = useState("");
   const [editLocation, setEditLocation] = useState("");
@@ -866,23 +869,32 @@ export default function DemandDetailPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-semibold">Ngân sách (VNĐ)</label>
-                  <input
-                    type="number"
-                    required
+                  <FormattedCurrencyInput
                     value={editBudget}
-                    onChange={(e) => setEditBudget(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs focus:border-orange-500 focus:outline-none"
+                    onChange={setEditBudget}
+                    placeholder="VD: 5.000.000"
+                    required
                   />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-semibold">Địa điểm thực hiện</label>
-                  <input
-                    type="text"
-                    required
-                    value={editLocation}
-                    onChange={(e) => setEditLocation(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs focus:border-orange-500 focus:outline-none"
-                  />
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      required
+                      value={editLocation}
+                      onChange={(e) => setEditLocation(e.target.value)}
+                      className="flex-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs focus:border-orange-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setEditMapOpen(true)}
+                      className="inline-flex items-center gap-1 rounded-xl border border-orange-500/30 bg-orange-500/10 px-2.5 py-2 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors shrink-0"
+                    >
+                      <MapPin className="size-3.5" />
+                      <span className="text-[11px]">Map</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -958,6 +970,14 @@ export default function DemandDetailPage() {
         bucketName="demands"
         title="Cập nhật hình ảnh nhu cầu dự án"
         maxImages={6}
+      />
+
+      {/* Goong Map Location Picker Modal Dialog */}
+      <LocationPickerDialog
+        open={editMapOpen}
+        onClose={() => setEditMapOpen(false)}
+        initialLocation={editLocation}
+        onSelectLocation={(addr) => setEditLocation(addr)}
       />
     </div>
   );

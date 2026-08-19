@@ -1,31 +1,44 @@
 "use client";
 
-import { ImageUploaderDialog } from "@/components/image-uploader-dialog";
+import { DirectImageUploader, type PreviewItem } from "@/components/direct-image-uploader";
+import { LocationPickerDialog } from "@/components/location-picker-dialog";
 import { AuroraText } from "@/components/ui/aurora-text";
+import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
+import { uploadPendingImages } from "@/lib/storage-helper";
 import { createClient } from "@/lib/supabase/client";
 import type { ServiceCategory } from "@/lib/types/database";
-import { ArrowLeft, ImageIcon, Plus, Trash2, Upload } from "lucide-react";
-import Image from "next/image";
+import { ArrowLeft, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const SERVICE_PRICE_PRESETS = [500000, 1000000, 2000000, 3500000, 5000000, 10000000];
 
 export default function PostNewServicePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<ServiceCategory>("equipment");
-  const [pricePerDay, setPricePerDay] = useState("");
+  const [pricePerDay, setPricePerDay] = useState("1500000");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
-  const [imageList, setImageList] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<PreviewItem[]>([]);
 
-  const handleRemoveImage = (index: number) => {
-    setImageList((prev) => prev.filter((_, i) => i !== index));
-  };
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace("/login?next=/services/new");
+      }
+    }
+    checkAuth();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,28 +62,37 @@ export default function PostNewServicePage() {
       return;
     }
 
-    const { data: newService, error } = await supabase
-      .from("services")
-      .insert({
-        provider_id: user.id,
-        title,
-        category,
-        price_per_day: price,
-        location,
-        description,
-        images: imageList,
-        status: "pending",
-      })
-      .select()
-      .single();
+    try {
+      // 1. Upload any pending local image files to Supabase Storage
+      const uploadedUrls = await uploadPendingImages(imagePreviews, "services");
 
-    if (error) {
-      setErrorMsg(error.message);
+      // 2. Insert service record into database
+      const { data: newService, error } = await supabase
+        .from("services")
+        .insert({
+          provider_id: user.id,
+          title,
+          category,
+          price_per_day: price,
+          location,
+          description,
+          images: uploadedUrls,
+          status: "pending",
+        })
+        .select()
+        .single();
+
+      if (error) {
+        setErrorMsg(error.message);
+        setLoading(false);
+      } else if (newService) {
+        router.push(`/services/${newService.id}`);
+      } else {
+        router.push("/services/my");
+      }
+    } catch (err: unknown) {
+      setErrorMsg((err as Error).message || "Đã xảy ra lỗi khi tạo dịch vụ.");
       setLoading(false);
-    } else if (newService) {
-      router.push(`/services/${newService.id}`);
-    } else {
-      router.push("/services/my");
     }
   };
 
@@ -135,31 +157,40 @@ export default function PostNewServicePage() {
                 <label className="mb-2 block text-xs font-semibold text-muted-foreground">
                   Giá thuê 1 ngày (VNĐ) <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  min={100000}
-                  step={50000}
+                <FormattedCurrencyInput
                   value={pricePerDay}
-                  onChange={(e) => setPricePerDay(e.target.value)}
-                  placeholder="1500000"
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none"
+                  onChange={setPricePerDay}
+                  placeholder="VD: 1.500.000"
+                  presetAmounts={SERVICE_PRICE_PRESETS}
+                  unitSuffix="/ngày"
                   required
                 />
               </div>
             </div>
 
+            {/* Location with Goong Map Dialog Picker */}
             <div>
               <label className="mb-2 block text-xs font-semibold text-muted-foreground">
                 Khu vực / Địa điểm giao nhận <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Quận 1, TP. Hồ Chí Minh"
-                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none"
-                required
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Quận 1, TP. Hồ Chí Minh"
+                  className="flex-1 rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setMapDialogOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors cursor-pointer shrink-0"
+                >
+                  <MapPin className="size-4" />
+                  <span>Chọn trên bản đồ</span>
+                </button>
+              </div>
             </div>
 
             <div>
@@ -176,100 +207,34 @@ export default function PostNewServicePage() {
               />
             </div>
 
-            {/* Premium Image Uploader Dialog Trigger */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-semibold">
-                  Hình ảnh thực tế thiết bị / studio ({imageList.length} ảnh)
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setUploadDialogOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors"
-                >
-                  <Upload className="size-3.5" />
-                  <span>Tải ảnh lên (Không cần link)</span>
-                </button>
-              </div>
-
-              {imageList.length === 0 ? (
-                <div
-                  onClick={() => setUploadDialogOpen(true)}
-                  className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border p-8 text-center cursor-pointer hover:border-orange-500/50 hover:bg-muted/20 transition-all space-y-2"
-                >
-                  <div className="flex size-11 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500 shadow-xs">
-                    <ImageIcon className="size-5" />
-                  </div>
-                  <p className="text-xs font-bold text-foreground">
-                    Chưa có hình ảnh thực tế
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Nhấp vào đây để mở hộp thoại tải ảnh lên trực tiếp từ thiết bị của bạn
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-1">
-                  {imageList.map((imgSrc, i) => (
-                    <div
-                      key={i}
-                      className="group relative aspect-video overflow-hidden rounded-xl border border-border bg-muted shadow-xs"
-                    >
-                      <Image
-                        src={imgSrc}
-                        alt=""
-                        fill
-                        className="object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(i)}
-                        className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-black/70 text-white hover:bg-rose-600 transition-colors shadow-sm"
-                        title="Xóa ảnh này"
-                      >
-                        <Trash2 className="size-3" />
-                      </button>
-                      <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-white backdrop-blur-xs">
-                        #{i + 1}
-                      </span>
-                    </div>
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={() => setUploadDialogOpen(true)}
-                    className="flex aspect-video flex-col items-center justify-center rounded-xl border border-dashed border-border hover:border-orange-500/50 hover:bg-muted/20 text-muted-foreground transition-all"
-                  >
-                    <Plus className="size-5 text-orange-500" />
-                    <span className="text-[10px] font-semibold mt-1">Thêm ảnh</span>
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Direct Image Uploader (Zero modal dialog, direct upload on submit) */}
+            <DirectImageUploader
+              items={imagePreviews}
+              onChange={setImagePreviews}
+              maxImages={6}
+              label="Hình ảnh thực tế thiết bị / studio"
+              description="Thêm ảnh trực tiếp từ máy để tăng độ uy tín cho bài đăng (ảnh sẽ được lưu khi bấm Đăng)"
+            />
 
             <div className="pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl bg-orange-500 py-3.5 text-xs font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 disabled:opacity-50"
+                className="w-full rounded-xl bg-orange-500 py-3.5 text-xs font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 disabled:opacity-50 cursor-pointer"
               >
-                {loading ? "Đang gửi duyệt..." : "Hoàn tất & Chuyển tới trang chi tiết dịch vụ"}
+                {loading ? "Đang tải ảnh & lưu dịch vụ..." : "Hoàn tất & Chuyển tới trang chi tiết dịch vụ"}
               </button>
             </div>
           </form>
         </div>
       </div>
 
-      {/* Image Uploader Modal Dialog */}
-      <ImageUploaderDialog
-        open={uploadDialogOpen}
-        onClose={() => setUploadDialogOpen(false)}
-        onImagesSelected={(urls) => {
-          setImageList(urls);
-        }}
-        initialImages={imageList}
-        bucketName="services"
-        title="Tải lên hình ảnh thiết bị / dịch vụ"
-        maxImages={6}
+      {/* Goong Map Location Picker Modal Dialog */}
+      <LocationPickerDialog
+        open={mapDialogOpen}
+        onClose={() => setMapDialogOpen(false)}
+        initialLocation={location}
+        onSelectLocation={(addr) => setLocation(addr)}
       />
     </div>
   );

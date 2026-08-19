@@ -1,8 +1,8 @@
 "use client";
 
-import { UnauthenticatedBlurOverlay } from "@/components/unauthenticated-blur-overlay";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { Skeleton } from "@/components/ui/skeleton";
+import { loginWithGoogle } from "@/lib/auth-client";
 import { SEED_SERVICES } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/client";
 import type { Service } from "@/lib/types/database";
@@ -40,15 +40,15 @@ export function FeaturedServices() {
           .select("*")
           .eq("status", "approved")
           .order("created_at", { ascending: false })
-          .limit(6);
+          .limit(3);
 
         if (data && data.length > 0 && !error) {
           setServices(data as Service[]);
         } else {
-          setServices(SEED_SERVICES.slice(0, 6));
+          setServices(SEED_SERVICES.slice(0, 3));
         }
       } catch {
-        setServices(SEED_SERVICES.slice(0, 6));
+        setServices(SEED_SERVICES.slice(0, 3));
       } finally {
         setLoading(false);
       }
@@ -58,7 +58,7 @@ export function FeaturedServices() {
   }, []);
 
   return (
-    <section className="relative border-t border-border bg-background py-20 text-foreground">
+    <section className="relative border-t border-border bg-background py-16 text-foreground">
       <div className="mx-auto max-w-6xl px-4 xl:px-0">
         {/* Section Header */}
         <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
@@ -86,8 +86,8 @@ export function FeaturedServices() {
 
         {/* Services Grid */}
         {loading ? (
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
                 className="flex flex-col justify-between rounded-3xl border border-border bg-card p-3.5 shadow-sm space-y-4"
@@ -107,12 +107,12 @@ export function FeaturedServices() {
             ))}
           </div>
         ) : (
-          <div className="relative mt-10">
+          <div className="relative mt-8 min-h-[320px] rounded-3xl">
             {/* Grid of sample cards */}
             <div
               className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${
                 !currentUser
-                  ? "pointer-events-none select-none filter blur-[3.5px] opacity-60 transition-all"
+                  ? "pointer-events-none select-none filter blur-[4px] opacity-70 transition-all"
                   : ""
               }`}
             >
@@ -120,6 +120,12 @@ export function FeaturedServices() {
                 <Link
                   key={service.id}
                   href={currentUser ? `/services/${service.id}` : "#"}
+                  onClick={(e) => {
+                    if (!currentUser) {
+                      e.preventDefault();
+                      loginWithGoogle(`/services/${service.id}`);
+                    }
+                  }}
                   tabIndex={!currentUser ? -1 : 0}
                   className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40 hover:shadow-xl hover:shadow-orange-500/5"
                 >
@@ -176,11 +182,33 @@ export function FeaturedServices() {
 
             {/* Locked Blur Overlay for Guests */}
             {!currentUser && (
-              <UnauthenticatedBlurOverlay
-                title="Đăng nhập để khám phá kho thiết bị & Dịch vụ"
-                description="Tạo tài khoản miễn phí trong 30 giây để mở khóa toàn bộ danh mục dịch vụ livestream, xem thông tin nhà cung cấp và đặt lịch trực tiếp."
-                badgeText="Mở khóa hơn 100+ dịch vụ & Báo giá"
-              />
+              <div className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-background/35 backdrop-blur-[2px] rounded-3xl">
+                <div className="w-full max-w-lg rounded-[2.5rem] border border-orange-500/40 bg-card/95 p-6 sm:p-8 shadow-2xl backdrop-blur-2xl text-center ring-1 ring-orange-500/20 animate-in fade-in zoom-in-95 duration-300">
+                  <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 mb-3 shadow-xs">
+                    <Sparkles className="size-4 text-orange-500" />
+                    <span>Mở khóa Bảng giá & Nhà cung cấp</span>
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
+                    <AuroraText>Mở khóa 100+ Thiết bị & Studio Chuyên Nghiệp</AuroraText>
+                  </h3>
+
+                  <p className="mt-2.5 text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
+                    Đăng nhập để xem đầy đủ báo giá, thông tin liên hệ nhà cung cấp và đặt lịch thuê thiết bị, studio livestream ngay.
+                  </p>
+
+                  <div className="mt-5 flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={() => loginWithGoogle("/services")}
+                      className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-orange-500 px-7 py-3 text-sm font-bold text-white shadow-xl shadow-orange-500/30 transition-all hover:bg-orange-600 hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
+                    >
+                      <span>Gia nhập LiveHub miễn phí</span>
+                      <ArrowRight className="size-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
