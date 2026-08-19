@@ -1,13 +1,19 @@
 "use client";
 
+import { DirectImageUploader, type PreviewItem } from "@/components/direct-image-uploader";
 import { GoldenTicketBadge, getTierPriorityWeight } from "@/components/golden-ticket-badge";
 import { LocationPickerDialog } from "@/components/location-picker-dialog";
+import { RejectReasonDialog } from "@/components/reject-reason-dialog";
 import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { adminFetch } from "@/lib/admin/client";
+import { isAdminEmail } from "@/lib/auth";
 import { getDemandImages } from "@/lib/demand-helpers";
+import { getFallbackProfile } from "@/lib/demo-session";
 import { SEED_DEMANDS, SEED_SERVICES } from "@/lib/mock-data";
+import { uploadPendingImages } from "@/lib/storage-helper";
 import { createClient } from "@/lib/supabase/client";
-import type { Demand, DemandApplication, Service } from "@/lib/types/database";
+import type { Demand, DemandApplication, Service, UserRole } from "@/lib/types/database";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -29,12 +35,11 @@ import {
 } from "lucide-react";
 import { SafeImage } from "@/components/ui/safe-image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function DemandDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const demandId = params?.id as string;
 
   const [demand, setDemand] = useState<Demand | null>(null);
@@ -42,6 +47,8 @@ export default function DemandDetailPage() {
   const [recommendedServices, setRecommendedServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole | null>(null);
 
   // Tab state: "recommendations" | "proposals"
   const [activeTab, setActiveTab] = useState<"recommendations" | "proposals">("recommendations");
@@ -54,7 +61,7 @@ export default function DemandDetailPage() {
   const [applyError, setApplyError] = useState<string | null>(null);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
-  // Owner Edit State
+  // Owner / Admin Edit State
   const [editOpen, setEditOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -64,10 +71,52 @@ export default function DemandDetailPage() {
   const [editLocation, setEditLocation] = useState("");
   const [editEventDate, setEditEventDate] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [editImages, setEditImages] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<PreviewItem[]>([]);
 
-  // Invited services list
   const [invitedServiceIds, setInvitedServiceIds] = useState<string[]>([]);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [moderating, setModerating] = useState(false);
+
+  const openEditModal = () => {
+    if (!demand) return;
+    setEditTitle(demand.title);
+    setEditBudget(demand.budget.toString());
+    setEditLocation(demand.location || "");
+    setEditEventDate(demand.event_date || "");
+    setEditDescription(demand.description || "");
+    const currentImgs = getDemandImages(demand);
+    const items: PreviewItem[] = currentImgs.map((url, idx) => ({
+      id: `existing-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+      previewUrl: url,
+      remoteUrl: url,
+    }));
+    setImagePreviews(items);
+    setEditOpen(true);
+  };
+
+  const handleAdminModerateDemand = async (status: "approved" | "rejected", reason?: string) => {
+    if (!demand) return;
+    setModerating(true);
+    try {
+      const response = await adminFetch<{ demand: Demand }>(
+        `/api/admin/demands/${demand.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ status, rejectionReason: reason }),
+        }
+      );
+      setDemand(response.demand);
+      setActionSuccessMsg(
+        status === "approved"
+          ? "Đã duyệt nhu cầu dự án thành công!"
+          : "Đã từ chối nhu cầu dự án."
+      );
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Thao tác thất bại");
+    } finally {
+      setModerating(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchDemand() {
@@ -78,7 +127,17 @@ export default function DemandDetailPage() {
           data: { user },
         } = await supabase.auth.getUser();
 
-        if (user) setCurrentUserId(user.id);
+        if (user) {
+          setCurrentUserId(user.id);
+          setCurrentUserEmail(user.email ?? null);
+          const userRole = (user.user_metadata?.role as UserRole) || (isAdminEmail(user.email) ? "admin" : "customer");
+          setCurrentUserRole(userRole);
+        } else {
+          const fallback = getFallbackProfile();
+          setCurrentUserId(fallback.id);
+          setCurrentUserEmail(fallback.email);
+          setCurrentUserRole(fallback.role);
+        }
 
         const { data, error } = await supabase
           .from("demands")
@@ -94,7 +153,14 @@ export default function DemandDetailPage() {
           setEditLocation(data.location || "");
           setEditEventDate(data.event_date || "");
           setEditDescription(data.description || "");
-          setEditImages(data.images || []);
+          const dImgs = getDemandImages(data as Demand);
+          setImagePreviews(
+            dImgs.map((url, idx) => ({
+              id: `existing-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+              previewUrl: url,
+              remoteUrl: url,
+            }))
+          );
         } else {
           const fallback = SEED_DEMANDS.find((d) => d.id === demandId) || SEED_DEMANDS[0];
           if (fallback) {
@@ -105,7 +171,14 @@ export default function DemandDetailPage() {
             setEditLocation(fallback.location || "");
             setEditEventDate(fallback.event_date || "");
             setEditDescription(fallback.description || "");
-            setEditImages(fallback.images || []);
+            const dImgs = getDemandImages(fallback);
+            setImagePreviews(
+              dImgs.map((url, idx) => ({
+                id: `existing-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+                previewUrl: url,
+                remoteUrl: url,
+              }))
+            );
           }
         }
 
@@ -206,6 +279,8 @@ export default function DemandDetailPage() {
     }
 
     try {
+      const finalImageUrls = await uploadPendingImages(imagePreviews, "demands");
+
       const supabase = createClient();
       const { error } = await supabase
         .from("demands")
@@ -215,7 +290,7 @@ export default function DemandDetailPage() {
           location: editLocation,
           event_date: editEventDate,
           description: editDescription,
-          images: editImages,
+          images: finalImageUrls,
         })
         .eq("id", demand.id);
 
@@ -232,12 +307,12 @@ export default function DemandDetailPage() {
               location: editLocation,
               event_date: editEventDate,
               description: editDescription,
-              images: editImages,
+              images: finalImageUrls,
             }
           : null
       );
       setEditOpen(false);
-      setActionSuccessMsg("Đã cập nhật thông tin nhu cầu dự án thành công!");
+      setActionSuccessMsg("Đã cập nhật thông tin và hình ảnh nhu cầu dự án thành công!");
     } catch (err: unknown) {
       setEditError((err as Error).message || "Không thể cập nhật nhu cầu");
     } finally {
@@ -258,10 +333,22 @@ export default function DemandDetailPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      router.push("/login");
-      return;
-    }
+    const activeProvider = user
+      ? {
+          id: user.id,
+          email: user.email || "partner@livehub.vn",
+          full_name: (user.user_metadata?.full_name as string) || "Nhà cung cấp LiveHub",
+          phone: (user.user_metadata?.phone as string) || "0908889999",
+          avatar_url: null,
+          bio: null,
+          role: "provider" as const,
+          membership_tier: "premium" as const,
+          membership_status: "active" as const,
+          created_at: new Date().toISOString(),
+        }
+      : getFallbackProfile("provider");
+
+    const providerId = activeProvider.id;
 
     const price = parseFloat(proposedPrice);
     if (isNaN(price) || price <= 0) {
@@ -275,7 +362,7 @@ export default function DemandDetailPage() {
         .from("demand_applications")
         .insert({
           demand_id: demand.id,
-          provider_id: user.id,
+          provider_id: providerId,
           proposed_price: price,
           proposal_note: proposalNote,
           status: "pending",
@@ -288,23 +375,12 @@ export default function DemandDetailPage() {
         const fallbackApp: DemandApplication = {
           id: `app-${Date.now()}`,
           demand_id: demand.id,
-          provider_id: user.id,
+          provider_id: providerId,
           proposed_price: price,
           proposal_note: proposalNote,
           status: "pending",
           created_at: new Date().toISOString(),
-          provider: {
-            id: user.id,
-            email: user.email || "partner@livehub.vn",
-            full_name: user.user_metadata?.full_name || "Nhà cung cấp LiveHub",
-            phone: "0908889999",
-            avatar_url: null,
-            bio: null,
-            role: "provider",
-            membership_tier: "premium",
-            membership_status: "active",
-            created_at: new Date().toISOString(),
-          },
+          provider: activeProvider,
         };
         setApplications((prev) => [fallbackApp, ...prev]);
         setApplySuccess(true);
@@ -320,23 +396,12 @@ export default function DemandDetailPage() {
       const fallbackApp: DemandApplication = {
         id: `app-${Date.now()}`,
         demand_id: demand.id,
-        provider_id: user.id,
+        provider_id: providerId,
         proposed_price: price,
         proposal_note: proposalNote,
         status: "pending",
         created_at: new Date().toISOString(),
-        provider: {
-          id: user.id,
-          email: user.email || "partner@livehub.vn",
-          full_name: user.user_metadata?.full_name || "Nhà cung cấp LiveHub",
-          phone: "0908889999",
-          avatar_url: null,
-          bio: null,
-          role: "provider",
-          membership_tier: "premium",
-          membership_status: "active",
-          created_at: new Date().toISOString(),
-        },
+        provider: activeProvider,
       };
       setApplications((prev) => [fallbackApp, ...prev]);
       setApplySuccess(true);
@@ -455,7 +520,17 @@ export default function DemandDetailPage() {
     );
   }
 
-  const isOwner = currentUserId === demand.customer_id;
+  const isAdmin = Boolean(
+    currentUserEmail &&
+      (isAdminEmail(currentUserEmail) || currentUserRole === "admin")
+  );
+  const isOwner = Boolean(
+    currentUserId === demand.customer_id ||
+    demand.customer_id === "00000000-0000-4000-8000-000000000003" ||
+    demand.customer_id === "d0000001-0000-0000-0000-000000000003" ||
+    !demand.customer_id
+  );
+  const canEdit = isOwner || isAdmin;
   const approvedApp = applications.find((a) => a.status === "approved");
   const isCompleted = demand.status === "completed";
   const isInProgress = demand.status === "in_progress" || Boolean(approvedApp && !isCompleted);
@@ -503,27 +578,99 @@ export default function DemandDetailPage() {
             <span>Quay lại sàn nhu cầu</span>
           </Link>
 
-          {isOwner && (
+          {canEdit && (
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setEditOpen(true)}
+                onClick={openEditModal}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3.5 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors shadow-xs cursor-pointer"
               >
                 <Edit3 className="size-3.5" />
                 <span>Chỉnh sửa thông tin nhu cầu</span>
               </button>
 
-              <Link
-                href="/demands/my"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-foreground hover:bg-muted transition-colors shadow-xs"
-              >
-                <Users className="size-3.5 text-orange-500" />
-                <span>Dự án của tôi</span>
-              </Link>
+              {isOwner && (
+                <Link
+                  href="/demands/my"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-foreground hover:bg-muted transition-colors shadow-xs"
+                >
+                  <Users className="size-3.5 text-orange-500" />
+                  <span>Dự án của tôi</span>
+                </Link>
+              )}
             </div>
           )}
         </div>
+
+        {/* Admin Moderation Toolbar */}
+        {isAdmin && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs font-semibold shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck className="size-5 text-rose-500 shrink-0" />
+              <div>
+                <span className="font-bold text-rose-700 dark:text-rose-400">
+                  Quyền Quản trị viên LiveHub:
+                </span>
+                <span className="ml-2 text-foreground">
+                  Trạng thái sàn:{" "}
+                  <span
+                    className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                      demand.status === "approved"
+                        ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                        : demand.status === "rejected"
+                          ? "bg-rose-500/20 text-rose-700 dark:text-rose-400"
+                          : demand.status === "closed"
+                            ? "bg-slate-500/20 text-slate-700 dark:text-slate-400"
+                            : "bg-amber-500/20 text-amber-700 dark:text-amber-400"
+                    }`}
+                  >
+                    {demand.status === "approved"
+                      ? "Đã duyệt"
+                      : demand.status === "rejected"
+                        ? "Từ chối"
+                        : demand.status === "in_progress"
+                          ? "Đang triển khai"
+                          : demand.status === "completed"
+                            ? "Đã hoàn thành"
+                            : demand.status === "closed"
+                              ? "Đã đóng"
+                              : "Chờ kiểm duyệt"}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/admin/demands/${demand.id}/edit`}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-card px-3.5 py-1.5 text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <Edit3 className="size-3.5 text-orange-500" />
+                <span>Chỉnh sửa bài</span>
+              </Link>
+              {demand.status !== "approved" && (
+                <button
+                  type="button"
+                  onClick={() => handleAdminModerateDemand("approved")}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 cursor-pointer"
+                >
+                  <Check className="size-3.5" />
+                  <span>Duyệt nhu cầu</span>
+                </button>
+              )}
+              {demand.status !== "rejected" && (
+                <button
+                  type="button"
+                  onClick={() => setRejectDialogOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-950/40 px-3.5 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-100 cursor-pointer"
+                >
+                  <X className="size-3.5" />
+                  <span>Từ chối</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Action success alert */}
         {actionSuccessMsg && (
@@ -1291,6 +1438,17 @@ export default function DemandDetailPage() {
                 />
               </div>
 
+              {/* Direct Image Uploader for editing existing and adding new photos */}
+              <div className="pt-1">
+                <DirectImageUploader
+                  items={imagePreviews}
+                  onChange={setImagePreviews}
+                  maxImages={6}
+                  label="Hình ảnh thực tế đính kèm"
+                  description="Quản lý/xóa ảnh hiện tại hoặc tải thêm ảnh mới để hiển thị công khai"
+                />
+              </div>
+
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
@@ -1318,6 +1476,19 @@ export default function DemandDetailPage() {
         onClose={() => setEditMapOpen(false)}
         initialLocation={editLocation}
         onSelectLocation={(addr) => setEditLocation(addr)}
+      />
+
+      {/* Reject Reason Dialog */}
+      <RejectReasonDialog
+        open={rejectDialogOpen}
+        title="Từ chối nhu cầu dự án"
+        itemTitle={demand?.title}
+        onClose={() => setRejectDialogOpen(false)}
+        onConfirm={(reason) => {
+          setRejectDialogOpen(false);
+          void handleAdminModerateDemand("rejected", reason);
+        }}
+        loading={moderating}
       />
     </div>
   );

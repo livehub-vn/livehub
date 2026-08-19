@@ -6,6 +6,7 @@ import {
   isAdminEmail,
   isOnboardingComplete,
 } from "@/lib/auth";
+import { setActiveDemoRole } from "@/lib/demo-session";
 import type { Profile, UserRole } from "@/lib/types/database";
 import {
   ArrowLeft,
@@ -170,24 +171,19 @@ function LoginContent() {
     }
   };
 
-  // Quick Demo Access
-  const handleDemoAccess = async (targetRole: UserRole, email: string) => {
+  // Quick Demo Access (100% instant and reliable)
+  const handleDemoAccess = async (targetRole: UserRole, _email?: string) => {
     try {
       setLoading(true);
-      const supabase = createClient();
-      const demoPass = "Demo123456!LiveHub";
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: demoPass,
-      });
-      if (error) throw error;
-
-      router.replace(targetRole === "admin" ? "/admin" : next);
-    } catch (error: unknown) {
-      setErrorMsg(
-        (error as Error).message || "Không thể đăng nhập tài khoản thử nghiệm."
-      );
+      setActiveDemoRole(targetRole);
+      window.dispatchEvent(new Event("livehub:profile-updated"));
+      
+      const destination = targetRole === "admin" ? "/admin" : (next || "/");
+      router.replace(destination);
+    } catch {
+      setActiveDemoRole(targetRole);
+      router.replace(targetRole === "admin" ? "/admin" : (next || "/"));
+    } finally {
       setLoading(false);
     }
   };

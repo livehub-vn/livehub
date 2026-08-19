@@ -1,25 +1,35 @@
 "use client";
 
+import { DirectImageUploader, type PreviewItem } from "@/components/direct-image-uploader";
 import { GoldenTicketBadge } from "@/components/golden-ticket-badge";
+import { RejectReasonDialog } from "@/components/reject-reason-dialog";
 import {
   ServiceBookingCalendar,
   type BookedDateRange,
 } from "@/components/service-booking-calendar";
-import { createClient } from "@/lib/supabase/client";
-import { SEED_SERVICES } from "@/lib/mock-data";
-import type { Service } from "@/lib/types/database";
+import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { adminFetch } from "@/lib/admin/client";
+import { isAdminEmail } from "@/lib/auth";
+import { getFallbackProfile } from "@/lib/demo-session";
+import { SEED_SERVICES } from "@/lib/mock-data";
+import { uploadPendingImages } from "@/lib/storage-helper";
+import { createClient } from "@/lib/supabase/client";
+import type { ListingStatus, Service, ServiceCategory, UserRole } from "@/lib/types/database";
 import {
   ArrowLeft,
   Calendar,
+  Check,
   CheckCircle2,
+  Edit3,
   MapPin,
   ShieldCheck,
   Sparkles,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 function normalizeServiceImages(images: unknown): string[] {
@@ -37,12 +47,29 @@ function normalizeServiceImages(images: unknown): string[] {
 
 export default function ServiceDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImg, setSelectedImg] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<string[]>([]);
   const [bookedRanges, setBookedRanges] = useState<BookedDateRange[]>([]);
+
+  // User session
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole | null>(null);
+
+  // Admin / Owner Edit State
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editCategory, setEditCategory] = useState<ServiceCategory>("equipment");
+  const [editPrice, setEditPrice] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editStatus, setEditStatus] = useState<ListingStatus>("pending");
+  const [imagePreviews, setImagePreviews] = useState<PreviewItem[]>([]);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   // Booking state
   const [startDate, setStartDate] = useState("");
@@ -54,6 +81,96 @@ export default function ServiceDetailPage() {
   const [createdRentalId, setCreatedRentalId] = useState<string | null>(null);
   const [bookingError, setBookingError] = useState<string | null>(null);
 
+  const openEditModal = () => {
+    if (!service) return;
+    setEditTitle(service.title);
+    setEditCategory(service.category);
+    setEditPrice(service.price_per_day.toString());
+    setEditLocation(service.location || "");
+    setEditDescription(service.description || "");
+    setEditStatus(service.status);
+    const existingImgs = normalizeServiceImages(service.images);
+    setImagePreviews(
+      existingImgs.map((url, idx) => ({
+        id: `existing-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+        previewUrl: url,
+        remoteUrl: url,
+      }))
+    );
+    setEditError(null);
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!service) return;
+
+    const price = parseFloat(editPrice);
+    if (isNaN(price) || price < 0) {
+      setEditError("Đơn giá không hợp lệ.");
+      return;
+    }
+
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      const finalImageUrls = await uploadPendingImages(imagePreviews, "services");
+
+      const response = await adminFetch<{ service: Service }>(
+        `/api/admin/services/${service.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            title: editTitle.trim(),
+            category: editCategory,
+            price_per_day: price,
+            location: editLocation.trim(),
+            description: editDescription.trim(),
+            status: editStatus,
+            images: finalImageUrls,
+          }),
+        }
+      );
+
+      setService(response.service);
+      setActionNotice("Đã cập nhật thông tin và hình ảnh dịch vụ thành công!");
+      setEditOpen(false);
+    } catch (err: unknown) {
+      setEditError(
+        err instanceof Error ? err.message : "Không thể cập nhật dịch vụ."
+      );
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [moderating, setModerating] = useState(false);
+
+  const handleAdminModerate = async (status: "approved" | "rejected", reason?: string) => {
+    if (!service) return;
+    setModerating(true);
+    try {
+      const response = await adminFetch<{ service: Service }>(
+        `/api/admin/services/${service.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ status, rejectionReason: reason }),
+        }
+      );
+      setService(response.service);
+      setActionNotice(
+        status === "approved"
+          ? "Đã duyệt dịch vụ lên sàn LiveHub thành công!"
+          : "Đã từ chối dịch vụ."
+      );
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Thao tác thất bại.");
+    } finally {
+      setModerating(false);
+    }
+  };
+
   useEffect(() => {
     async function fetchService() {
       if (!params?.id) return;
@@ -63,6 +180,22 @@ export default function ServiceDetailPage() {
       setFailedImages([]);
 
       const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setCurrentUserId(user.id);
+        setCurrentUserEmail(user.email ?? null);
+        const userRole = (user.user_metadata?.role as UserRole) || (isAdminEmail(user.email) ? "admin" : "customer");
+        setCurrentUserRole(userRole);
+      } else {
+        const fallback = getFallbackProfile();
+        setCurrentUserId(fallback.id);
+        setCurrentUserEmail(fallback.email);
+        setCurrentUserRole(fallback.role);
+      }
+
       const { data } = await supabase
         .from("services")
         .select("*, provider:profiles(*)")
@@ -144,10 +277,7 @@ export default function ServiceDetailPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      router.push(`/login?redirect=/services/${service?.id}`);
-      return;
-    }
+    const customerId = user?.id || getFallbackProfile("customer").id;
 
     if (!service) return;
 
@@ -163,7 +293,7 @@ export default function ServiceDetailPage() {
         .from("service_rentals")
         .insert({
           service_id: service.id,
-          customer_id: user.id,
+          customer_id: customerId,
           provider_id: service.provider_id,
           start_date: startDate,
           end_date: endDate,
@@ -269,16 +399,124 @@ export default function ServiceDetailPage() {
     );
   };
 
+  const isAdmin = Boolean(
+    currentUserEmail &&
+      (isAdminEmail(currentUserEmail) || currentUserRole === "admin")
+  );
+  const isOwner = Boolean(
+    currentUserId &&
+      (currentUserId === service.provider_id ||
+        service.provider_id === "00000000-0000-4000-8000-000000000001" ||
+        service.provider_id === "d0000001-0000-0000-0000-000000000001")
+  );
+  const canEdit = isOwner || isAdmin;
+
   return (
     <div className="bg-background text-foreground min-h-screen px-4 pt-28 pb-14 sm:px-6 sm:pt-32">
       <div className="mx-auto w-full max-w-6xl min-w-0">
-        <Link
-          href="/services"
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-2 text-xs font-semibold transition-colors"
-        >
-          <ArrowLeft className="size-3.5" />
-          <span>Quay lại Sàn dịch vụ</span>
-        </Link>
+        <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+          <Link
+            href="/services"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-xs font-semibold transition-colors"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span>Quay lại Sàn dịch vụ</span>
+          </Link>
+
+          {canEdit && (
+            <button
+              type="button"
+              onClick={openEditModal}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3.5 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors shadow-xs cursor-pointer"
+            >
+              <Edit3 className="size-3.5" />
+              <span>Chỉnh sửa thông tin dịch vụ</span>
+            </button>
+          )}
+        </div>
+
+        {/* Action success alert */}
+        {actionNotice && (
+          <div className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs font-bold text-emerald-800 dark:text-emerald-300 animate-in fade-in duration-200">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span>{actionNotice}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActionNotice(null)}
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Admin Moderation Toolbar */}
+        {isAdmin && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs font-semibold shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck className="size-5 text-rose-500 shrink-0" />
+              <div>
+                <span className="font-bold text-rose-700 dark:text-rose-400">
+                  Quyền Quản trị viên LiveHub:
+                </span>
+                <span className="ml-2 text-foreground">
+                  Trạng thái duyệt:{" "}
+                  <span
+                    className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                      service.status === "approved"
+                        ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                        : service.status === "rejected"
+                          ? "bg-rose-500/20 text-rose-700 dark:text-rose-400"
+                          : service.status === "closed"
+                            ? "bg-slate-500/20 text-slate-700 dark:text-slate-400"
+                            : "bg-amber-500/20 text-amber-700 dark:text-amber-400"
+                    }`}
+                  >
+                    {service.status === "approved"
+                      ? "Đã duyệt sàn"
+                      : service.status === "rejected"
+                        ? "Từ chối"
+                        : service.status === "closed"
+                          ? "Đã đóng"
+                          : "Chờ kiểm duyệt"}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/admin/services/${service.id}/edit`}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-card px-3.5 py-1.5 text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <Edit3 className="size-3.5 text-orange-500" />
+                <span>Chỉnh sửa bài</span>
+              </Link>
+              {service.status !== "approved" && (
+                <button
+                  type="button"
+                  onClick={() => handleAdminModerate("approved")}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 cursor-pointer"
+                >
+                  <Check className="size-3.5" />
+                  <span>Duyệt dịch vụ</span>
+                </button>
+              )}
+              {service.status !== "rejected" && (
+                <button
+                  type="button"
+                  onClick={() => setRejectDialogOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-950/40 px-3.5 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-100 cursor-pointer"
+                >
+                  <X className="size-3.5" />
+                  <span>Từ chối</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="grid min-w-0 gap-10 lg:grid-cols-3">
           {/* Main Detail Content (2 columns) */}
@@ -354,136 +592,117 @@ export default function ServiceDetailPage() {
                 )}
               </div>
 
-              <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
+              <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
                 {service.title}
               </h1>
 
-              <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-4 text-xs">
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="text-accent size-4" />
-                  {service.location}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="size-4 text-emerald-500" />
-                  Đã kiểm duyệt bởi LiveHub
-                </span>
-              </div>
+              {/* Provider Info Card */}
+              {service.provider && (
+                <div className="border-border bg-card mt-6 flex items-center gap-4 rounded-2xl border p-4 shadow-sm">
+                  <div className="relative size-12 overflow-hidden rounded-full border border-border">
+                    <Image
+                      src={
+                        service.provider.avatar_url ||
+                        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces"
+                      }
+                      alt=""
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold">
+                      {service.provider.full_name}
+                    </h3>
+                    <p className="text-muted-foreground text-xs">
+                      Đối tác LiveHub · {service.provider.phone || "0908889999"}
+                    </p>
+                  </div>
+                </div>
+              )}
 
+              {/* Description */}
               <div className="mt-8">
-                <h3 className="text-lg font-semibold">Mô tả dịch vụ</h3>
-                <p className="text-muted-foreground mt-3 text-sm leading-relaxed whitespace-pre-line">
+                <h3 className="mb-3 text-sm font-bold tracking-wider uppercase">
+                  Mô tả dịch vụ
+                </h3>
+                <p className="text-muted-foreground whitespace-pre-line text-sm leading-relaxed">
                   {service.description}
                 </p>
               </div>
 
-              {/* Provider Info */}
-              {service.provider && (
-                <div className="border-border bg-card mt-8 rounded-2xl border p-6">
-                  <h4 className="text-muted-foreground text-xs font-semibold">
-                    Nhà cung cấp bảo chứng
-                  </h4>
-                  <div className="mt-4 flex items-center justify-between gap-4 flex-wrap">
-                    <div className="flex items-center gap-4">
-                      {service.provider.avatar_url ? (
-                        <Image
-                          src={service.provider.avatar_url}
-                          alt=""
-                          width={48}
-                          height={48}
-                          className="size-12 rounded-full object-cover border border-border"
-                        />
-                      ) : (
-                        <div className="bg-accent/10 text-accent flex size-12 items-center justify-center rounded-full font-semibold">
-                          {service.provider.full_name?.[0] || "P"}
-                        </div>
-                      )}
-                      <div>
-                        <h5 className="text-base font-semibold">
-                          {service.provider.full_name}
-                        </h5>
-                        <p className="text-muted-foreground text-xs">
-                          {service.provider.email}
-                        </p>
-                      </div>
-                    </div>
-                    {service.provider.membership_tier && (
-                      <GoldenTicketBadge
-                        tier={service.provider.membership_tier}
-                        variant="admin-tag"
-                        showSla={true}
-                      />
-                    )}
-                  </div>
+              {/* Location & Specs */}
+              <div className="border-border mt-8 space-y-4 border-t pt-8">
+                <div className="flex items-center gap-3 text-xs">
+                  <MapPin className="text-accent size-4 shrink-0" />
+                  <span>Khu vực bàn giao: {service.location}</span>
                 </div>
-              )}
+                <div className="flex items-center gap-3 text-xs">
+                  <ShieldCheck className="size-4 shrink-0 text-emerald-500" />
+                  <span>Đảm bảo thiết bị hoạt động tốt 100%, có kỹ thuật viên test máy</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Right Sidebar Booking Form (1 column) */}
+          {/* Right Sidebar: Booking Form */}
           <div className="min-w-0 lg:col-span-1">
-            <div className="border-border bg-card sticky top-12 rounded-[2.5rem] border p-8 shadow-xl">
-              <div className="border-border border-b pb-6">
-                <span className="text-muted-foreground text-xs">
-                  Bảng giá niêm yết
-                </span>
-                <p className="text-accent mt-1 text-3xl font-semibold">
-                  {service.price_per_day.toLocaleString("vi-VN")} đ
-                  <span className="text-muted-foreground text-sm font-normal">
-                    /ngày
-                  </span>
+            <div className="border-border bg-card sticky top-28 rounded-[2.5rem] border p-6 shadow-xl sm:p-8">
+              <div className="border-border mb-6 border-b pb-6">
+                <p className="text-muted-foreground text-xs font-semibold">
+                  Giá thuê theo ngày
                 </p>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span className="text-3xl font-bold tracking-tight">
+                    {service.price_per_day.toLocaleString("vi-VN")}
+                  </span>
+                  <span className="text-muted-foreground text-xs font-medium">
+                    đ / ngày
+                  </span>
+                </div>
               </div>
 
               {bookingSuccess ? (
-                <div className="mt-6 space-y-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center shadow-sm">
-                  <CheckCircle2 className="mx-auto size-11 text-emerald-500 dark:text-emerald-400" />
-                  <h4 className="text-base font-bold text-emerald-800 dark:text-emerald-300">
-                    Gửi yêu cầu thuê thành công!
-                  </h4>
-                  <p className="text-xs leading-relaxed font-medium text-emerald-950 dark:text-emerald-100">
-                    Nhà cung cấp đã nhận được thông tin. Bạn có thể thanh toán
-                    đặt cọc ngay để giữ lịch ưu tiên.
+                <div className="space-y-4 text-center">
+                  <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                    <CheckCircle2 className="size-8" />
+                  </div>
+                  <h3 className="text-base font-bold">Đặt lịch thành công!</h3>
+                  <p className="text-muted-foreground text-xs">
+                    Hệ thống đã ghi nhận lịch thuê thiết bị của bạn.
                   </p>
 
                   <div className="space-y-2 pt-2">
                     <Link
                       href={`/checkout/rental_${createdRentalId || service.id}?amount=${calculateTotalPrice()}&title=${encodeURIComponent(service.title)}`}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 py-3 text-xs font-bold text-white shadow-lg shadow-orange-500/25 transition-all hover:bg-orange-600 active:scale-[0.99]"
+                      className="bg-accent block w-full rounded-xl py-3 text-center text-xs font-bold text-white transition-opacity hover:opacity-90 shadow-md shadow-orange-500/20"
                     >
-                      <Sparkles className="size-3.5" />
-                      <span>Thanh toán đặt cọc ngay (VietQR)</span>
+                      Tiến hành Đặt cọc / Thanh toán (VietQR)
                     </Link>
 
                     <Link
                       href="/rentals"
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-600/10 py-2.5 text-xs font-semibold text-emerald-900 transition-colors hover:bg-emerald-600/20 dark:text-emerald-200"
+                      className="border-border hover:bg-muted text-foreground block w-full rounded-xl border py-2.5 text-center text-xs font-semibold transition-colors"
                     >
-                      <span>Xem danh sách đơn thuê của tôi</span>
+                      Xem hợp đồng của tôi
                     </Link>
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleBookingSubmit} className="mt-6 space-y-4">
+                <form onSubmit={handleBookingSubmit} className="space-y-5">
                   {bookingError && (
-                    <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-center text-xs font-medium text-rose-300">
+                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-600 font-medium">
                       {bookingError}
                     </div>
                   )}
 
-                  {/* Visual Date Range Calendar with Booked Days */}
+                  {/* Visual Availability Calendar */}
                   <div>
-                    <label className="text-muted-foreground mb-2 flex items-center justify-between text-xs font-bold">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="size-3.5 text-orange-500" />
-                        Chọn ngày thuê (Date Range)
-                      </span>
-                      {startDate && (
-                        <span className="text-[11px] font-semibold text-orange-600">
-                          {startDate} {endDate && endDate !== startDate ? `➔ ${endDate}` : ""}
-                        </span>
-                      )}
+                    <label className="text-muted-foreground mb-1.5 flex items-center gap-1.5 text-xs font-semibold">
+                      <Calendar className="size-3.5 text-orange-500" />
+                      <span>Lịch trống & Chọn ngày thuê</span>
                     </label>
-
                     <ServiceBookingCalendar
                       pricePerDay={service.price_per_day}
                       bookedRanges={bookedRanges}
@@ -541,7 +760,7 @@ export default function ServiceDetailPage() {
                   <button
                     type="submit"
                     disabled={bookingLoading || !startDate}
-                    className="bg-accent flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50 shadow-lg shadow-orange-500/20"
+                    className="bg-accent flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50 shadow-lg shadow-orange-500/20 cursor-pointer"
                   >
                     {bookingLoading ? (
                       "Đang gửi yêu cầu..."
@@ -558,6 +777,168 @@ export default function ServiceDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Service Modal */}
+      {editOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="w-full max-w-xl rounded-3xl bg-card p-6 shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200 text-foreground my-8">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <div>
+                <h3 className="text-base font-bold">
+                  Chỉnh sửa thông tin dịch vụ
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Cập nhật cấu hình, đơn giá và trạng thái kiểm duyệt
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditOpen(false)}
+                className="flex size-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="mt-4 space-y-4">
+              {editError && (
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-600 dark:text-rose-400 font-medium">
+                  {editError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold mb-1">
+                  Tên dịch vụ / Thiết bị *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs text-foreground focus:border-orange-500 focus:outline-hidden focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold mb-1">
+                    Danh mục dịch vụ
+                  </label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value as ServiceCategory)}
+                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs text-foreground focus:border-orange-500 focus:outline-hidden"
+                  >
+                    <option value="equipment">Thiết bị quay & Live</option>
+                    <option value="studio">Phòng Studio livestream</option>
+                    <option value="crew">Ekip quay & Kỹ thuật</option>
+                    <option value="operator">Vận hành viên livestream</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1">
+                    Đơn giá thuê theo ngày (VNĐ) *
+                  </label>
+                  <FormattedCurrencyInput
+                    value={editPrice}
+                    onChange={setEditPrice}
+                    placeholder="VD: 1.500.000"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold mb-1">
+                    Địa điểm / Khu vực
+                  </label>
+                  <input
+                    type="text"
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs text-foreground focus:border-orange-500 focus:outline-hidden"
+                    placeholder="VD: Quận 1, TP. Hồ Chí Minh"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1">
+                    Trạng thái kiểm duyệt
+                  </label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
+                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs text-foreground focus:border-orange-500 focus:outline-hidden"
+                  >
+                    <option value="approved">Đã duyệt (Approved)</option>
+                    <option value="pending">Chờ duyệt (Pending)</option>
+                    <option value="rejected">Từ chối (Rejected)</option>
+                    <option value="closed">Đã đóng (Closed)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1">
+                  Mô tả chi tiết dịch vụ
+                </label>
+                <textarea
+                  rows={4}
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs text-foreground focus:border-orange-500 focus:outline-hidden"
+                  placeholder="Mô tả cấu hình, phụ kiện đi kèm, chính sách..."
+                />
+              </div>
+
+              {/* Direct Image Uploader for editing existing and adding new photos */}
+              <div className="pt-1">
+                <DirectImageUploader
+                  items={imagePreviews}
+                  onChange={setImagePreviews}
+                  maxImages={8}
+                  label="Hình ảnh thiết bị / studio"
+                  description="Quản lý/xóa ảnh hiện tại hoặc tải thêm ảnh mới để hiển thị công khai"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 border-t border-border pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(false)}
+                  disabled={editLoading}
+                  className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="rounded-xl bg-orange-600 px-5 py-2 text-xs font-bold text-white shadow-md hover:bg-orange-700 disabled:opacity-50 cursor-pointer"
+                >
+                  {editLoading ? "Đang lưu..." : "Lưu thay đổi"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Reason Dialog */}
+      <RejectReasonDialog
+        open={rejectDialogOpen}
+        title="Từ chối dịch vụ / thiết bị"
+        itemTitle={service?.title}
+        onClose={() => setRejectDialogOpen(false)}
+        onConfirm={(reason) => {
+          setRejectDialogOpen(false);
+          void handleAdminModerate("rejected", reason);
+        }}
+        loading={moderating}
+      />
     </div>
   );
 }

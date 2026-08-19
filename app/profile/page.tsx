@@ -6,6 +6,7 @@ import {
   MEMBERSHIP_TIERS,
   withResolvedMembership,
 } from "@/lib/membership";
+import { getFallbackProfile, setActiveDemoRole } from "@/lib/demo-session";
 import type { Profile } from "@/lib/types/database";
 import {
   ArrowLeft,
@@ -47,7 +48,13 @@ export default function ProfilePage() {
         } = await supabase.auth.getUser();
 
         if (!user) {
-          router.push("/login");
+          const fallback = getFallbackProfile();
+          setProfile(fallback);
+          setFullName(fallback.full_name || "");
+          setPhone(fallback.phone || "");
+          setBio(fallback.bio || "");
+          setRole(fallback.role === "provider" ? "provider" : "customer");
+          setLoading(false);
           return;
         }
 
@@ -136,6 +143,7 @@ export default function ProfilePage() {
       });
       if (metadataError) throw metadataError;
 
+      setActiveDemoRole(role);
       setProfile((current) =>
         current
           ? { ...current, full_name: fullName, phone, bio, role: nextRole }

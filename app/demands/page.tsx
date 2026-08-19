@@ -3,7 +3,9 @@
 import { GoldenTicketBadge, getTierPriorityWeight, getTierCardStyle } from "@/components/golden-ticket-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuroraText } from "@/components/ui/aurora-text";
+import { UnauthenticatedBlurOverlay } from "@/components/unauthenticated-blur-overlay";
 import { loginWithGoogle } from "@/lib/auth-client";
+import { DEMO_PROFILES, getActiveDemoRole } from "@/lib/demo-session";
 import { getDemandImages } from "@/lib/demand-helpers";
 import { SEED_DEMANDS } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/client";
@@ -33,7 +35,16 @@ export default function DemandsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterVipOnly, setFilterVipOnly] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ id: string; role: string; email: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; role: string; email: string } | null>(() => {
+    if (typeof window !== "undefined") {
+      const demoRole = getActiveDemoRole();
+      const demoProfile = DEMO_PROFILES[demoRole];
+      if (demoProfile) {
+        return { id: demoProfile.id, role: demoProfile.role, email: demoProfile.email };
+      }
+    }
+    return null;
+  });
 
   useEffect(() => {
     async function fetchDemands() {
@@ -73,6 +84,13 @@ export default function DemandsPage() {
 
             setMyDemands((ownDemands ?? []) as Demand[]);
             setRecommendedServices(servicesData ?? []);
+          }
+        } else {
+          // Fallback to active demo role profile
+          const demoRole = getActiveDemoRole();
+          const demoProfile = DEMO_PROFILES[demoRole];
+          if (demoProfile) {
+            setCurrentUser({ id: demoProfile.id, role: demoProfile.role, email: demoProfile.email });
           }
         }
 
@@ -454,21 +472,20 @@ export default function DemandsPage() {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-sm space-y-4"
+                className="flex flex-col justify-between rounded-3xl border border-border bg-card p-3.5 shadow-xs space-y-3"
               >
-                <div className="space-y-3">
+                <Skeleton className="aspect-[16/10] w-full rounded-2xl" />
+                <div className="space-y-2 p-1">
                   <div className="flex items-center justify-between">
-                    <Skeleton className="h-4 w-24 rounded-full" />
+                    <Skeleton className="h-4 w-20 rounded-lg" />
                     <Skeleton className="h-3 w-16 rounded-md" />
                   </div>
-                  <Skeleton className="h-6 w-3/4 rounded-md" />
+                  <Skeleton className="h-5 w-4/5 rounded-md" />
                   <Skeleton className="h-3.5 w-full rounded-md" />
-                  <Skeleton className="h-3.5 w-4/5 rounded-md" />
                 </div>
-
-                <div className="border-t border-border/60 pt-3 flex items-center justify-between">
-                  <Skeleton className="h-4 w-28 rounded-md" />
-                  <Skeleton className="h-6 w-24 rounded-md" />
+                <div className="border-t border-border/60 pt-3 flex items-center justify-between px-1">
+                  <Skeleton className="h-4 w-24 rounded-md" />
+                  <Skeleton className="h-7 w-20 rounded-xl" />
                 </div>
               </div>
             ))}
@@ -481,11 +498,13 @@ export default function DemandsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {displayedDemands.map((demand) => {
               const tier = demand.customer?.membership_tier;
               const isVip = tier === "premium" || tier === "standard";
               const cardClasses = getTierCardStyle(tier);
+              const dImages = getDemandImages(demand);
+              const hasImage = dImages.length > 0;
 
               return (
                 <Link
@@ -498,92 +517,102 @@ export default function DemandsPage() {
                     }
                   }}
                   tabIndex={!currentUser ? -1 : 0}
-                  className={`group relative flex flex-col justify-between rounded-3xl border p-5 transition-all duration-300 ${
+                  className={`group relative flex flex-col justify-between rounded-3xl border p-3.5 shadow-xs transition-all duration-300 ${
                     currentUser ? "hover:shadow-xl hover:-translate-y-1" : ""
                   } ${cardClasses}`}
                 >
                   <div>
-                    {/* Top Row: Tag, VIP Badge & Date */}
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="rounded-full bg-orange-500/10 px-2.5 py-0.5 text-[10px] font-bold text-orange-500">
-                          Dự án cần ekip
+                    {/* Top Image Aspect Box with inner rounded-2xl & aspect-[16/10] */}
+                    <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
+                      {hasImage ? (
+                        <SafeImage
+                          src={dImages[0]!}
+                          alt={demand.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-muted flex items-center justify-center">
+                          <div className="flex flex-col items-center justify-center text-muted-foreground/70">
+                            <Calendar className="size-8 text-orange-500/60 mb-1" />
+                            <span className="text-[11px] font-semibold text-muted-foreground">Nhu cầu tuyển ekip</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Top Badges on Image */}
+                      <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between gap-1.5 z-10">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="rounded-lg bg-black/75 px-2.5 py-0.5 text-[10px] font-extrabold text-white shadow-xs uppercase tracking-wider whitespace-nowrap shrink-0">
+                            Cần ekip
+                          </span>
+                          {isVip && (
+                            <GoldenTicketBadge
+                              tier={tier}
+                              variant="admin-tag"
+                            />
+                          )}
+                        </div>
+
+                        <span className="rounded-lg bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[10px] font-medium text-white shadow-xs">
+                          {new Date(demand.created_at).toLocaleDateString("vi-VN")}
                         </span>
-                        {isVip && (
-                          <GoldenTicketBadge
-                            tier={tier}
-                            variant="badge"
-                            showSla={tier === "premium"}
-                          />
-                        )}
                       </div>
-                      <span className="text-[11px] text-muted-foreground shrink-0">
-                        {new Date(demand.created_at).toLocaleDateString("vi-VN")}
-                      </span>
+
+                      {/* Multi image indicator */}
+                      {dImages.length > 1 && (
+                        <div className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 rounded-lg bg-black/75 px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
+                          <Images className="size-3" />
+                          <span>+{dImages.length - 1} ảnh</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Image Preview Banner if available */}
-                    {(() => {
-                      const dImages = getDemandImages(demand);
-                      if (dImages.length === 0) return null;
-                      return (
-                        <div className="relative mt-3.5 h-36 w-full overflow-hidden rounded-2xl bg-muted">
-                          <SafeImage
-                            src={dImages[0]!}
-                            alt={demand.title}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                          {dImages.length > 1 && (
-                            <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-lg bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
-                              <Images className="size-3" />
-                              <span>+{dImages.length - 1} ảnh</span>
+                    {/* Body Content */}
+                    <div className="flex flex-1 flex-col p-2.5 pt-3.5 space-y-2">
+                      <h3 className="line-clamp-2 text-base font-bold leading-snug transition-colors group-hover:text-orange-500">
+                        {demand.title}
+                      </h3>
+
+                      <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                        {demand.description}
+                      </p>
+
+                      <div className="pt-2 space-y-2">
+                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="size-3.5 text-orange-500 shrink-0" />
+                            <span className="truncate">{demand.location}</span>
+                          </span>
+                          {demand.event_date && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="size-3.5 text-amber-500 shrink-0" />
+                              <span>{new Date(demand.event_date).toLocaleDateString("vi-VN")}</span>
                             </span>
                           )}
                         </div>
-                      );
-                    })()}
 
-                    <h3 className="mt-3.5 text-base font-semibold leading-snug transition-colors group-hover:text-accent">
-                      {demand.title}
-                    </h3>
-
-                    <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                      {demand.description}
-                    </p>
-
-                    <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <MapPin className="size-3.5 text-accent" />
-                        {demand.location}
-                      </span>
-                      {demand.event_date && (
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="size-3.5 text-amber-500" />
-                          Ngày diễn ra: {demand.event_date}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="pb-3">
-                      {demand.customer?.full_name && (
-                        <p className="mt-3 text-[11px] text-muted-foreground">
-                          Người đăng: <strong className="text-foreground">{demand.customer.full_name}</strong>
-                        </p>
-                      )}
+                        {demand.customer?.full_name && (
+                          <div className="border-t border-border/50 pt-2 text-[11px] text-muted-foreground flex items-center justify-between">
+                            <span className="truncate">Người đăng: <strong className="text-foreground">{demand.customer.full_name}</strong></span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="border-border/60 -mx-5 -mb-5 mt-auto flex items-center justify-between border-t px-5 py-3.5 bg-muted/20 rounded-b-3xl">
+                  {/* Footer */}
+                  <div className="border-border/60 -mx-3.5 -mb-3.5 mt-3 flex items-center justify-between border-t px-4 py-3 bg-muted/20 rounded-b-3xl">
                     <div>
                       <span className="text-[10px] block font-medium text-muted-foreground">Ngân sách dự kiến</span>
-                      <p className="text-base font-bold text-accent">
+                      <p className="text-base font-extrabold text-orange-600">
                         {Number(demand.budget).toLocaleString("vi-VN")} đ
                       </p>
                     </div>
 
-                    <span className="flex size-8 items-center justify-center rounded-full border border-border text-foreground transition-all group-hover:bg-accent group-hover:border-accent group-hover:text-white shadow-xs">
-                      <ArrowUpRight className="size-3.5" />
+                    <span className="flex size-8 items-center justify-center rounded-full border border-border text-foreground transition-all group-hover:bg-orange-500 group-hover:border-orange-500 group-hover:text-white shadow-xs">
+                      <ArrowUpRight className="size-4" />
                     </span>
                   </div>
                 </Link>
@@ -591,39 +620,20 @@ export default function DemandsPage() {
             })}
           </div>
         )}
+
+        {/* Inline Guest Banner at bottom of page (No intrusive full-screen flash) */}
+        {!currentUser && !loading && (
+          <div className="mt-14">
+            <UnauthenticatedBlurOverlay
+              title="Mở khóa 100+ Dự án Livestream Đang Cần Ekip"
+              description="Đăng nhập để nhận thông tin liên hệ trực tiếp từ thương hiệu và gửi báo giá chốt show ngay hôm nay."
+              loginUrl="/demands"
+              badgeText="Mở khóa Dự án & Cơ hội Nhận việc"
+            />
+          </div>
+        )}
       </main>
       </div>
-
-      {/* 2. FULL-SCREEN CENTERED LOCK OVERLAY FOR GUESTS */}
-      {!currentUser && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-background/35 backdrop-blur-[2px]">
-          <div className="w-full max-w-xl rounded-[2.5rem] border border-orange-500/40 bg-card/95 p-8 shadow-2xl backdrop-blur-2xl sm:p-10 text-center ring-1 ring-orange-500/20 animate-in fade-in zoom-in-95 duration-300">
-            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 mb-4 shadow-xs">
-              <Sparkles className="size-4 text-orange-500" />
-              <span>Mở khóa Dự án & Cơ hội Nhận việc</span>
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              <AuroraText>Mở khóa 100+ Dự án Livestream Đang Cần Ekip</AuroraText>
-            </h2>
-
-            <p className="mt-3 text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
-              Đăng nhập để nhận thông tin liên hệ trực tiếp từ thương hiệu và gửi báo giá chốt show ngay hôm nay.
-            </p>
-
-            <div className="mt-6 flex items-center justify-center">
-              <button
-                type="button"
-                onClick={() => loginWithGoogle("/demands")}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-orange-500 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-orange-500/30 transition-all hover:bg-orange-600 hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
-              >
-                <span>Gia nhập LiveHub miễn phí</span>
-                <ArrowRight className="size-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

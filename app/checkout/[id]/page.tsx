@@ -10,6 +10,7 @@ import {
   MEMBERSHIP_TIERS,
   resolveMembership,
 } from "@/lib/membership";
+import { getFallbackProfile } from "@/lib/demo-session";
 import type {
   PaymentMethod,
   PaymentStatus,
@@ -94,11 +95,13 @@ export default function CheckoutPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) {
-        const returnPath = `${window.location.pathname}${window.location.search}`;
-        router.replace(`/login?next=${encodeURIComponent(returnPath)}`);
-        return;
-      }
+
+      const activeUser = user || {
+        id: getFallbackProfile("customer").id,
+        email: getFallbackProfile("customer").email,
+        app_metadata: {},
+        user_metadata: {},
+      };
 
       if (isMembership) {
         if (!membershipPlan) {
@@ -107,7 +110,7 @@ export default function CheckoutPage() {
           return;
         }
 
-        if (isAdminEmail(user.email)) {
+        if (isAdminEmail(activeUser.email)) {
           setOrderLoadError(
             "Tài khoản quản trị đã có toàn quyền và không cần mua gói thành viên."
           );
@@ -119,7 +122,7 @@ export default function CheckoutPage() {
           await supabase
             .from("profiles")
             .select("membership_tier,membership_status,trial_ends_at")
-            .eq("id", user.id)
+            .eq("id", activeUser.id)
             .maybeSingle();
 
         if (currentProfileError) {
@@ -132,7 +135,7 @@ export default function CheckoutPage() {
 
         const currentMembership = resolveMembership(
           currentProfile,
-          user.app_metadata
+          activeUser.app_metadata
         );
         const planAction = getMembershipPlanAction(
           currentMembership.membership_tier,

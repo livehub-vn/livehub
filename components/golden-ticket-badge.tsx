@@ -26,27 +26,22 @@ export function GoldenTicketBadge({
     if (isPremium) {
       return (
         <span
-          className={`inline-flex items-center gap-1.5 rounded-lg border border-amber-400/50 bg-gradient-to-r from-amber-500/15 via-yellow-500/20 to-amber-500/15 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 shadow-xs ${className}`}
-          title="Thành viên Premium - Golden Ticket VIP Support (SLA xử lý 15 phút)"
+          className={`inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2.5 py-0.5 text-[10px] font-extrabold text-white shadow-xs whitespace-nowrap shrink-0 ${className}`}
+          title="Tài khoản hội viên Premium"
         >
-          <Crown className="size-3.5 text-amber-600 dark:text-amber-400 fill-amber-500/30 shrink-0" />
-          <span>Golden Ticket VIP</span>
-          {showSla && (
-            <span className="ml-0.5 rounded bg-amber-500/20 px-1 py-0.2 text-[9px] font-bold">
-              SLA 15p
-            </span>
-          )}
+          <Crown className="size-3 text-white fill-white shrink-0" />
+          <span>Premium</span>
         </span>
       );
     }
 
     return (
       <span
-        className={`inline-flex items-center gap-1.5 rounded-lg border border-blue-400/40 bg-blue-500/10 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 ${className}`}
-        title="Thành viên Standard - Ưu tiên kiểm duyệt trong ngày"
+        className={`inline-flex items-center gap-1 rounded-lg bg-blue-500 px-2.5 py-0.5 text-[10px] font-extrabold text-white shadow-xs whitespace-nowrap shrink-0 ${className}`}
+        title="Tài khoản hội viên Standard"
       >
-        <Sparkles className="size-3.5 text-blue-500 shrink-0" />
-        <span>Standard Priority</span>
+        <Sparkles className="size-3 text-white shrink-0" />
+        <span>Standard</span>
       </span>
     );
   }

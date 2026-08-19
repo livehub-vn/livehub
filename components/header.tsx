@@ -7,7 +7,9 @@ import type { Profile } from "@/lib/types/database";
 import {
   ArrowDownRight,
   ArrowRight,
+  CheckSquare,
   ChevronDown,
+  FileCheck,
   FileText,
   Layers,
   LayoutDashboard,
@@ -15,11 +17,14 @@ import {
   Package,
   PlusCircle,
   Settings,
+  ShieldCheck,
   ShoppingBag,
   Sparkles,
   User,
+  Users,
   Video,
 } from "lucide-react";
+import { getFallbackProfile } from "@/lib/demo-session";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -111,6 +116,8 @@ export function Header(): ReactNode {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         loadProfileForUser(session.user);
+      } else {
+        setProfile(getFallbackProfile());
       }
     });
 
@@ -124,23 +131,24 @@ export function Header(): ReactNode {
       ) {
         loadProfileForUser(session.user);
       } else if (event === "SIGNED_OUT") {
-        setProfile(null);
+        setProfile(getFallbackProfile("customer"));
       }
     });
 
     const handleProfileUpdated = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) loadProfileForUser(session.user);
+        if (session?.user) {
+          loadProfileForUser(session.user);
+        } else {
+          setProfile(getFallbackProfile());
+        }
       });
     };
     window.addEventListener("livehub:profile-updated", handleProfileUpdated);
 
     return () => {
       subscription.unsubscribe();
-      window.removeEventListener(
-        "livehub:profile-updated",
-        handleProfileUpdated
-      );
+      window.removeEventListener("livehub:profile-updated", handleProfileUpdated);
     };
   }, []);
 
@@ -286,9 +294,6 @@ export function Header(): ReactNode {
               >
                 <FileText className="size-3.5 shrink-0 text-orange-500" />
                 <span>Tìm dự án & Nhu cầu</span>
-                <span className="rounded-full bg-orange-500/10 px-1.5 py-0.5 text-[9px] font-bold text-orange-600 dark:text-orange-400">
-                  Nhận việc
-                </span>
               </Link>
 
               {/* SUPPLIER: DỊCH VỤ CỦA TÔI */}
@@ -387,8 +392,9 @@ export function Header(): ReactNode {
               <Link
                 href="/services"
                 onClick={scrollToTop}
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
+                <Video className="size-3.5 shrink-0 text-orange-500" />
                 <span>Sàn dịch vụ</span>
               </Link>
 
@@ -448,7 +454,11 @@ export function Header(): ReactNode {
                     <User className="size-4" />
                   </div>
                 )}
-                {profile.membership_tier &&
+                {profile.role === "admin" || isAdminEmail(profile.email) ? (
+                  <span className="shrink-0 rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap text-rose-600 dark:text-rose-400">
+                    Admin
+                  </span>
+                ) : profile.membership_tier &&
                 profile.membership_tier !== "free_trial" ? (
                   <MembershipBadge
                     tier={profile.membership_tier}
@@ -457,7 +467,7 @@ export function Header(): ReactNode {
                   />
                 ) : (
                   <span className="shrink-0 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap text-orange-500">
-                    {profile.role === "provider" ? "Supplier" : "Khách hàng"}
+                    {profile.role === "provider" ? "Nhà cung cấp" : "Khách hàng"}
                   </span>
                 )}
                 <ChevronDown className="size-3 shrink-0 opacity-60" />
@@ -481,15 +491,110 @@ export function Header(): ReactNode {
                         {profile.email}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1.5 px-2">
-                        <MembershipBadge
-                          tier={profile.membership_tier}
-                          status={profile.membership_status}
-                        />
+                        {profile.role === "admin" || isAdminEmail(profile.email) ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-[10px] font-bold text-rose-600 dark:text-rose-400 shadow-xs">
+                            <ShieldCheck className="size-3 text-rose-500" />
+                            <span>Quản trị viên tối cao (Admin)</span>
+                          </span>
+                        ) : (
+                          <MembershipBadge
+                            tier={profile.membership_tier}
+                            status={profile.membership_status}
+                          />
+                        )}
                       </div>
                     </div>
 
                     <div className="mt-1 space-y-0.5">
-                      {profile.role === "provider" ? (
+                      {profile.role === "admin" || isAdminEmail(profile.email) ? (
+                        <>
+                          <Link
+                            href="/admin"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold cursor-pointer transition-colors"
+                          >
+                            <LayoutDashboard className="size-4 text-orange-500" />
+                            <span>Bảng quản trị Admin</span>
+                          </Link>
+
+                          <Link
+                            href="/admin/services"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                          >
+                            <FileCheck className="size-4 text-orange-500" />
+                            <span>Kiểm duyệt dịch vụ sàn</span>
+                          </Link>
+
+                          <Link
+                            href="/admin/demands"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                          >
+                            <CheckSquare className="size-4 text-orange-500" />
+                            <span>Kiểm duyệt nhu cầu & dự án</span>
+                          </Link>
+
+                          <Link
+                            href="/admin/users"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                          >
+                            <Users className="size-4 text-orange-500" />
+                            <span>Quản lý tài khoản & VIP</span>
+                          </Link>
+
+                          <div className="border-border/70 my-1 border-t -mx-2" />
+
+                          <Link
+                            href="/services"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                          >
+                            <Video className="size-4 text-muted-foreground" />
+                            <span>Khám phá Sàn Dịch vụ</span>
+                          </Link>
+
+                          <Link
+                            href="/demands"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                          >
+                            <FileText className="size-4 text-muted-foreground" />
+                            <span>Khám phá Sàn Nhu cầu</span>
+                          </Link>
+
+                          <Link
+                            href="/profile"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                          >
+                            <Settings className="text-muted-foreground size-4" />
+                            <span>Hồ sơ tài khoản</span>
+                          </Link>
+                        </>
+                      ) : profile.role === "provider" ? (
                         <>
                           <Link
                             href="/demands"
@@ -538,6 +643,30 @@ export function Header(): ReactNode {
                             <ShoppingBag className="size-4 text-orange-500" />
                             <span>Đơn thuê nhận được</span>
                           </Link>
+
+                          <Link
+                            href="/pricing"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                          >
+                            <Layers className="size-4 text-orange-500" />
+                            <span>Hạng thành viên & Bảng giá</span>
+                          </Link>
+
+                          <Link
+                            href="/profile"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                          >
+                            <Settings className="text-muted-foreground size-4" />
+                            <span>Hồ sơ tài khoản</span>
+                          </Link>
                         </>
                       ) : (
                         <>
@@ -576,47 +705,32 @@ export function Header(): ReactNode {
                             <ShoppingBag className="size-4 text-orange-500" />
                             <span>Hợp đồng thuê của tôi</span>
                           </Link>
+
+                          <Link
+                            href="/pricing"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                          >
+                            <Layers className="size-4 text-orange-500" />
+                            <span>Hạng thành viên & Bảng giá</span>
+                          </Link>
+
+                          <Link
+                            href="/profile"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                          >
+                            <Settings className="text-muted-foreground size-4" />
+                            <span>Hồ sơ tài khoản</span>
+                          </Link>
                         </>
                       )}
-
-                      {/* Admin Link */}
-                      {isAdminEmail(profile.email) && (
-                        <Link
-                          href="/admin"
-                          onClick={() => {
-                            setUserDropdownOpen(false);
-                            scrollToTop();
-                          }}
-                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-orange-500 hover:bg-orange-500/10 cursor-pointer"
-                        >
-                          <LayoutDashboard className="size-4" />
-                          <span>Bảng quản trị Admin</span>
-                        </Link>
-                      )}
-
-                      <Link
-                        href="/pricing"
-                        onClick={() => {
-                          setUserDropdownOpen(false);
-                          scrollToTop();
-                        }}
-                        className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
-                      >
-                        <Layers className="size-4 text-orange-500" />
-                        <span>Hạng thành viên & Bảng giá</span>
-                      </Link>
-
-                      <Link
-                        href="/profile"
-                        onClick={() => {
-                          setUserDropdownOpen(false);
-                          scrollToTop();
-                        }}
-                        className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
-                      >
-                        <Settings className="text-muted-foreground size-4" />
-                        <span>Hồ sơ tài khoản</span>
-                      </Link>
 
                       <div className="border-border/70 my-1 border-t -mx-2" />
 
@@ -814,15 +928,64 @@ export function Header(): ReactNode {
                     <span className="text-foreground text-xs font-bold">
                       {profile.full_name}
                     </span>
-                    <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold text-orange-500">
-                      {roleLabelMap[profile.role] || "Thành viên"}
-                    </span>
-                    <MembershipBadge
-                      tier={profile.membership_tier}
-                      status={profile.membership_status}
-                      compact
-                    />
+                    {profile.role === "admin" || isAdminEmail(profile.email) ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-600 dark:text-rose-400">
+                        <ShieldCheck className="size-3" />
+                        <span>Admin</span>
+                      </span>
+                    ) : (
+                      <>
+                        <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold text-orange-500">
+                          {roleLabelMap[profile.role] || "Thành viên"}
+                        </span>
+                        <MembershipBadge
+                          tier={profile.membership_tier}
+                          status={profile.membership_status}
+                          compact
+                        />
+                      </>
+                    )}
                   </div>
+
+                  {profile.role === "admin" || isAdminEmail(profile.email) ? (
+                    <>
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-orange-500 bg-orange-500/10"
+                        onClick={closeMobile}
+                      >
+                        <LayoutDashboard className="size-4" />
+                        <span>Bảng quản trị Admin</span>
+                      </Link>
+
+                      <Link
+                        href="/admin/services"
+                        className="text-foreground hover:bg-muted flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium"
+                        onClick={closeMobile}
+                      >
+                        <FileCheck className="size-4 text-orange-500" />
+                        <span>Kiểm duyệt dịch vụ sàn</span>
+                      </Link>
+
+                      <Link
+                        href="/admin/demands"
+                        className="text-foreground hover:bg-muted flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium"
+                        onClick={closeMobile}
+                      >
+                        <CheckSquare className="size-4 text-orange-500" />
+                        <span>Kiểm duyệt nhu cầu</span>
+                      </Link>
+
+                      <Link
+                        href="/admin/users"
+                        className="text-foreground hover:bg-muted flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium"
+                        onClick={closeMobile}
+                      >
+                        <Users className="size-4 text-orange-500" />
+                        <span>Quản lý người dùng & VIP</span>
+                      </Link>
+                    </>
+                  ) : null}
 
                   <Link
                     href="/profile"
@@ -832,17 +995,6 @@ export function Header(): ReactNode {
                     <Settings className="text-muted-foreground size-4" />
                     <span>Hồ sơ tài khoản</span>
                   </Link>
-
-                  {isAdminEmail(profile.email) && (
-                    <Link
-                      href="/admin"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-orange-500 hover:bg-orange-500/10"
-                      onClick={closeMobile}
-                    >
-                      <LayoutDashboard className="size-4" />
-                      <span>Bảng quản trị Admin</span>
-                    </Link>
-                  )}
 
                   <button
                     type="button"

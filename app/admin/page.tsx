@@ -3,6 +3,17 @@
 import { AuroraText } from "@/components/ui/aurora-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
   Activity,
   AlertTriangle,
   ArrowUpRight,
@@ -757,14 +768,7 @@ export default function AdminDashboardPage() {
       <section className="relative isolate overflow-hidden rounded-3xl border border-slate-200 bg-white px-5 py-6 shadow-xs sm:px-8 sm:py-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-bold tracking-[0.16em] text-orange-700 uppercase">
-              <span className="relative flex size-2" aria-hidden="true">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-orange-400 opacity-75" />
-                <span className="relative inline-flex size-2 rounded-full bg-orange-500" />
-              </span>
-              LiveHub Control Room
-            </div>
-            <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
               Toàn cảnh vận hành <AuroraText>LiveHub</AuroraText>
             </h1>
             <p className="mt-2 max-w-2xl text-xs leading-relaxed text-slate-500 sm:text-sm">
@@ -850,16 +854,16 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* TAB 1: DOANH THU & ĐƠN HÀNG (Giữ nguyên chart 2 cột cũ + Line chart) */}
+        {/* TAB 1: DOANH THU & ĐƠN HÀNG */}
         {chartTab === "revenue" && (
           <div className="grid gap-6 lg:grid-cols-3">
-            {/* Revenue 7-Day Chart (GIỮ NGUYÊN 100%) */}
-            <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
+            {/* Revenue Chart via Recharts */}
+            <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-4">
                 <div>
                   <p className="flex items-center gap-2 text-[10px] font-bold text-orange-600">
                     <Banknote className="size-3.5" aria-hidden="true" />
-                    Biểu đồ doanh thu 7 ngày
+                    Biểu đồ doanh thu 7 ngày (Recharts)
                   </p>
                   <h3 className="mt-0.5 text-base font-bold text-slate-900">
                     Doanh thu và lượt giao dịch theo tuần
@@ -877,42 +881,79 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="mt-6">
-                <div className="grid grid-cols-7 gap-2 sm:gap-4 items-end h-48 pt-6 pb-2">
-                  {[
-                    { day: "T2", amount: "3.2M", val: 45, rentals: 3 },
-                    { day: "T3", amount: "6.8M", val: 75, rentals: 6 },
-                    { day: "T4", amount: "4.5M", val: 55, rentals: 4 },
-                    { day: "T5", amount: "8.9M", val: 90, rentals: 8 },
-                    { day: "T6", amount: "12.4M", val: 100, rentals: 11 },
-                    { day: "T7", amount: "9.6M", val: 82, rentals: 9 },
-                    { day: "CN", amount: "5.1M", val: 60, rentals: 5 },
-                  ].map((bar, idx) => (
-                    <div key={idx} className="group relative flex flex-col items-center h-full justify-end">
-                      <div className="pointer-events-none absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] font-bold rounded-lg px-2 py-1 shadow-md whitespace-nowrap z-10">
-                        {bar.amount} ({bar.rentals} đơn)
-                      </div>
-                      <div className="w-full flex gap-1 items-end justify-center h-full">
-                        <div
-                          style={{ height: `${bar.val}%` }}
-                          className="w-full max-w-[28px] rounded-t-lg bg-gradient-to-t from-orange-500 to-orange-400 group-hover:brightness-110 transition-all shadow-xs"
-                        />
-                        <div
-                          style={{ height: `${Math.round(bar.val * 0.65)}%` }}
-                          className="w-full max-w-[12px] rounded-t-lg bg-sky-400/80 group-hover:bg-sky-500 transition-all hidden sm:block"
-                        />
-                      </div>
-                      <span className="mt-2 text-[11px] font-bold text-slate-500 group-hover:text-slate-900">
-                        {bar.day}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+              <div className="h-60 w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={[
+                      { day: "T2", revenue: 3200000, rentals: 3 },
+                      { day: "T3", revenue: 6800000, rentals: 6 },
+                      { day: "T4", revenue: 4500000, rentals: 4 },
+                      { day: "T5", revenue: 8900000, rentals: 8 },
+                      { day: "T6", revenue: 12400000, rentals: 11 },
+                      { day: "T7", revenue: 9600000, rentals: 9 },
+                      { day: "CN", revenue: 5100000, rentals: 5 },
+                    ]}
+                    margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="day"
+                      tickLine={false}
+                      axisLine={{ stroke: "#e2e8f0" }}
+                      tick={{ fontSize: 11, fill: "#64748b", fontWeight: 600 }}
+                    />
+                    <YAxis
+                      yAxisId="left"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 10, fill: "#94a3b8" }}
+                      tickFormatter={(val: number) => `${(val / 1000000).toFixed(1)}M`}
+                    />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 10, fill: "#94a3b8" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "1rem",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                        fontSize: "12px",
+                      }}
+                      formatter={
+                        ((val: unknown, name: unknown) => [
+                          name === "revenue"
+                            ? currencyFormatter.format(Number(val) || 0)
+                            : `${val ?? 0} đơn`,
+                          name === "revenue" ? "Doanh thu" : "Đơn thuê",
+                        ]) as unknown as (value: unknown) => [string, string]
+                      }
+                    />
+                    <Bar
+                      yAxisId="left"
+                      dataKey="revenue"
+                      name="revenue"
+                      fill="#f97316"
+                      radius={[6, 6, 0, 0]}
+                    />
+                    <Bar
+                      yAxisId="right"
+                      dataKey="rentals"
+                      name="rentals"
+                      fill="#38bdf8"
+                      radius={[6, 6, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
-                  <span>Tổng tuần này: <strong className="text-slate-900">50.500.000 đ</strong></span>
-                  <span className="text-emerald-600 font-bold">↑ 18.4% so với tuần trước</span>
-                </div>
+              <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+                <span>Tổng tuần này: <strong className="text-slate-900">50.500.000 đ</strong></span>
+                <span className="text-emerald-600 font-bold">↑ 18.4% so với tuần trước</span>
               </div>
             </div>
 
@@ -967,16 +1008,16 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 2: TĂNG TRƯỞNG & NHU CẦU (Multi-Line Chart & Category Breakdown) */}
+        {/* TAB 2: TĂNG TRƯỞNG & NHU CẦU (Recharts Multi-Area Chart) */}
         {chartTab === "growth" && (
           <div className="grid gap-6 lg:grid-cols-3">
-            {/* Multi-Line Growth Chart */}
+            {/* Multi-Line Growth Chart via Recharts */}
             <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-4">
                 <div>
                   <p className="flex items-center gap-2 text-[10px] font-bold text-orange-600">
                     <TrendingUp className="size-3.5" aria-hidden="true" />
-                    Biểu đồ đường xu hướng tăng trưởng
+                    Biểu đồ tăng trưởng (Recharts Library)
                   </p>
                   <h3 className="mt-0.5 text-base font-bold text-slate-900">
                     Tương quan Người dùng mới vs Nhu cầu đăng tải
@@ -985,89 +1026,114 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
                   <span className="flex items-center gap-1.5">
                     <span className="size-2.5 rounded-full bg-orange-500" />
-                    Người dùng mới
+                    Người dùng ({overview.totalUsers})
                   </span>
                   <span className="flex items-center gap-1.5">
                     <span className="size-2.5 rounded-full bg-emerald-500" />
-                    Nhu cầu đăng mới
+                    Nhu cầu ({overview.totalDemands})
                   </span>
                 </div>
               </div>
 
-              {/* Interactive SVG Multi-Line Chart */}
-              <div className="relative h-56 w-full pt-4">
-                <svg className="w-full h-full overflow-visible" viewBox="0 0 600 200" fill="none">
-                  {/* Grid Lines */}
-                  <line x1="0" y1="40" x2="600" y2="40" stroke="#f1f5f9" strokeDasharray="4 4" />
-                  <line x1="0" y1="90" x2="600" y2="90" stroke="#f1f5f9" strokeDasharray="4 4" />
-                  <line x1="0" y1="140" x2="600" y2="140" stroke="#f1f5f9" strokeDasharray="4 4" />
-
-                  {/* Gradient Area under Orange Line */}
-                  <defs>
-                    <linearGradient id="orangeGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#f97316" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#f97316" stopOpacity="0.0" />
-                    </linearGradient>
-                    <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                    </linearGradient>
-                  </defs>
-
-                  {/* Area 1: Users */}
-                  <path
-                    d="M 50 150 Q 150 120 250 80 T 450 50 T 550 30 L 550 180 L 50 180 Z"
-                    fill="url(#orangeGrad)"
-                  />
-                  {/* Line 1: Users (Orange) */}
-                  <path
-                    d="M 50 150 Q 150 120 250 80 T 450 50 T 550 30"
-                    stroke="#f97316"
-                    strokeWidth="3.5"
-                    strokeLinecap="round"
-                  />
-
-                  {/* Area 2: Demands (Emerald) */}
-                  <path
-                    d="M 50 165 Q 150 140 250 110 T 450 75 T 550 55 L 550 180 L 50 180 Z"
-                    fill="url(#emeraldGrad)"
-                  />
-                  {/* Line 2: Demands (Emerald) */}
-                  <path
-                    d="M 50 165 Q 150 140 250 110 T 450 75 T 550 55"
-                    stroke="#10b981"
-                    strokeWidth="3"
-                    strokeDasharray="6 3"
-                    strokeLinecap="round"
-                  />
-
-                  {/* Data Points */}
-                  {[
-                    { x: 50, y: 150, val: "W1: 42" },
-                    { x: 150, y: 120, val: "W2: 78" },
-                    { x: 250, y: 80, val: "W3: 135" },
-                    { x: 350, y: 65, val: "W4: 190" },
-                    { x: 450, y: 50, val: "W5: 260" },
-                    { x: 550, y: 30, val: "W6: 345" },
-                  ].map((pt, i) => (
-                    <circle key={i} cx={pt.x} cy={pt.y} r="5" fill="#f97316" stroke="#fff" strokeWidth="2" />
-                  ))}
-                </svg>
-
-                {/* X Axis Labels */}
-                <div className="flex justify-between text-[11px] font-bold text-slate-400 mt-2 px-6">
-                  <span>Tuần 1</span>
-                  <span>Tuần 2</span>
-                  <span>Tuần 3</span>
-                  <span>Tuần 4</span>
-                  <span>Tuần 5</span>
-                  <span>Tuần này</span>
-                </div>
+              {/* Interactive Recharts Area Chart */}
+              <div className="h-60 w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={[
+                      {
+                        period: "Tuần 1",
+                        users: Math.max(1, Math.round(overview.totalUsers * 0.35)),
+                        demands: Math.max(1, Math.round(overview.totalDemands * 0.25)),
+                      },
+                      {
+                        period: "Tuần 2",
+                        users: Math.max(2, Math.round(overview.totalUsers * 0.55)),
+                        demands: Math.max(2, Math.round(overview.totalDemands * 0.45)),
+                      },
+                      {
+                        period: "Tuần 3",
+                        users: Math.max(3, Math.round(overview.totalUsers * 0.75)),
+                        demands: Math.max(3, Math.round(overview.totalDemands * 0.65)),
+                      },
+                      {
+                        period: "Tuần 4",
+                        users: Math.max(4, Math.round(overview.totalUsers * 0.88)),
+                        demands: Math.max(4, Math.round(overview.totalDemands * 0.8)),
+                      },
+                      {
+                        period: "Tuần này",
+                        users: overview.totalUsers,
+                        demands: overview.totalDemands,
+                      },
+                    ]}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="userGrowthGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#f97316" stopOpacity={0.0} />
+                      </linearGradient>
+                      <linearGradient id="demandGrowthGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="period"
+                      tickLine={false}
+                      axisLine={{ stroke: "#e2e8f0" }}
+                      tick={{ fontSize: 11, fill: "#64748b", fontWeight: 600 }}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 11, fill: "#94a3b8" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "1rem",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                        fontSize: "12px",
+                      }}
+                      formatter={
+                        ((val: unknown, name: unknown) => [
+                          `${val ?? 0} ${name === "users" ? "người dùng" : "nhu cầu"}`,
+                          name === "users" ? "Người dùng" : "Nhu cầu đăng tải",
+                        ]) as unknown as (value: unknown) => [string, string]
+                      }
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="users"
+                      name="users"
+                      stroke="#f97316"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#userGrowthGrad)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="demands"
+                      name="demands"
+                      stroke="#10b981"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#demandGrowthGrad)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
 
               <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-600">
-                <span>Tỷ lệ tăng trưởng người dùng hàng tuần: <strong className="text-orange-600">+28.5%</strong></span>
-                <span className="text-emerald-600 font-bold">✓ Tỷ lệ match dự án thành công: 84%</span>
+                <span>
+                  Tổng thành viên: <strong className="text-orange-600">{overview.totalUsers} tài khoản</strong> ({overview.newUsers30d} mới/30d)
+                </span>
+                <span className="text-emerald-600 font-bold">
+                  ✓ Tổng nhu cầu dự án: {overview.totalDemands} bài đăng
+                </span>
               </div>
             </div>
 

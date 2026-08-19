@@ -6,11 +6,12 @@ import { AuroraText } from "@/components/ui/aurora-text";
 import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
 import { uploadPendingImages } from "@/lib/storage-helper";
 import { createClient } from "@/lib/supabase/client";
+import { getFallbackProfile } from "@/lib/demo-session";
 import type { ServiceCategory } from "@/lib/types/database";
 import { ArrowLeft, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const SERVICE_PRICE_PRESETS = [500000, 1000000, 2000000, 3500000, 5000000, 10000000];
 
@@ -27,19 +28,6 @@ export default function PostNewServicePage() {
   const [description, setDescription] = useState("");
   const [imagePreviews, setImagePreviews] = useState<PreviewItem[]>([]);
 
-  useEffect(() => {
-    async function checkAuth() {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        router.replace("/login?next=/services/new");
-      }
-    }
-    checkAuth();
-  }, [router]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -50,10 +38,7 @@ export default function PostNewServicePage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      router.push("/login");
-      return;
-    }
+    const providerId = user?.id || getFallbackProfile("provider").id;
 
     const price = parseFloat(pricePerDay);
     if (isNaN(price) || price <= 0) {
@@ -70,7 +55,7 @@ export default function PostNewServicePage() {
       let insertResult = await supabase
         .from("services")
         .insert({
-          provider_id: user.id,
+          provider_id: providerId,
           title,
           category,
           price_per_day: price,
@@ -87,7 +72,7 @@ export default function PostNewServicePage() {
         insertResult = await supabase
           .from("services")
           .insert({
-            provider_id: user.id,
+            provider_id: providerId,
             title,
             category,
             price_per_day: price,

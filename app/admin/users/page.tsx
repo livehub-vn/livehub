@@ -1,6 +1,5 @@
 "use client";
 
-import { GoldenTicketBadge } from "@/components/golden-ticket-badge";
 import { MembershipBadge } from "@/components/membership-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminFetch } from "@/lib/admin/client";
@@ -12,7 +11,6 @@ import {
   RefreshCw,
   Search,
   Trash2,
-  UserRoundCog,
 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -46,13 +44,12 @@ function UserAvatar({ user }: { user: AdminUser }) {
 function RoleBadge({ role }: { role: UserRole }) {
   return (
     <span
-      className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${
-        role === "admin"
+      className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${role === "admin"
           ? "border-sky-200 bg-sky-50 text-sky-700"
           : role === "provider"
             ? "border-orange-200 bg-orange-50 text-orange-700"
             : "border-slate-200 bg-slate-100 text-slate-700"
-      }`}
+        }`}
     >
       {roleLabels[role]}
     </span>
@@ -175,15 +172,11 @@ export default function AdminUsersPage() {
     <div className="mx-auto w-full max-w-[90rem] space-y-6 sm:space-y-8 text-slate-900">
       <header className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-orange-600 uppercase">
-            <UserRoundCog className="size-3.5" aria-hidden="true" />
-            Account Control · Quản lý thành viên & Hội viên
-          </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             Quản lý tài khoản người dùng
           </h1>
           <p className="mt-2 max-w-2xl text-xs leading-relaxed text-slate-500 sm:text-sm">
-            Theo dõi hồ sơ, gói hội viên, hỗ trợ Golden Ticket VIP và phân quyền Khách hàng / Nhà cung cấp.
+            Theo dõi hồ sơ người dùng, phân loại gói hội viên và phân quyền Khách hàng / Nhà cung cấp.
           </p>
         </div>
 
@@ -300,7 +293,6 @@ export default function AdminUsersPage() {
 
                     <div className="flex flex-wrap items-center gap-2">
                       <MembershipBadge tier={tier} status={user.membership_status} />
-                      <GoldenTicketBadge tier={tier} variant="admin-tag" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-xs">
@@ -390,7 +382,6 @@ export default function AdminUsersPage() {
                               </p>
                               <div className="flex flex-wrap items-center gap-1.5">
                                 <MembershipBadge tier={tier} status={user.membership_status} compact={true} />
-                                <GoldenTicketBadge tier={tier} variant="admin-tag" />
                               </div>
                             </div>
                           </div>
@@ -423,7 +414,7 @@ export default function AdminUsersPage() {
                                   void handleChangeRole(
                                     user,
                                     event.target.value as
-                                      "customer" | "provider"
+                                    "customer" | "provider"
                                   )
                                 }
                                 disabled={busy}

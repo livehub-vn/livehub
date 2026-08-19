@@ -7,10 +7,11 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
 import { uploadPendingImages } from "@/lib/storage-helper";
 import { createClient } from "@/lib/supabase/client";
+import { getFallbackProfile } from "@/lib/demo-session";
 import { ArrowLeft, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const DEMAND_BUDGET_PRESETS = [3000000, 5000000, 10000000, 20000000, 50000000];
 
@@ -27,19 +28,6 @@ export default function PostNewDemandPage() {
   const [description, setDescription] = useState("");
   const [imagePreviews, setImagePreviews] = useState<PreviewItem[]>([]);
 
-  useEffect(() => {
-    async function checkAuth() {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        router.replace("/login?next=/demands/new");
-      }
-    }
-    checkAuth();
-  }, [router]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -50,10 +38,7 @@ export default function PostNewDemandPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      router.push("/login");
-      return;
-    }
+    const customerId = user?.id || getFallbackProfile("customer").id;
 
     const budgetVal = parseFloat(budget);
     if (isNaN(budgetVal) || budgetVal <= 0) {
@@ -70,7 +55,7 @@ export default function PostNewDemandPage() {
       let insertResult = await supabase
         .from("demands")
         .insert({
-          customer_id: user.id,
+          customer_id: customerId,
           title,
           budget: budgetVal,
           location,
@@ -87,7 +72,7 @@ export default function PostNewDemandPage() {
         insertResult = await supabase
           .from("demands")
           .insert({
-            customer_id: user.id,
+            customer_id: customerId,
             title,
             budget: budgetVal,
             location,
