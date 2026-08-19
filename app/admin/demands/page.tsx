@@ -23,7 +23,7 @@ type FilterStatus = "pending" | "vip" | "approved" | "rejected" | "all";
 
 const filterLabels: Record<FilterStatus, string> = {
   pending: "Chờ duyệt",
-  vip: "⚡ Golden Ticket VIP",
+  vip: "Golden Ticket VIP",
   approved: "Đã duyệt",
   rejected: "Từ chối",
   all: "Tất cả",

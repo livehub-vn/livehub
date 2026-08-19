@@ -31,7 +31,7 @@ const INITIAL_MOCK_NOTIFICATIONS: RealtimeNotification[] = [
   {
     id: "notif-1",
     type: "vip",
-    title: "⚡ Golden Ticket VIP: Yêu cầu thuê mới",
+    title: "Golden Ticket VIP: Yêu cầu thuê mới",
     message: "Khách hàng V-Brand vừa đặt thuê gói máy Sony FX3. SLA phản hồi trong 15 phút.",
     link: "/admin/services",
     read: false,
@@ -406,7 +406,7 @@ export function RealtimeNotifications({
 
           <div className="mt-3 border-t pt-2.5 text-center border-slate-100 dark:border-neutral-800">
             <span className="text-[10px] font-medium text-slate-400">
-              ⚡ Hệ thống thông báo tự động kết nối Supabase Realtime
+              Hệ thống thông báo tự động kết nối Supabase Realtime
             </span>
           </div>
         </div>

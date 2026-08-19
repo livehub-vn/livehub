@@ -249,33 +249,33 @@ export function LiveHubChatbot() {
           </div>
 
           {/* Messages List Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-[13.5px]">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex gap-2.5 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.sender === "bot" && (
-                  <div className="flex size-7 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 mt-0.5">
                     <Bot className="size-4" />
                   </div>
                 )}
 
                 <div
-                  className={`max-w-[80%] rounded-2xl p-3.5 leading-relaxed space-y-2 ${
+                  className={`max-w-[82%] rounded-2xl p-3.5 sm:p-4 leading-relaxed space-y-2 text-[13.5px] ${
                     msg.sender === "user"
-                      ? "bg-orange-500 text-white rounded-br-xs"
-                      : "bg-muted/70 text-foreground border border-border/70 rounded-bl-xs"
+                      ? "bg-orange-500 text-white rounded-br-xs font-normal"
+                      : "bg-muted/70 text-foreground border border-border/70 rounded-bl-xs font-normal"
                   }`}
                 >
-                  <p className="whitespace-pre-line">{msg.text}</p>
+                  <p className="whitespace-pre-line leading-relaxed text-[13.5px]">{msg.text}</p>
 
                   {msg.actionLink && (
                     <div className="pt-1">
                       <Link
                         href={msg.actionLink.href}
                         onClick={() => setIsOpen(false)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-background border border-border px-3 py-1.5 text-[11px] font-bold text-orange-500 shadow-xs hover:bg-muted"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-background border border-border px-3 py-1.5 text-xs font-bold text-orange-500 shadow-xs hover:bg-muted transition-colors"
                       >
                         <Sparkles className="size-3" />
                         <span>{msg.actionLink.label}</span>
@@ -284,7 +284,7 @@ export function LiveHubChatbot() {
                   )}
 
                   <span
-                    className={`block text-[9px] ${
+                    className={`block text-[10px] ${
                       msg.sender === "user" ? "text-white/70 text-right" : "text-muted-foreground"
                     }`}
                   >
@@ -299,7 +299,7 @@ export function LiveHubChatbot() {
                 <span className="size-1.5 rounded-full bg-orange-500 animate-bounce" />
                 <span className="size-1.5 rounded-full bg-orange-500 animate-bounce [animation-delay:0.2s]" />
                 <span className="size-1.5 rounded-full bg-orange-500 animate-bounce [animation-delay:0.4s]" />
-                <span className="text-[11px]">Trợ lý đang phản hồi...</span>
+                <span className="text-xs">Trợ lý đang phản hồi...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -328,25 +328,25 @@ export function LiveHubChatbot() {
             </div>
           </div>
 
-          {/* Input & Send Form */}
+          {/* Input & Send Form - Extra Rounded Capsule Style */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="border-t border-border p-3 flex items-center gap-2 bg-card"
+            className="border-t border-border p-3 sm:p-3.5 flex items-center gap-2.5 bg-card"
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Nhập câu hỏi hoặc mã đơn (LH-xxxxxx)..."
-              className="flex-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none"
+              className="flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all"
             />
             <button
               type="submit"
               disabled={!input.trim()}
-              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white shadow-md shadow-orange-500/25 transition-transform hover:scale-105 active:scale-95 disabled:opacity-40"
+              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white shadow-md shadow-orange-500/25 transition-transform hover:scale-105 active:scale-95 disabled:opacity-40"
               title="Gửi tin nhắn"
             >
               <Send className="size-4" />

@@ -541,7 +541,7 @@ export default function DemandDetailPage() {
                     <Sparkles className="size-5 text-orange-500" />
                     <div>
                       <h3 className="text-base font-bold text-foreground">
-                        ⚡ Gợi ý Nhà cung cấp & Ekip thực tế phù hợp (Chỉ bạn thấy)
+                        Gợi ý Nhà cung cấp & Ekip thực tế phù hợp (Chỉ bạn thấy)
                       </h3>
                       <p className="text-xs text-muted-foreground">
                         Hệ thống đối chiếu ngân sách {Number(demand.budget).toLocaleString("vi-VN")} đ và địa điểm {demand.location}

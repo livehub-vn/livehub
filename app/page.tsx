@@ -3,6 +3,7 @@ import { FeaturedServices } from "@/components/featured-services";
 import { Hero } from "@/components/hero";
 import { HowItWorks } from "@/components/how-it-works";
 import { ProductionKit } from "@/components/production-kit";
+import { TurnkeyPackagesHome } from "@/components/turnkey-packages-home";
 import { createMetadata, siteConfig } from "@/lib/metadata";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -17,6 +18,7 @@ export default function HomePage(): ReactNode {
   return (
     <main id="main-content" className="flex-1">
       <Hero />
+      <TurnkeyPackagesHome />
       <FeaturedServices />
       <ProductionKit />
       <HowItWorks />

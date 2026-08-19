@@ -30,7 +30,7 @@ export function GoldenTicketBadge({
           title="Thành viên Premium - Golden Ticket VIP Support (SLA xử lý 15 phút)"
         >
           <Crown className="size-3.5 text-amber-600 dark:text-amber-400 fill-amber-500/30 shrink-0" />
-          <span>⚡ Golden Ticket VIP</span>
+          <span>Golden Ticket VIP</span>
           {showSla && (
             <span className="ml-0.5 rounded bg-amber-500/20 px-1 py-0.2 text-[9px] font-bold">
               SLA 15p
@@ -46,7 +46,7 @@ export function GoldenTicketBadge({
         title="Thành viên Standard - Ưu tiên kiểm duyệt trong ngày"
       >
         <Sparkles className="size-3.5 text-blue-500 shrink-0" />
-        <span>⭐ Standard Priority</span>
+        <span>Standard Priority</span>
       </span>
     );
   }
@@ -58,7 +58,7 @@ export function GoldenTicketBadge({
           className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 px-3 py-1 text-[10px] font-bold text-slate-950 shadow-md shadow-amber-500/25 ring-1 ring-amber-300/60 ${className}`}
         >
           <Crown className="size-3 fill-slate-950" />
-          <span>👑 Golden VIP Pro</span>
+          <span>Golden VIP Pro</span>
         </div>
       );
     }
@@ -68,7 +68,7 @@ export function GoldenTicketBadge({
         className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-[10px] font-bold text-white shadow-sm ${className}`}
       >
         <Sparkles className="size-3" />
-        <span>⭐ Đối tác Standard</span>
+        <span>Đối tác Standard</span>
       </div>
     );
   }

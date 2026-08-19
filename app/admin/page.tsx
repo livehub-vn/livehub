@@ -1116,7 +1116,7 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="rounded-2xl bg-orange-50 border border-orange-100 p-3 text-xs text-orange-800">
-                ⚡ Nhu cầu thuê máy quay 4K tăng <strong>+42%</strong> trong tháng này.
+                Nhu cầu thuê máy quay 4K tăng <strong>+42%</strong> trong tháng này.
               </div>
             </div>
           </div>

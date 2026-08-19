@@ -26,8 +26,7 @@ const turnkeyPackages = [
     unit: "/ ca 4 tiếng",
     suitableFor:
       "Shop thời trang, mỹ phẩm, đồ gia dụng bán hàng trên TikTok Shop, Shopee Live, Facebook Live.",
-    image:
-      "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?w=1000&auto=format&fit=crop&q=80",
+    image: "/brand/3d/package-ecommerce-3d.jpg",
     features: [
       "1-2 Máy quay Sony 4K chuyên dụng góc cận & góc toàn",
       "Bộ đèn Key Light, Fill Light & RGB tạo chiều sâu",
@@ -45,8 +44,7 @@ const turnkeyPackages = [
     unit: "/ buổi",
     suitableFor:
       "Tọa đàm chuyên gia, hội thảo quốc tế, lễ ký kết hợp tác, webinar đa điểm cầu qua Zoom/Teams.",
-    image:
-      "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=1000&auto=format&fit=crop&q=80",
+    image: "/brand/3d/package-talkshow-3d.jpg",
     features: [
       "2-3 Máy quay Sony FX3/FX6 chuẩn điện ảnh đa góc bắt cảm xúc",
       "Bàn trộn hình chuyên dụng Blackmagic ATEM Mini Extreme ISO",
@@ -64,8 +62,7 @@ const turnkeyPackages = [
     unit: "/ sự kiện",
     suitableFor:
       "Đại nhạc hội, lễ hội âm nhạc, lễ ra mắt sản phẩm thương hiệu, gala vinh danh 500+ khách mời.",
-    image:
-      "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1000&auto=format&fit=crop&q=80",
+    image: "/brand/3d/package-mega-event-3d.jpg",
     features: [
       "4-6 Máy quay chuyên dụng (Cần cẩu Crane 7m, Gimbal, Tele lens, Flycam)",
       "Kết nối màn hình LED sân khấu P2.5 siêu sắc nét",
@@ -286,26 +283,27 @@ export default function PackagesPage() {
             {turnkeyPackages.map((pkg) => (
               <div
                 key={pkg.id}
-                className="border-border bg-card flex flex-col justify-between overflow-hidden rounded-[2.5rem] border shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+                className="border-border bg-card flex flex-col justify-between rounded-[2.5rem] border p-4 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl sm:p-5"
               >
                 <div>
-                  {/* Package Image */}
-                  <div className="bg-muted relative h-52 w-full overflow-hidden">
+                  {/* Package Image - Rounded Top & Bottom with padding */}
+                  <div className="bg-muted/50 relative aspect-[16/10] w-full overflow-hidden rounded-[1.75rem] border border-border/60">
                     <Image
                       src={pkg.image}
                       alt={pkg.name}
                       fill
-                      className="object-cover"
+                      className="object-cover transition-transform duration-500 hover:scale-105"
+                      sizes="(max-width: 1024px) 100vw, 33vw"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent" />
-                    <span className="absolute bottom-3 left-4 inline-flex items-center gap-1 rounded-full bg-orange-500 px-3 py-0.5 text-[11px] font-bold text-white shadow-md">
+                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/70 via-transparent to-transparent" />
+                    <span className="absolute bottom-3 left-3.5 inline-flex items-center gap-1 rounded-full bg-orange-500 px-3 py-0.5 text-[11px] font-bold text-white shadow-md">
                       <Sparkles className="size-3" />
                       {pkg.badge}
                     </span>
                   </div>
 
                   {/* Package Content */}
-                  <div className="space-y-4 p-6 sm:p-8">
+                  <div className="space-y-4 px-2 pt-5 sm:px-3 sm:pt-6">
                     <h3 className="text-lg leading-snug font-bold">
                       {pkg.name}
                     </h3>
@@ -341,7 +339,7 @@ export default function PackagesPage() {
                   </div>
                 </div>
 
-                <div className="p-6 pt-0 sm:p-8">
+                <div className="px-2 pt-6 pb-1 sm:px-3 sm:pb-2">
                   <button
                     type="button"
                     onClick={() => handleOpenBooking(pkg.id)}

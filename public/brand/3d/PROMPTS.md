@@ -92,3 +92,24 @@ Composition: one isolated grouped object, generous empty padding on every side, 
 
 Background requirement for transparent extraction: perfectly flat, uniform solid chroma green #00ff00 from edge to edge, no gradient, no texture, no vignette, no lighting variation. Keep the subject fully opaque with crisp clean edges and no green spill.
 ```
+
+## Bộ minh hoạ các gói dịch vụ chuẩn hoá
+
+### Gói 1: Gói Livestream Bán Hàng E-Commerce
+
+```text
+Stylized tactile soft-clay and satin-plastic 3D editorial illustration for LiveHub e-commerce livestream package. A compact cohesive isometric studio setup: a professional mirrorless 4K livestream camera with an orange ring light, a sleek wireless microphone transmitter, a floating smartphone showing abstract live shopping product badges and orange cart token, and subtle floating discount tag shapes. Colors: LiveHub vivid orange #f97316, peach #fed7aa, warm cream #fff7ed, dark charcoal #171717, and neutral gray accents. Soft studio lighting, smooth matte clay textures, rounded bevels, centered isometric view on a clean neutral studio background, high quality 3D render.
+```
+
+### Gói 2: Gói Talkshow & Hội Thảo Doanh Nghiệp
+
+```text
+Stylized tactile soft-clay and satin-plastic 3D editorial illustration for LiveHub Corporate Talkshow & Webinar livestream package. A compact cohesive isometric multicam production setup: two sleek studio cinema cameras on articulating arms, a compact Blackmagic ATEM style video switcher mixer with tactile glowing buttons and orange fader, a studio podcast broadcast microphone on shock mount, and a floating dual-window conference screen showing abstract webinar connection graphs. Colors: LiveHub vivid orange #f97316, peach #fed7aa, warm cream #fff7ed, dark charcoal #171717, and neutral gray accents. Soft studio lighting, smooth matte clay textures, rounded bevels, centered isometric view on a clean neutral studio background, high quality 3D render.
+```
+
+### Gói 3: Gói Sự Kiện Ra Mắt & Đại Nhạc Hội Mega Event
+
+```text
+Stylized tactile soft-clay and satin-plastic 3D editorial illustration for LiveHub Mega Concert and Grand Event livestream package. A compact cohesive isometric production setup: a broadcast cinema camera on a jib crane arm, a compact camera drone flycam hovering with orange accents, an LED concert stage screen with abstract warm glow, stage spotlight fixtures, and a bonded wireless network transmitter. Colors: LiveHub vivid orange #f97316, peach #fed7aa, warm cream #fff7ed, charcoal #171717, and neutral gray. Soft studio lighting, smooth matte clay textures, rounded bevels, centered isometric view on a clean neutral background.
+```
+

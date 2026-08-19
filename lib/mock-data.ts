@@ -174,7 +174,7 @@ export const SEED_DEMANDS: Demand[] = [
   {
     id: "d0000002-0000-0000-0000-000000000001",
     customer_id: p3.id,
-    title: "⚡ Golden VIP: Cần Thuê Ekip & 4 Camera 4K Livestream Runway Thời Trang Thu Đông",
+    title: "Golden VIP: Cần Thuê Ekip & 4 Camera 4K Livestream Runway Thời Trang Thu Đông",
     description: "Doanh nghiệp cần tìm đơn vị sản xuất livestream runway thời trang tại trung tâm White Palace. Yêu cầu tối thiểu 4 máy quay Sony FX3/FX6 4K, đường truyền LiveU hoặc mạng vệ tinh backup, bàn trộn và hệ thống âm thanh trực tiếp.",
     budget: 18000000,
     location: "Phú Nhuận, TP. Hồ Chí Minh",
@@ -198,7 +198,7 @@ export const SEED_DEMANDS: Demand[] = [
   {
     id: "d0000002-0000-0000-0000-000000000002",
     customer_id: p4.id,
-    title: "⭐ Standard Partner: Thuê Studio Cách Âm Livestream TikTok Shop Mega Sale 24 Giờ",
+    title: "Standard Partner: Thuê Studio Cách Âm Livestream TikTok Shop Mega Sale 24 Giờ",
     description: "Tìm studio diện tích 40-70m² tại khu vực Đống Đa / Cầu Giấy để phát sóng bán hàng liên tục 24h. Yêu cầu trang bị sẵn hệ thống đèn, máy lạnh công suất lớn, phòng nghỉ cho KOC và internet riêng cáp quang 500Mbps.",
     budget: 25000000,
     location: "Cầu Giấy, Hà Nội",
@@ -220,7 +220,7 @@ export const SEED_DEMANDS: Demand[] = [
   {
     id: "d0000002-0000-0000-0000-000000000003",
     customer_id: p3.id,
-    title: "⚡ Golden VIP: Tuyển Kỹ Thuật Viên Vận Hành Bàn Trộn ATEM Mini & vMix Cho Hội Thảo",
+    title: "Golden VIP: Tuyển Kỹ Thuật Viên Vận Hành Bàn Trộn ATEM Mini & vMix Cho Hội Thảo",
     description: "Cần 1 Kỹ sư hình ảnh điều khiển bàn trộn và kiểm soát luồng phát livestream Zoom Webinar & YouTube cho chuỗi hội nghị đào tạo 3 ngày liên tiếp của tập đoàn.",
     budget: 6000000,
     location: "Quận 3, TP. Hồ Chí Minh",

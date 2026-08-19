@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Demand } from "@/lib/types/database";
 import {
   ArrowLeft,
+  ArrowRight,
   ArrowUpRight,
   Calendar,
   Crown,
@@ -15,13 +16,15 @@ import {
   MapPin,
   Plus,
   Search,
+  Sparkles,
+  Users,
+  Zap,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { UnauthenticatedBlurOverlay } from "@/components/unauthenticated-blur-overlay";
-import { ArrowRight } from "lucide-react";
 
 export default function DemandsPage() {
   const [demands, setDemands] = useState<Demand[]>([]);
@@ -136,8 +139,9 @@ export default function DemandsPage() {
           <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400">
-                  ⚡ Ưu tiên dự án Golden Ticket VIP & Standard
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400">
+                  <Zap className="size-3 text-amber-500 fill-amber-500" />
+                  <span>Ưu tiên dự án Golden Ticket VIP & Standard</span>
                 </span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -197,8 +201,8 @@ export default function DemandsPage() {
                     : "border border-amber-400/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20"
                   }`}
               >
-                <Crown className="size-3.5" />
-                <span>⚡ Golden VIP & Standard</span>
+                <Crown className="size-3.5 text-amber-500 fill-amber-500" />
+                <span>Golden VIP & Standard</span>
               </button>
             </div>
           </div>
@@ -213,8 +217,9 @@ export default function DemandsPage() {
             {/* Buyer Role Explanatory Banner */}
             <div className="rounded-3xl border border-orange-500/30 bg-orange-500/10 p-6 sm:p-8 space-y-3">
               <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                <Users className="size-4" />
                 <span className="text-xs font-bold uppercase tracking-wider">
-                  🎯 Không gian Quản lý Nhu cầu của Khách hàng (Buyer)
+                  Không gian Quản lý Nhu cầu của Khách hàng (Buyer)
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-foreground">
@@ -313,9 +318,12 @@ export default function DemandsPage() {
             {/* Section: Recommended Services for Buyer */}
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-border pb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-foreground">⚡ Gợi ý Nhà cung cấp & Thiết bị có sẵn</h3>
-                  <p className="text-xs text-muted-foreground">Các dịch vụ đã được LiveHub kiểm duyệt sẵn sàng phục vụ</p>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-orange-500" />
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Gợi ý Nhà cung cấp & Thiết bị có sẵn</h3>
+                    <p className="text-xs text-muted-foreground">Các dịch vụ đã được LiveHub kiểm duyệt sẵn sàng phục vụ</p>
+                  </div>
                 </div>
                 <Link href="/services" className="text-xs font-bold text-orange-500 hover:underline">
                   Xem tất cả ({recommendedServices.length}) →
@@ -398,9 +406,14 @@ export default function DemandsPage() {
             </p>
           </div>
         ) : (
-          <>
-            <div className="grid gap-6 sm:grid-cols-2">
-              {(currentUser ? processedDemands : processedDemands.slice(0, 3)).map((demand) => {
+          <div className="relative">
+            {/* Authenticated View vs Locked Blur for Guests */}
+            <div
+              className={`grid gap-6 sm:grid-cols-2 ${
+                !currentUser ? "pointer-events-none select-none filter blur-[3.5px] opacity-60 transition-all" : ""
+              }`}
+            >
+              {(currentUser ? processedDemands : processedDemands.slice(0, 6)).map((demand) => {
                 const tier = demand.customer?.membership_tier;
                 const isVip = tier === "premium" || tier === "standard";
                 const cardClasses = getTierCardStyle(tier);
@@ -408,8 +421,11 @@ export default function DemandsPage() {
                 return (
                   <Link
                     key={demand.id}
-                    href={`/demands/${demand.id}`}
-                    className={`group relative flex flex-col justify-between rounded-3xl border p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${cardClasses}`}
+                    href={currentUser ? `/demands/${demand.id}` : "#"}
+                    tabIndex={!currentUser ? -1 : 0}
+                    className={`group relative flex flex-col justify-between rounded-3xl border p-5 transition-all duration-300 ${
+                      currentUser ? "hover:shadow-xl hover:-translate-y-1" : ""
+                    } ${cardClasses}`}
                   >
                     <div>
                       {/* Top Row: Tag, VIP Badge & Date */}
@@ -496,15 +512,15 @@ export default function DemandsPage() {
               })}
             </div>
 
-            {/* 2. PROGRESSIVE BLUR FOR UNAUTHENTICATED GUESTS */}
+            {/* 2. PROGRESSIVE BLUR OVERLAY WITH SINGLE CTA BUTTON */}
             {!currentUser && (
               <UnauthenticatedBlurOverlay
                 title="Đăng nhập để xem toàn bộ nhu cầu dự án & Ứng tuyển"
                 description="Tạo tài khoản hoặc đăng nhập để mở khóa danh sách nhu cầu tìm kiếm ekip, thuê thiết bị livestream từ các thương hiệu và nộp báo giá trực tiếp."
-                badgeText="⚡ Mở khóa toàn bộ dự án & Khách hàng"
+                badgeText="Mở khóa toàn bộ dự án & Khách hàng"
               />
             )}
-          </>
+          </div>
         )}
       </main>
     </div>

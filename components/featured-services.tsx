@@ -1,14 +1,16 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
+import { UnauthenticatedBlurOverlay } from "@/components/unauthenticated-blur-overlay";
+import { AuroraText } from "@/components/ui/aurora-text";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SEED_SERVICES } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/client";
 import type { Service } from "@/lib/types/database";
+import type { User } from "@supabase/supabase-js";
 import { ArrowRight, Camera, MapPin, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AuroraText } from "@/components/ui/aurora-text";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const categoryLabels: Record<string, string> = {
   equipment: "Thiết bị",
@@ -19,12 +21,20 @@ const categoryLabels: Record<string, string> = {
 
 export function FeaturedServices() {
   const [services, setServices] = useState<Service[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchFeatured() {
       try {
         const supabase = createClient();
+
+        // Get auth status
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        setCurrentUser(session?.user ?? null);
+
         const { data, error } = await supabase
           .from("services")
           .select("*")
@@ -97,62 +107,81 @@ export function FeaturedServices() {
             ))}
           </div>
         ) : (
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => (
-              <Link
-                key={service.id}
-                href={`/services/${service.id}`}
-                className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40 hover:shadow-xl hover:shadow-orange-500/5"
-              >
-                <div>
-                  {/* Thumbnail */}
-                  <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-muted">
-                    {service.images && service.images.length > 0 && service.images[0] ? (
-                      <Image
-                        src={service.images[0]}
-                        alt={service.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
-                        <Camera className="size-6 opacity-40" />
-                      </div>
-                    )}
-                    <span className="absolute top-2.5 left-2.5 rounded-full border border-black/10 bg-black/60 px-2.5 py-0.5 text-[11px] font-semibold text-white backdrop-blur-md">
-                      {categoryLabels[service.category] || "Dịch vụ"}
-                    </span>
-                  </div>
-
-                  {/* Body */}
-                  <div className="mt-3.5 px-1">
-                    <h3 className="line-clamp-2 text-sm font-bold text-foreground transition-colors group-hover:text-orange-500">
-                      {service.title}
-                    </h3>
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
-                      {service.description}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Footer specs & price */}
-                <div className="mt-4 border-t border-border/70 pt-3 px-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-1 text-muted-foreground">
-                      <MapPin className="size-3.5 text-orange-500" />
-                      <span>{service.location || "Toàn quốc"}</span>
-                    </span>
-
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-orange-500">
-                        {service.price_per_day.toLocaleString("vi-VN")} đ
+          <div className="relative mt-10">
+            {/* Grid of sample cards */}
+            <div
+              className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${
+                !currentUser
+                  ? "pointer-events-none select-none filter blur-[3.5px] opacity-60 transition-all"
+                  : ""
+              }`}
+            >
+              {services.map((service) => (
+                <Link
+                  key={service.id}
+                  href={currentUser ? `/services/${service.id}` : "#"}
+                  tabIndex={!currentUser ? -1 : 0}
+                  className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40 hover:shadow-xl hover:shadow-orange-500/5"
+                >
+                  <div>
+                    {/* Thumbnail */}
+                    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-muted">
+                      {service.images && service.images.length > 0 && service.images[0] ? (
+                        <Image
+                          src={service.images[0]}
+                          alt={service.title}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
+                          <Camera className="size-6 opacity-40" />
+                        </div>
+                      )}
+                      <span className="absolute top-2.5 left-2.5 rounded-full border border-black/10 bg-black/60 px-2.5 py-0.5 text-[11px] font-semibold text-white backdrop-blur-md">
+                        {categoryLabels[service.category] || "Dịch vụ"}
                       </span>
-                      <span className="text-[11px] text-muted-foreground">/ngày</span>
+                    </div>
+
+                    {/* Body */}
+                    <div className="mt-3.5 px-1">
+                      <h3 className="line-clamp-2 text-sm font-bold text-foreground transition-colors group-hover:text-orange-500">
+                        {service.title}
+                      </h3>
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+                        {service.description}
+                      </p>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+
+                  {/* Footer specs & price */}
+                  <div className="mt-4 border-t border-border/70 pt-3 px-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <MapPin className="size-3.5 text-orange-500" />
+                        <span>{service.location || "Toàn quốc"}</span>
+                      </span>
+
+                      <div className="text-right">
+                        <span className="text-sm font-bold text-orange-500">
+                          {service.price_per_day.toLocaleString("vi-VN")} đ
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">/ngày</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Locked Blur Overlay for Guests */}
+            {!currentUser && (
+              <UnauthenticatedBlurOverlay
+                title="Đăng nhập để khám phá kho thiết bị & Dịch vụ"
+                description="Tạo tài khoản miễn phí trong 30 giây để mở khóa toàn bộ danh mục dịch vụ livestream, xem thông tin nhà cung cấp và đặt lịch trực tiếp."
+                badgeText="Mở khóa hơn 100+ dịch vụ & Báo giá"
+              />
+            )}
           </div>
         )}
       </div>
