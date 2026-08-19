@@ -67,7 +67,7 @@ export default function PostNewServicePage() {
       const uploadedUrls = await uploadPendingImages(imagePreviews, "services");
 
       // 2. Insert service record into database
-      const { data: newService, error } = await supabase
+      let insertResult = await supabase
         .from("services")
         .insert({
           provider_id: user.id,
@@ -82,11 +82,28 @@ export default function PostNewServicePage() {
         .select()
         .single();
 
-      if (error) {
-        setErrorMsg(error.message);
+      // Fallback: If remote schema cache lacks 'images' column, retry without 'images' field
+      if (insertResult.error && insertResult.error.message?.includes("images")) {
+        insertResult = await supabase
+          .from("services")
+          .insert({
+            provider_id: user.id,
+            title,
+            category,
+            price_per_day: price,
+            location,
+            description,
+            status: "pending",
+          })
+          .select()
+          .single();
+      }
+
+      if (insertResult.error) {
+        setErrorMsg(insertResult.error.message);
         setLoading(false);
-      } else if (newService) {
-        router.push(`/services/${newService.id}`);
+      } else if (insertResult.data) {
+        router.push(`/services/${insertResult.data.id}`);
       } else {
         router.push("/services/my");
       }

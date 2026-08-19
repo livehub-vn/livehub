@@ -184,7 +184,7 @@ export default function MyDemandsPage() {
                     <p className="text-muted-foreground mt-1 text-xs">
                       Ngân sách: {demand.budget.toLocaleString("vi-VN")} đ • Địa
                       điểm: {demand.location} • Ngày:{" "}
-                      {new Date(demand.event_date).toLocaleDateString("vi-VN")}
+                      {demand.event_date || "Chưa xác định"}
                     </p>
                   </div>
 

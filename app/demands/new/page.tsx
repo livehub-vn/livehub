@@ -67,7 +67,7 @@ export default function PostNewDemandPage() {
       const uploadedUrls = await uploadPendingImages(imagePreviews, "demands");
 
       // 2. Insert demand record into database
-      const { data: newDemand, error } = await supabase
+      let insertResult = await supabase
         .from("demands")
         .insert({
           customer_id: user.id,
@@ -82,11 +82,28 @@ export default function PostNewDemandPage() {
         .select()
         .single();
 
-      if (error) {
-        setErrorMsg(error.message);
+      // Fallback: If remote schema cache lacks 'images' column, retry without 'images' field
+      if (insertResult.error && insertResult.error.message?.includes("images")) {
+        insertResult = await supabase
+          .from("demands")
+          .insert({
+            customer_id: user.id,
+            title,
+            budget: budgetVal,
+            location,
+            event_date: eventDate,
+            description,
+            status: "pending",
+          })
+          .select()
+          .single();
+      }
+
+      if (insertResult.error) {
+        setErrorMsg(insertResult.error.message);
         setLoading(false);
-      } else if (newDemand) {
-        router.push(`/demands/${newDemand.id}`);
+      } else if (insertResult.data) {
+        router.push(`/demands/${insertResult.data.id}`);
       } else {
         router.push("/demands");
       }

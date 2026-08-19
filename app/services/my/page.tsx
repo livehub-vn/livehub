@@ -2,9 +2,9 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { Service } from "@/lib/types/database";
+import { SafeImage } from "@/components/ui/safe-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -121,22 +121,16 @@ export default function MyServicesPage() {
             {services.map((service) => (
               <div
                 key={service.id}
-                className="border-border bg-card flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between"
+                className="border-border bg-card flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between shadow-xs"
               >
                 <div className="flex items-center gap-4">
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-neutral-900">
-                    {service.images && service.images.length > 0 ? (
-                      <Image
-                        src={service.images[0]!}
-                        alt=""
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex size-full items-center justify-center text-[10px] text-neutral-500">
-                        No pic
-                      </div>
-                    )}
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-muted border border-border">
+                    <SafeImage
+                      src={service.images?.[0] || "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1000&auto=format&fit=crop&q=80"}
+                      alt={service.title}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
 
                   <div>
@@ -165,13 +159,22 @@ export default function MyServicesPage() {
                         : "Chờ duyệt"}
                   </span>
 
-                  <button
-                    onClick={() => handleDelete(service.id)}
-                    className="text-muted-foreground p-2 transition-colors hover:text-rose-500"
-                    title="Xóa bài đăng"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/services/${service.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors shadow-xs"
+                    >
+                      <span>Xem trang</span>
+                    </Link>
+
+                    <button
+                      onClick={() => handleDelete(service.id)}
+                      className="text-muted-foreground p-2 transition-colors hover:text-rose-500 rounded-xl hover:bg-rose-500/10 cursor-pointer"
+                      title="Xóa bài đăng"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
