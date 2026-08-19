@@ -22,10 +22,10 @@ export function ThemeSwitch(): ReactNode {
 
   if (!mounted) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed right-6 bottom-6 z-50">
         <button
-          className="w-12 h-12 rounded-full bg-foreground/10 opacity-30 cursor-not-allowed"
-          aria-label="Toggle theme"
+          className="bg-foreground/10 h-12 w-12 cursor-not-allowed rounded-full opacity-30"
+          aria-label="Chuyển giao diện sáng hoặc tối"
           disabled
         />
       </div>
@@ -35,18 +35,20 @@ export function ThemeSwitch(): ReactNode {
   const isDark = resolvedTheme === "dark";
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed right-6 bottom-6 z-50">
       <button
         onClick={toggleTheme}
-        className="w-10 h-10 cursor-pointer rounded-full bg-frame text-foreground flex items-center justify-center opacity-30 hover:opacity-100 transition-opacity duration-300 shadow-lg hover:shadow-xl"
-        aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+        className="bg-frame text-foreground flex h-10 w-10 cursor-pointer items-center justify-center rounded-full opacity-30 shadow-lg transition-opacity duration-300 hover:opacity-100 hover:shadow-xl"
+        aria-label={
+          isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"
+        }
         aria-pressed={isDark}
         type="button"
       >
         {isDark ? (
-          <Sun className="w-5 h-5" aria-hidden="true" />
+          <Sun className="h-5 w-5" aria-hidden="true" />
         ) : (
-          <Moon className="w-5 h-5" aria-hidden="true" />
+          <Moon className="h-5 w-5" aria-hidden="true" />
         )}
       </button>
     </div>

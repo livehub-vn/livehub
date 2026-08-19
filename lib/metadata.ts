@@ -1,32 +1,36 @@
 import type { Metadata } from "next";
 
 export const siteConfig = {
-  name: "React Bits Pro - SaaS Template",
+  name: "LiveHub",
   description:
-    "A modern, accessible landing page template built with Next.js, Tailwind CSS, and TypeScript.",
-  url: "https://example.com",
-  ogImage: "/og-image.png",
-  creator: "@yourhandle",
+    "LiveHub kết nối khách hàng với nhà cung cấp dịch vụ livestream có kiểm duyệt.",
+  url: "https://livehub-main.vercel.app",
+  ogImage: "/brand/livehub-social-card.jpg",
+  creator: "LiveHub",
   authors: [
     {
-      name: "Your Name",
-      url: "https://example.com",
+      name: "LiveHub",
+      url: "https://livehub-main.vercel.app",
     },
   ],
   keywords: [
-    "landing page",
-    "template",
-    "Next.js",
-    "React",
-    "Tailwind CSS",
-    "TypeScript",
+    "dịch vụ livestream",
+    "nền tảng kết nối dịch vụ livestream",
+    "sàn dịch vụ livestream",
+    "nhà cung cấp dịch vụ livestream",
+    "đăng nhu cầu livestream",
+    "thuê thiết bị livestream",
+    "sản xuất livestream",
+    "ê-kíp livestream",
+    "thuê studio livestream",
+    "nền tảng livestream Việt Nam",
   ],
 } as const;
 
 export const baseMetadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: siteConfig.name,
+    default: "LiveHub | Nền tảng kết nối dịch vụ livestream",
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -50,9 +54,9 @@ export const baseMetadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "vi_VN",
     url: siteConfig.url,
-    title: siteConfig.name,
+    title: "LiveHub | Nền tảng kết nối dịch vụ livestream",
     description: siteConfig.description,
     siteName: siteConfig.name,
     images: [
@@ -60,21 +64,20 @@ export const baseMetadata: Metadata = {
         url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: siteConfig.name,
+        alt: "LiveHub - Nền tảng kết nối dịch vụ livestream",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: siteConfig.name,
+    title: "LiveHub | Nền tảng kết nối dịch vụ livestream",
     description: siteConfig.description,
     images: [siteConfig.ogImage],
-    creator: siteConfig.creator,
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-icon.png",
+    icon: "/icon-192.png",
+    shortcut: "/Logo.png",
+    apple: "/icon-192.png",
   },
   manifest: "/site.webmanifest",
 };

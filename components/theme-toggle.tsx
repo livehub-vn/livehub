@@ -23,8 +23,8 @@ export function ThemeToggle(): ReactNode {
   if (!mounted) {
     return (
       <button
-        className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-background transition-colors hover:bg-muted"
-        aria-label="Toggle theme"
+        className="focus-ring border-border bg-background hover:bg-muted inline-flex h-10 w-10 items-center justify-center rounded-md border transition-colors"
+        aria-label="Chuyển giao diện sáng hoặc tối"
         disabled
       >
         <span className="h-5 w-5" />
@@ -37,15 +37,17 @@ export function ThemeToggle(): ReactNode {
   return (
     <button
       onClick={toggleTheme}
-      className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-background transition-colors hover:bg-muted"
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      className="focus-ring border-border bg-background hover:bg-muted inline-flex h-10 w-10 items-center justify-center rounded-md border transition-colors"
+      aria-label={
+        isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"
+      }
       aria-pressed={isDark}
       type="button"
     >
       {isDark ? (
-        <Sun className="h-5 w-5 text-foreground" aria-hidden="true" />
+        <Sun className="text-foreground h-5 w-5" aria-hidden="true" />
       ) : (
-        <Moon className="h-5 w-5 text-foreground" aria-hidden="true" />
+        <Moon className="text-foreground h-5 w-5" aria-hidden="true" />
       )}
     </button>
   );
@@ -62,11 +64,11 @@ export function ThemeToggleWithLabel(): ReactNode {
   if (!mounted) {
     return (
       <button
-        className="focus-ring inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+        className="focus-ring hover:bg-muted inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors"
         disabled
       >
         <span className="h-4 w-4" />
-        <span>Theme</span>
+        <span>Giao diện</span>
       </button>
     );
   }
@@ -76,19 +78,21 @@ export function ThemeToggleWithLabel(): ReactNode {
   return (
     <button
       onClick={toggleTheme}
-      className="focus-ring inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      className="focus-ring hover:bg-muted inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+      aria-label={
+        isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"
+      }
       type="button"
     >
       {isDark ? (
         <>
           <Sun className="h-4 w-4" aria-hidden="true" />
-          <span>Light</span>
+          <span>Sáng</span>
         </>
       ) : (
         <>
           <Moon className="h-4 w-4" aria-hidden="true" />
-          <span>Dark</span>
+          <span>Tối</span>
         </>
       )}
     </button>

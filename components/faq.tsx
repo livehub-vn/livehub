@@ -6,29 +6,17 @@ import { useState, type ReactNode } from "react";
 
 const faqs = [
   {
-    question: "How does the 14-day free trial work?",
+    question: "LiveHub làm gì?",
     answer:
-      "Start using our platform immediately with full access to all features. No credit card required. At the end of your trial, choose a plan that fits your needs or continue with our free tier.",
+      "LiveHub kết nối người cần livestream với nhà cung cấp dịch vụ. Bạn có thể tìm dịch vụ hoặc đăng nhu cầu.",
   },
   {
-    question: "Can I switch plans at any time?",
-    answer:
-      "Absolutely! You can upgrade or downgrade your plan at any time. When upgrading, you'll get immediate access to new features. When downgrading, changes take effect at your next billing cycle.",
+    question: "Tin đăng có được duyệt không?",
+    answer: "Có. LiveHub kiểm tra nội dung trước khi công khai.",
   },
   {
-    question: "What integrations do you support?",
-    answer:
-      "We integrate with all major platforms including Slack, Zendesk, Salesforce, HubSpot, Intercom, and 50+ other tools. Our API also allows custom integrations for enterprise customers.",
-  },
-  {
-    question: "How secure is my data?",
-    answer:
-      "Security is our top priority. We use bank-level encryption (AES-256), are SOC 2 Type II certified, and GDPR compliant. All data is stored in secure, redundant data centers with 99.99% uptime.",
-  },
-  {
-    question: "Do you offer dedicated support?",
-    answer:
-      "All plans include email support with 24-hour response times. Premium plans get priority support with 4-hour response times. Enterprise customers receive a dedicated success manager and phone support.",
+    question: "Tôi bắt đầu từ đâu?",
+    answer: "Xem dịch vụ có sẵn. Đăng nhập để gửi yêu cầu hoặc đăng nhu cầu.",
   },
 ];
 
@@ -52,7 +40,7 @@ function FAQItem({
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, ease, delay: index * 0.05 }}
       onClick={onToggle}
-      className="cursor-pointer rounded-2xl bg-frame p-5 shadow-sm sm:p-6"
+      className="bg-frame cursor-pointer rounded-2xl p-5 shadow-sm sm:p-6"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -64,7 +52,7 @@ function FAQItem({
       aria-expanded={isOpen}
     >
       <div className="flex w-full items-center justify-between gap-4 text-left">
-        <span className="text-base font-medium text-foreground sm:text-lg">
+        <span className="text-foreground text-base font-medium sm:text-lg">
           {faq.question}
         </span>
         <motion.div
@@ -72,7 +60,7 @@ function FAQItem({
           transition={{ duration: 0.3, ease }}
           className="shrink-0"
         >
-          <ChevronDown className="h-5 w-5 text-muted-foreground" />
+          <ChevronDown className="text-muted-foreground h-5 w-5" />
         </motion.div>
       </div>
       <AnimatePresence initial={false}>
@@ -84,7 +72,7 @@ function FAQItem({
             transition={{ duration: 0.3, ease }}
             className="overflow-hidden"
           >
-            <p className="pt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
+            <p className="text-muted-foreground pt-4 text-sm leading-relaxed sm:text-base">
               {faq.answer}
             </p>
           </motion.div>
@@ -102,8 +90,8 @@ export function FAQ(): ReactNode {
   };
 
   return (
-    <section className="w-full px-6 py-20 sm:py-28">
-      <div className="mx-auto max-w-3xl">
+    <section id="faq" className="w-full scroll-mt-24 py-20 sm:py-28">
+      <div className="mx-auto w-full max-w-6xl px-4 xl:px-0">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -111,32 +99,36 @@ export function FAQ(): ReactNode {
           transition={{ duration: 0.6, ease }}
           className="mb-12 text-center sm:mb-16"
         >
-          <span className="text-sm font-medium text-muted-foreground">
-            Frequently Asked Questions
+          <span className="text-muted-foreground text-sm font-medium">
+            Câu hỏi thường gặp
           </span>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-            Everything you need to know
+          <h2 className="text-foreground mt-3 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+            LiveHub, luôn sẵn sàng hỗ trợ
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
-            Can&apos;t find the answer you&apos;re looking for? Reach out!
+          <p className="text-muted-foreground mx-auto mt-4 max-w-xl text-base sm:text-lg">
+            Ba câu trả lời trước khi bắt đầu.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <motion.a
-              href="#"
+              href="https://livehub-main.vercel.app/services"
+              target="_blank"
+              rel="noreferrer"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="inline-flex items-center rounded-xl bg-foreground px-6 py-2.5 text-sm font-semibold text-background transition-colors hover:bg-foreground/90"
+              className="bg-foreground text-background hover:bg-foreground/90 inline-flex items-center rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
             >
-              Get Started
+              Xem dịch vụ
             </motion.a>
             <motion.a
-              href="#"
+              href="https://livehub-main.vercel.app/contact"
+              target="_blank"
+              rel="noreferrer"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="inline-flex items-center rounded-xl border border-border bg-frame px-6 py-2.5 text-sm font-semibold text-foreground transition-colors"
+              className="border-border bg-frame text-foreground inline-flex items-center rounded-xl border px-6 py-2.5 text-sm font-semibold transition-colors"
             >
-              Contact Support
+              Liên hệ
             </motion.a>
           </div>
         </motion.div>
@@ -144,7 +136,7 @@ export function FAQ(): ReactNode {
         <div className="flex flex-col gap-3" role="list">
           {faqs.map((faq, index) => (
             <FAQItem
-              key={index}
+              key={faq.question}
               faq={faq}
               index={index}
               isOpen={openIndex === index}

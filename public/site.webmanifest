@@ -1,11 +1,11 @@
 {
-  "name": "Your Site Name",
-  "short_name": "Site",
-  "description": "A modern, accessible landing page template built with Next.js, Tailwind CSS, and TypeScript.",
+  "name": "LiveHub - Nền tảng kết nối dịch vụ livestream",
+  "short_name": "LiveHub",
+  "description": "LiveHub kết nối khách hàng với nhà cung cấp dịch vụ livestream có kiểm duyệt.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#a8d946",
+  "background_color": "#fff7ed",
+  "theme_color": "#f97316",
   "icons": [
     {
       "src": "/icon-192.png",

@@ -1,103 +1,103 @@
 /**
  * ============================================================================
- * SITE CONFIGURATION
+ * CẤU HÌNH TRANG WEB
  * ============================================================================
- * 
- * Customize your landing page by editing the values below.
- * All text, links, and settings are centralized here for easy editing.
+ *
+ * Tùy chỉnh trang đích bằng cách chỉnh sửa các giá trị bên dưới.
+ * Toàn bộ nội dung, liên kết và thiết lập được tập trung tại đây để dễ quản lý.
  */
 
 export const siteConfig = {
-  // Brand
-  name: "Circular",
-  tagline: "Build Faster, Ship with Confidence",
-  description: "The modern platform for teams who want to move fast without breaking things",
-  
-  // URLs
-  url: "https://example.com",
-  twitter: "@circular",
-  
-  // Navigation
+  // Thương hiệu
+  name: "LiveHub",
+  tagline: "Nhu cầu gặp đúng nhà cung cấp",
+  description:
+    "LiveHub kết nối khách hàng với nhà cung cấp dịch vụ livestream có kiểm duyệt.",
+
+  // Đường dẫn
+  url: "https://livehub-main.vercel.app",
+
+  // Điều hướng
   nav: {
     cta: {
-      text: "Try for free",
-      href: "#",
+      text: "Xem dịch vụ",
+      href: "https://livehub-main.vercel.app/services",
     },
     signIn: {
-      text: "Sign in",
-      href: "#",
+      text: "Đăng nhập",
+      href: "https://livehub-main.vercel.app/login",
     },
   },
 };
 
 export const heroConfig = {
-  badge: "Now Available",
+  badge: "Nền tảng dịch vụ livestream",
   headline: {
-    line1: "Build Faster",
-    line2: "Ship with",
-    accent: "Confidence",
+    line1: "Nhu cầu gặp đúng",
+    line2: "nhà",
+    accent: "cung cấp",
   },
-  subheadline: "The modern platform for teams who want to move fast without breaking things",
+  subheadline:
+    "Khách hàng tìm dịch vụ hoặc đăng nhu cầu. Nhà cung cấp đăng dịch vụ và ứng tuyển dự án.",
   cta: {
-    text: "Get Started",
-    href: "#",
+    text: "Xem dịch vụ",
+    href: "https://livehub-main.vercel.app/services",
   },
 };
 
 export const blurHeadlineConfig = {
-  text: "Modern teams use our platform to elevate every customer touchpoint, blending human expertise with AI capabilities in a unified system that drives continuous improvement across all channels.",
+  text: "LiveHub kết nối khách hàng và nhà cung cấp qua các tin dịch vụ, nhu cầu và quy trình có kiểm duyệt.",
 };
 
 export const testimonialsConfig = {
-  title: "Trusted by teams worldwide",
-  autoplayInterval: 10000, // milliseconds
+  title: "Dành cho nhiều hình thức livestream",
+  autoplayInterval: 10000, // mili giây
 };
 
 export const howItWorksConfig = {
-  title: "How it works",
-  description: "Your platform, configured by experts and launched on an Enterprise plan, ready to grow with you.",
+  title: "Đăng. Duyệt. Kết nối.",
+  description:
+    "Tạo tin dịch vụ hoặc nhu cầu. LiveHub duyệt trước khi hai bên kết nối.",
   cta: {
-    text: "Schedule kickoff",
-    href: "#",
+    text: "Xem dịch vụ",
+    href: "https://livehub-main.vercel.app/services",
   },
 };
 
 export const pricingConfig = {
-  title: "Simple, transparent pricing",
-  description: "Choose the plan that works best for your team. All plans include a 14-day free trial.",
-  billingNote: "Billed annually",
+  title: "Hai phía. Một nền tảng.",
+  description: "Khách hàng tìm dịch vụ; nhà cung cấp tìm dự án.",
 };
 
 export const faqConfig = {
-  title: "Everything you need to know",
-  description: "Can't find the answer you're looking for? Reach out!",
+  title: "Bắt đầu với LiveHub",
+  description: "Thông tin ngắn về nền tảng.",
   cta: {
     primary: {
-      text: "Get Started",
-      href: "#",
+      text: "Xem dịch vụ",
+      href: "https://livehub-main.vercel.app/services",
     },
     secondary: {
-      text: "Contact Support",
-      href: "#",
+      text: "Liên hệ LiveHub",
+      href: "https://livehub-main.vercel.app/contact",
     },
   },
 };
 
 export const footerConfig = {
   cta: {
-    headline: "Start building something amazing today",
-    placeholder: "Enter your email",
-    button: "Join Waitlist",
+    headline: "Kết nối đúng người cho buổi livestream tiếp theo.",
+    button: "Xem dịch vụ",
   },
-  copyright: `© ${new Date().getFullYear()} Circular. All rights reserved.`,
+  copyright: `© ${new Date().getFullYear()} LiveHub. Nền tảng kết nối dịch vụ livestream.`,
 };
 
 /**
  * ============================================================================
- * FEATURE FLAGS
+ * CỜ TÍNH NĂNG
  * ============================================================================
- * 
- * Toggle features on/off without touching component code.
+ *
+ * Bật hoặc tắt tính năng mà không cần chỉnh sửa mã nguồn component.
  */
 
 export const features = {
@@ -109,11 +109,11 @@ export const features = {
 
 /**
  * ============================================================================
- * THEME CONFIGURATION
+ * CẤU HÌNH GIAO DIỆN
  * ============================================================================
- * 
- * Colors are defined in globals.css using CSS custom properties.
- * This config controls which theme features are enabled.
+ *
+ * Màu sắc được định nghĩa trong globals.css bằng các thuộc tính CSS tùy chỉnh.
+ * Cấu hình này kiểm soát những tính năng giao diện được bật.
  */
 
 export const themeConfig = {

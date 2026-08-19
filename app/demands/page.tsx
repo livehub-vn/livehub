@@ -1,0 +1,301 @@
+"use client";
+
+import { GoldenTicketBadge, getTierPriorityWeight, getTierCardStyle } from "@/components/golden-ticket-badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AuroraText } from "@/components/ui/aurora-text";
+import { SEED_DEMANDS } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/client";
+import type { Demand } from "@/lib/types/database";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  Calendar,
+  Crown,
+  Images,
+  MapPin,
+  Plus,
+  Search,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+
+export default function DemandsPage() {
+  const [demands, setDemands] = useState<Demand[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterVipOnly, setFilterVipOnly] = useState(false);
+
+  useEffect(() => {
+    async function fetchDemands() {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("demands")
+          .select("*, customer:profiles(*)")
+          .eq("status", "approved")
+          .order("created_at", { ascending: false });
+
+        if (data && data.length > 0 && !error) {
+          setDemands(data as Demand[]);
+        } else {
+          setDemands(SEED_DEMANDS);
+        }
+      } catch {
+        setDemands(SEED_DEMANDS);
+      }
+      setLoading(false);
+    }
+
+    fetchDemands();
+  }, []);
+
+  // Filter & priority sort: Premium (Golden VIP) > Standard > Basic > Free Trial
+  const processedDemands = useMemo(() => {
+    let list = demands.filter((d) => {
+      const matchesSearch =
+        d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        d.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (d.description && d.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      if (!matchesSearch) return false;
+
+      if (filterVipOnly) {
+        const tier = d.customer?.membership_tier;
+        return tier === "premium" || tier === "standard";
+      }
+
+      return true;
+    });
+
+    return list.sort((a, b) => {
+      const weightA = getTierPriorityWeight(a.customer?.membership_tier);
+      const weightB = getTierPriorityWeight(b.customer?.membership_tier);
+      if (weightB !== weightA) {
+        return weightB - weightA;
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [demands, searchQuery, filterVipOnly]);
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Header Banner with generous top spacing */}
+      <header className="border-b border-border bg-card/60 px-4 pt-28 pb-10 xl:px-0 sm:pt-32 backdrop-blur-sm">
+        <div className="mx-auto w-full max-w-6xl">
+          <Link
+            href="/"
+            className="mb-4 inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span>Trở về Trang chủ</span>
+          </Link>
+
+          <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400">
+                  ⚡ Ưu tiên dự án Golden Ticket VIP & Standard
+                </span>
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                Sàn nhu cầu dự án <AuroraText>LiveHub</AuroraText>
+              </h1>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                Tổng hợp yêu cầu tuyển chọn ekip, thuê thiết bị & dự án livestream từ các thương hiệu hàng đầu.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <Link
+                href="/demands/my"
+                className="rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-muted"
+              >
+                Nhu cầu của tôi
+              </Link>
+              <Link
+                href="/demands/new"
+                className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-orange-600"
+              >
+                <Plus className="size-4" />
+                <span>Đăng nhu cầu mới</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Search & VIP Filter Controls */}
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm nhu cầu theo tiêu đề, địa điểm..."
+                className="w-full rounded-xl border border-border bg-background py-2.5 pl-11 pr-4 text-sm focus:border-accent focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setFilterVipOnly(false)}
+                className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${!filterVipOnly
+                    ? "bg-accent text-white shadow-sm"
+                    : "border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+              >
+                Tất cả nhu cầu
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterVipOnly(true)}
+                className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${filterVipOnly
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/20 ring-1 ring-amber-400"
+                    : "border border-amber-400/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20"
+                  }`}
+              >
+                <Crown className="size-3.5" />
+                <span>⚡ Golden VIP & Standard</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Demands Grid */}
+      <main className="mx-auto w-full max-w-6xl px-4 xl:px-0 py-10">
+        {loading ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-sm space-y-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-24 rounded-full" />
+                    <Skeleton className="h-3 w-16 rounded-md" />
+                  </div>
+                  <Skeleton className="h-6 w-3/4 rounded-md" />
+                  <Skeleton className="h-3.5 w-full rounded-md" />
+                  <Skeleton className="h-3.5 w-4/5 rounded-md" />
+                </div>
+
+                <div className="border-t border-border/60 pt-3 flex items-center justify-between">
+                  <Skeleton className="h-4 w-28 rounded-md" />
+                  <Skeleton className="h-6 w-24 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : processedDemands.length === 0 ? (
+          <div className="rounded-[2.5rem] border border-border bg-card p-12 text-center">
+            <h3 className="text-lg font-medium">Chưa có nhu cầu dự án nào</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Thử tìm kiếm từ khóa khác hoặc đăng nhu cầu mới.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2">
+            {processedDemands.map((demand) => {
+              const tier = demand.customer?.membership_tier;
+              const isVip = tier === "premium" || tier === "standard";
+              const cardClasses = getTierCardStyle(tier);
+
+              return (
+                <Link
+                  key={demand.id}
+                  href={`/demands/${demand.id}`}
+                  className={`group relative flex flex-col justify-between rounded-3xl border p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${cardClasses}`}
+                >
+                  <div>
+                    {/* Top Row: Tag, VIP Badge & Date */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="rounded-full bg-orange-500/10 px-2.5 py-0.5 text-[10px] font-bold text-orange-500">
+                          Dự án cần ekip
+                        </span>
+                        {isVip && (
+                          <GoldenTicketBadge
+                            tier={tier}
+                            variant="badge"
+                            showSla={tier === "premium"}
+                          />
+                        )}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground shrink-0">
+                        {new Date(demand.created_at).toLocaleDateString("vi-VN")}
+                      </span>
+                    </div>
+
+                    {/* Image Preview Banner if available */}
+                    {demand.images && demand.images.length > 0 && (
+                      <div className="relative mt-3.5 h-36 w-full overflow-hidden rounded-2xl bg-muted">
+                        <Image
+                          src={demand.images[0]!}
+                          alt={demand.title}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        {demand.images.length > 1 && (
+                          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-lg bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
+                            <Images className="size-3" />
+                            <span>+{demand.images.length - 1} ảnh</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    <h3 className="mt-3.5 text-base font-semibold leading-snug transition-colors group-hover:text-accent">
+                      {demand.title}
+                    </h3>
+
+                    <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                      {demand.description}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="size-3.5 text-accent" />
+                        {demand.location}
+                      </span>
+                      {demand.event_date && (
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="size-3.5 text-amber-500" />
+                          Ngày diễn ra: {demand.event_date}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="pb-3">
+                      {demand.customer?.full_name && (
+                        <p className="mt-3 text-[11px] text-muted-foreground">
+                          Người đăng: <strong className="text-foreground">{demand.customer.full_name}</strong>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border-border/60 -mx-5 -mb-5 mt-auto flex items-center justify-between border-t px-5 py-3.5 bg-muted/20 rounded-b-3xl">
+                    <div>
+                      <span className="text-[10px] block font-medium text-muted-foreground">Ngân sách dự kiến</span>
+                      <p className="text-base font-bold text-accent">
+                        {Number(demand.budget).toLocaleString("vi-VN")} đ
+                      </p>
+                    </div>
+
+                    <span className="flex size-8 items-center justify-center rounded-full border border-border text-foreground transition-all group-hover:bg-accent group-hover:border-accent group-hover:text-white shadow-xs">
+                      <ArrowUpRight className="size-3.5" />
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}

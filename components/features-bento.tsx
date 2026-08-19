@@ -1,22 +1,28 @@
 "use client";
 
+import {
+  CalendarDays,
+  Camera,
+  CircleCheck,
+  FileText,
+  ListFilter,
+  Search,
+  UsersRound,
+  Video,
+  type LucideIcon,
+} from "lucide-react";
 import { motion, type Transition } from "motion/react";
-import { CircleCheck, Star } from "lucide-react";
-import Image from "next/image";
 import type { ReactNode } from "react";
 
 const EASE = [0.23, 1, 0.32, 1] as const;
 
-const AVATAR_URLS = [
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
-];
-
-const DEPLOYMENT_STATS = [
-  { icon: "🚀", label: "2,598 Deploys", change: "+24%" },
-  { icon: "⚡", label: "99.9% Uptime", change: "+0.2%" },
+const STARTING_POINTS: Array<{
+  icon: LucideIcon;
+  label: string;
+  detail: string;
+}> = [
+  { icon: Search, label: "Khám phá", detail: "Dịch vụ" },
+  { icon: FileText, label: "Đăng", detail: "Nhu cầu" },
 ];
 
 const cardAnimation = {
@@ -42,19 +48,14 @@ function PhoneMockup({
 
   return (
     <div
-      className={`
-        relative bg-background shadow-2xl border-neutral-800 overflow-hidden z-10
-        ${isCompact 
-          ? "w-44 md:w-48 h-64 md:h-72 rounded-3xl border-4" 
-          : "w-56 md:w-64 h-96 md:h-115 rounded-t-4xl border-6 border-b-0"
-        }
-      `}
+      className={`bg-background relative z-10 overflow-hidden border-neutral-800 shadow-2xl ${
+        isCompact
+          ? "h-64 w-44 rounded-3xl border-4 md:h-72 md:w-48"
+          : "h-96 w-56 rounded-t-4xl border-6 border-b-0 md:h-115 md:w-64"
+      } `}
     >
       <div
-        className={`
-          absolute left-1/2 -translate-x-1/2 bg-neutral-800 rounded-full z-10
-          ${isCompact ? "top-2 w-16 h-4" : "top-2 w-20 h-5"}
-        `}
+        className={`absolute top-2 left-1/2 z-10 -translate-x-1/2 rounded-full bg-neutral-800 ${isCompact ? "h-4 w-16" : "h-5 w-20"} `}
         aria-hidden="true"
       />
       {children}
@@ -62,101 +63,72 @@ function PhoneMockup({
   );
 }
 
-function AvatarStack(): ReactNode {
+function ProductionIconStack(): ReactNode {
+  const categories = [
+    { icon: Camera, label: "Thiết bị" },
+    { icon: UsersRound, label: "Đội ngũ sản xuất" },
+    { icon: Video, label: "Studio" },
+  ];
+
   return (
-    <div className="flex items-center">
-      {AVATAR_URLS.map((src, i) => (
+    <div
+      className="flex items-center"
+      aria-label="Thiết bị, đội ngũ sản xuất và studio"
+    >
+      {categories.map(({ icon: Icon, label }, index) => (
         <div
-          key={i}
-          className="size-12 rounded-full border-2 border-white/25 overflow-hidden -ml-4 first:ml-0"
+          key={label}
+          className={`flex size-12 items-center justify-center rounded-full border-2 border-white/30 bg-neutral-900 text-white shadow-lg ${
+            index === 0 ? "" : "-ml-3"
+          }`}
+          title={label}
         >
-          <Image
-            src={src}
-            alt=""
-            width={48}
-            height={48}
-            className="size-full object-cover"
-          />
+          <Icon className="size-5" aria-hidden="true" />
+          <span className="sr-only">{label}</span>
         </div>
       ))}
-      <div className="size-12 rounded-full border-2 border-white/25 bg-accent text-black flex items-center justify-center text-sm font-semibold -ml-4">
-        5+
-      </div>
     </div>
   );
 }
 
-function DeploymentStat({
-  icon,
+function StartingPoint({
+  icon: Icon,
   label,
-  change,
+  detail,
 }: {
-  icon: string;
+  icon: LucideIcon;
   label: string;
-  change: string;
+  detail: string;
 }): ReactNode {
   return (
-    <div className="flex items-center justify-between bg-background rounded-xl p-3">
+    <div className="bg-background flex items-center justify-between rounded-xl p-3">
       <div className="flex items-center gap-2">
-        <span className="text-lg">{icon}</span>
+        <span className="bg-accent/15 text-foreground flex size-8 items-center justify-center rounded-lg">
+          <Icon className="size-4" aria-hidden="true" />
+        </span>
         <span className="text-foreground font-medium">{label}</span>
       </div>
-      <span className="text-black text-sm font-medium">{change}</span>
+      <span className="bg-accent/20 text-foreground rounded px-2 py-0.5 text-xs font-medium">
+        {detail}
+      </span>
     </div>
   );
 }
 
 function DecorativeCircles(): ReactNode {
   return (
-    <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-      <div className="absolute size-56 border border-accent/80 rounded-full" />
-      <div className="absolute size-72 border border-accent/60 rounded-full" />
-      <div className="absolute size-88 border border-accent/40 rounded-full" />
+    <div
+      className="absolute inset-0 flex items-center justify-center"
+      aria-hidden="true"
+    >
+      <div className="border-accent/80 absolute size-56 rounded-full border" />
+      <div className="border-accent/60 absolute size-72 rounded-full border" />
+      <div className="border-accent/40 absolute size-88 rounded-full border" />
     </div>
   );
 }
 
-function StepByStepCard(): ReactNode {
-  return (
-    <motion.div
-      {...cardAnimation}
-      transition={getCardTransition(0)}
-      className="group bg-card-primary rounded-4xl p-8 pb-0 overflow-hidden min-h-140 md:row-span-2 flex flex-col"
-    >
-      <div className="relative z-10 text-center mb-6 transition-transform duration-500 ease-out group-hover:scale-105">
-        <h3 className="text-2xl md:text-4xl font-medium text-neutral-900 leading-tight mb-3">
-          Guided Onboarding For Every Team
-        </h3>
-        <p className="text-neutral-700 text-sm">
-          Get your team up and running in minutes with step-by-step walkthroughs
-        </p>
-      </div>
-
-      <div className="flex-1 flex justify-center items-end transition-transform duration-500 ease-out group-hover:scale-[1.02]">
-        <PhoneMockup variant="full">
-          <div className="absolute inset-0 bg-phone-screen pt-14 px-5">
-            <h4 className="text-3xl font-medium text-neutral-900 leading-none tracking-tight mt-4">
-              Your workspace
-            </h4>
-            <h4 className="text-3xl font-medium text-neutral-900 leading-none tracking-tight mb-4">
-              is ready!
-            </h4>
-            <p className="text-sm text-neutral-500 leading-snug mb-8">
-              Invite your team and start collaborating instantly.
-            </p>
-
-            {/* Project Card */}
-            <div className="relative bg-linear-to-br from-accent via-accent/80 to-accent/50 rounded-2xl p-4 h-52 shadow-xl overflow-hidden">
-              <ProjectCardContent />
-            </div>
-          </div>
-        </PhoneMockup>
-      </div>
-    </motion.div>
-  );
-}
-
-function ProjectCardContent(): ReactNode {
+function MarketplaceCardContent(): ReactNode {
   return (
     <>
       <svg
@@ -179,72 +151,130 @@ function ProjectCardContent(): ReactNode {
         />
       </svg>
 
-      <div className="relative z-10 flex items-start justify-between gap-3 h-full">
+      <div className="relative z-10 flex h-full items-start justify-between gap-3">
         <div>
-          <p className="text-base font-semibold text-neutral-900">Project</p>
-          <p className="text-base font-semibold text-neutral-900">Alpha</p>
+          <p className="text-base font-semibold text-neutral-900">
+            Sự kiện kết hợp
+          </p>
+          <p className="text-base font-semibold text-neutral-900">
+            đa điểm cầu
+          </p>
         </div>
-        <CircleCheck className="opacity-25 text-black" aria-hidden="true" />
+        <CircleCheck className="text-black opacity-25" aria-hidden="true" />
       </div>
 
-      <div className="absolute bottom-3 left-5 flex items-center gap-2 text-neutral-700 text-xs tracking-widest" aria-hidden="true">
-        <span>PRJ</span>
+      <div
+        className="absolute bottom-3 left-5 flex items-center gap-2 text-xs text-neutral-700"
+        aria-hidden="true"
+      >
+        <span>THIẾT BỊ</span>
         <span>•</span>
-        <span>2024</span>
+        <span>SẢN XUẤT</span>
         <span>•</span>
-        <span>LIVE</span>
+        <span>STUDIO</span>
       </div>
     </>
   );
 }
 
-function DashboardCard(): ReactNode {
+function DiscoveryCard(): ReactNode {
+  return (
+    <motion.div
+      {...cardAnimation}
+      transition={getCardTransition(0)}
+      className="group bg-card-primary flex min-h-140 flex-col overflow-hidden rounded-4xl p-8 pb-0 md:row-span-2"
+    >
+      <div className="relative z-10 mb-6 text-center transition-transform duration-500 ease-out group-hover:scale-105">
+        <h3 className="mb-3 text-2xl leading-tight font-medium text-neutral-900 md:text-4xl">
+          Chuẩn bị trọn bộ cho buổi phát sóng
+        </h3>
+        <p className="text-sm text-neutral-700">
+          Tìm thiết bị, đội ngũ sản xuất, studio và dịch vụ livestream chỉ với
+          một lượt tìm kiếm.
+        </p>
+      </div>
+
+      <div className="flex flex-1 items-end justify-center transition-transform duration-500 ease-out group-hover:scale-[1.02]">
+        <PhoneMockup variant="full">
+          <div className="bg-phone-screen absolute inset-0 px-5 pt-14">
+            <h4 className="mt-4 text-3xl leading-none font-medium tracking-tight text-neutral-900">
+              Livestream của bạn
+            </h4>
+            <h4 className="mb-4 text-3xl leading-none font-medium tracking-tight text-neutral-900">
+              bắt đầu từ đây.
+            </h4>
+            <p className="mb-8 text-sm leading-snug text-neutral-500">
+              Tìm dịch vụ phù hợp hoặc đăng nhu cầu sản xuất của bạn.
+            </p>
+
+            <div className="from-accent via-accent/80 to-accent/50 relative h-52 overflow-hidden rounded-2xl bg-linear-to-br p-4 shadow-xl">
+              <MarketplaceCardContent />
+            </div>
+          </div>
+        </PhoneMockup>
+      </div>
+    </motion.div>
+  );
+}
+
+function SearchCard(): ReactNode {
   return (
     <motion.div
       {...cardAnimation}
       transition={getCardTransition(0.1)}
-      className="group bg-card-secondary rounded-4xl p-8 overflow-hidden min-h-80 relative flex flex-col md:block"
+      className="group bg-card-secondary relative flex min-h-80 flex-col overflow-hidden rounded-4xl p-8 md:block"
     >
       <div className="relative z-10 max-w-48 transition-transform duration-500 ease-out group-hover:scale-105">
-        <h3 className="text-xl md:text-2xl whitespace-nowrap font-medium text-card-foreground leading-tight mb-3">
-          Real-time Data
+        <h3 className="text-card-foreground mb-3 text-xl leading-tight font-medium whitespace-nowrap md:text-2xl">
+          Tìm đúng nhu cầu
         </h3>
         <p className="text-card-foreground-muted text-sm">
-          Monitor metrics, analytics, and team activity instantly
+          Xem phạm vi công việc, khoảng giá, ngày khả dụng và chi tiết trước khi
+          lựa chọn.
         </p>
       </div>
 
-      <div className="relative md:absolute mt-8 md:mt-0 md:right-12 md:top-1/2 md:-translate-y-1/2 flex items-center justify-center transition-transform duration-500 ease-out group-hover:scale-105 self-center md:self-auto">
+      <div className="relative mt-8 flex items-center justify-center self-center transition-transform duration-500 ease-out group-hover:scale-105 md:absolute md:top-1/2 md:right-12 md:mt-0 md:-translate-y-1/2 md:self-auto">
         <DecorativeCircles />
 
         <PhoneMockup variant="compact">
-          <div className="absolute inset-0 bg-phone-screen pt-9 px-3">
-            <div className="bg-white rounded-full px-2 py-1.5 mb-3 flex items-center gap-1.5 border border-neutral-200">
-              <span className="text-neutral-400 text-xs">Search projects...</span>
+          <div className="bg-phone-screen absolute inset-0 px-3 pt-9">
+            <div className="mb-3 flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-2 py-1.5">
+              <Search className="size-3 text-neutral-400" aria-hidden="true" />
+              <span className="text-xs text-neutral-400">Tìm dịch vụ...</span>
             </div>
-            <p className="text-xs text-neutral-500 mb-0.5">Active projects</p>
-            <p className="text-xl font-medium text-neutral-900 mb-3">24 running</p>
+            <p className="mb-0.5 text-xs text-neutral-500">
+              Tìm theo nhu cầu sản xuất
+            </p>
+            <p className="mb-3 text-xl font-medium text-neutral-900">
+              Lên kế hoạch livestream
+            </p>
 
-            <div className="flex gap-1.5 mb-4">
-              <span className="bg-accent text-black text-xs px-2.5 py-1 rounded-full">
-                Deploy
+            <div className="mb-4 flex gap-1.5">
+              <span className="bg-accent rounded-full px-2.5 py-1 text-xs text-black">
+                Thiết bị
               </span>
-              <span className="text-neutral-400 text-xs px-2 py-1">Build</span>
-              <span className="text-neutral-400 text-xs px-2 py-1">Test</span>
+              <span className="px-2 py-1 text-xs text-neutral-400">
+                Đội ngũ
+              </span>
+              <span className="px-2 py-1 text-xs text-neutral-400">Studio</span>
             </div>
           </div>
         </PhoneMockup>
 
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-neutral-900 rounded-2xl px-5 py-3 shadow-xl z-20 whitespace-nowrap">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-neutral-400 text-xs">Build status</span>
-            <span className="text-neutral-500 text-xs">ⓘ</span>
+        <div className="absolute bottom-0 left-1/2 z-20 -translate-x-1/2 rounded-2xl bg-neutral-900 px-5 py-3 whitespace-nowrap shadow-xl">
+          <div className="mb-0.5 flex items-center gap-2">
+            <span className="text-xs text-neutral-400">Chi tiết dịch vụ</span>
+            <ListFilter
+              className="size-3 text-neutral-500"
+              aria-hidden="true"
+            />
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-lg font-medium text-white">All passing</span>
-            <span className="text-xs font-medium text-accent bg-accent/20 px-2 py-0.5 rounded">
-              ✓ 100%
+            <span className="text-base font-medium text-white">
+              Phạm vi · giá · lịch
             </span>
+            <CalendarDays className="text-accent size-4" aria-hidden="true" />
           </div>
         </div>
       </div>
@@ -252,53 +282,53 @@ function DashboardCard(): ReactNode {
   );
 }
 
-function TrustedByCard(): ReactNode {
+function TwoSidedCard(): ReactNode {
   return (
     <motion.div
       {...cardAnimation}
       transition={getCardTransition(0.2)}
-      className="group bg-card-secondary rounded-4xl p-6 md:p-8 flex flex-col items-center justify-center text-center min-h-64"
+      className="group bg-card-secondary flex min-h-64 flex-col items-center justify-center rounded-4xl p-6 text-center md:p-8"
     >
       <div className="transition-transform duration-500 ease-out group-hover:scale-110">
-        <h3 className="text-2xl md:text-3xl font-medium text-card-foreground leading-tight mb-1">
-          Trusted By
+        <h3 className="text-card-foreground mb-1 text-2xl leading-tight font-medium md:text-3xl">
+          Hai phía.
         </h3>
-        <h3 className="text-2xl md:text-3xl font-medium text-card-foreground leading-tight mb-5">
-          254k+ Users
+        <h3 className="text-card-foreground mb-5 text-2xl leading-tight font-medium md:text-3xl">
+          Một buổi phát sóng.
         </h3>
       </div>
 
       <div className="transition-transform duration-500 ease-out group-hover:scale-105">
-        <AvatarStack />
+        <ProductionIconStack />
       </div>
 
-      <div className="flex items-center gap-2 mt-5 text-card-foreground-muted transition-transform duration-500 ease-out group-hover:scale-105">
-        <Star className="size-4 fill-current" />
-        <span className="text-xs font-medium">4.9 from 48k+ reviews</span>
-      </div>
+      <p className="text-card-foreground-muted mt-5 max-w-52 text-xs font-medium transition-transform duration-500 ease-out group-hover:scale-105">
+        Đơn vị tổ chức và nhà cung cấp gặp nhau quanh một nhu cầu sản xuất cụ
+        thể.
+      </p>
     </motion.div>
   );
 }
 
-function IntegrationsCard(): ReactNode {
+function StartingPointsCard(): ReactNode {
   return (
     <motion.div
       {...cardAnimation}
       transition={getCardTransition(0.3)}
-      className="group bg-card-primary rounded-4xl p-6 md:p-8 flex flex-col min-h-64"
+      className="group bg-card-primary flex min-h-64 flex-col rounded-4xl p-6 md:p-8"
     >
       <div className="mb-auto transition-transform duration-500 ease-out group-hover:scale-105">
-        <h3 className="text-xl md:text-2xl font-medium text-neutral-900 leading-tight mb-2">
-          Built to Scale
+        <h3 className="mb-2 text-xl leading-tight font-medium text-neutral-900 md:text-2xl">
+          Bắt đầu theo cách của bạn
         </h3>
-        <p className="text-neutral-700 text-sm">
-          Enterprise-ready infrastructure that grows with you
+        <p className="text-sm text-neutral-700">
+          Tìm dịch vụ có sẵn hoặc mô tả chính xác nhu cầu sản xuất.
         </p>
       </div>
 
-      <div className="flex flex-col gap-2 mt-6 transition-transform duration-500 ease-out group-hover:scale-[1.02]">
-        {DEPLOYMENT_STATS.map((stat) => (
-          <DeploymentStat key={stat.icon} {...stat} />
+      <div className="mt-6 flex flex-col gap-2 transition-transform duration-500 ease-out group-hover:scale-[1.02]">
+        {STARTING_POINTS.map((point) => (
+          <StartingPoint key={point.label} {...point} />
         ))}
       </div>
     </motion.div>
@@ -307,15 +337,33 @@ function IntegrationsCard(): ReactNode {
 
 export function FeaturesBento(): ReactNode {
   return (
-    <section className="w-full px-6 mb-32 bg-background">
-      <div className="max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-4">
-          <StepByStepCard />
-          <DashboardCard />
+    <section
+      id="features"
+      className="bg-background mb-32 w-full scroll-mt-24 px-6"
+    >
+      <div className="mx-auto max-w-5xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: EASE }}
+          className="mb-10 max-w-2xl"
+        >
+          <span className="text-muted-foreground text-sm font-medium">
+            Một hệ sinh thái sản xuất livestream
+          </span>
+          <h2 className="text-foreground mt-3 text-3xl font-semibold sm:text-4xl lg:text-5xl">
+            Tìm đúng thiết bị. Kết nối đúng người. Sẵn sàng lên sóng.
+          </h2>
+        </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <TrustedByCard />
-            <IntegrationsCard />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_1.5fr]">
+          <DiscoveryCard />
+          <SearchCard />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TwoSidedCard />
+            <StartingPointsCard />
           </div>
         </div>
       </div>

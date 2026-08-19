@@ -1,28 +1,25 @@
 "use client";
 
-import { useRef } from "react";
+import { FileCheck2, Handshake, Search } from "lucide-react";
 import { motion, useScroll, useTransform } from "motion/react";
-import { CalendarCheck, Users, Rocket } from "lucide-react";
+import { useRef } from "react";
 import type { ReactNode } from "react";
 
 const steps = [
   {
-    icon: CalendarCheck,
-    title: "Schedule kickoff",
-    description:
-      "Align on scope, structure, and timeline. Whether it's a quick setup or a full migration, we'll take it from there.",
+    icon: Search,
+    title: "Đăng",
+    description: "Dịch vụ hoặc nhu cầu.",
   },
   {
-    icon: Users,
-    title: "Real-time collaboration",
-    description:
-      "Work alongside our team with full visibility. Every step follows best practices and thorough QA to ensure quality.",
+    icon: FileCheck2,
+    title: "Duyệt",
+    description: "LiveHub kiểm tra nội dung trước khi công khai.",
   },
   {
-    icon: Rocket,
-    title: "Launch and scale",
-    description:
-      "Go live with confidence. Our AI continuously learns and improves, helping your team scale effortlessly.",
+    icon: Handshake,
+    title: "Kết nối",
+    description: "Gửi yêu cầu thuê hoặc hồ sơ ứng tuyển.",
   },
 ];
 
@@ -36,16 +33,21 @@ function StepItem({
   const Icon = step.icon;
 
   return (
-    <div className={`relative flex gap-5 ${isLast ? "" : "pb-64"}`}>
-      <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent" aria-hidden="true">
+    <div
+      className={`relative flex gap-5 ${isLast ? "" : "pb-28 sm:pb-40 lg:pb-52"}`}
+    >
+      <div
+        className="bg-accent relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
+        aria-hidden="true"
+      >
         <Icon className="h-5 w-5 text-black" strokeWidth={2} />
       </div>
 
       <div className="pt-1">
-        <h3 className="text-xl font-semibold text-foreground sm:text-2xl">
+        <h3 className="text-foreground text-xl font-semibold sm:text-2xl">
           {step.title}
         </h3>
-        <p className="mt-2 max-w-sm text-base leading-relaxed text-foreground/60">
+        <p className="text-foreground/60 mt-2 max-w-sm text-base leading-relaxed">
           {step.description}
         </p>
       </div>
@@ -54,7 +56,7 @@ function StepItem({
 }
 
 export function HowItWorks(): ReactNode {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -65,44 +67,43 @@ export function HowItWorks(): ReactNode {
 
   return (
     <section
+      id="how-it-works"
       ref={containerRef}
-      className="relative w-full bg-background"
+      className="bg-background relative w-full scroll-mt-24"
     >
-      <div className="mx-auto grid max-w-5xl gap-12 px-6 py-20 sm:py-28 lg:grid-cols-2 lg:gap-20">
+      <div className="mx-auto grid max-w-6xl gap-12 px-4 xl:px-0 py-20 sm:py-28 lg:grid-cols-2 lg:gap-20">
         <div className="lg:sticky lg:top-48 lg:h-fit lg:self-start">
-          <h2 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            How it works
+          <h2 className="text-foreground text-2xl font-semibold whitespace-nowrap sm:text-3xl lg:text-4xl">
+            Đăng, Duyệt & Kết nối
           </h2>
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-foreground/60">
-            Your platform, configured by experts and launched on an{" "}
-            <span className="font-medium text-foreground">Enterprise plan</span>
-            , ready to grow with you.
+          <p className="text-foreground/60 mt-6 max-w-md text-lg leading-relaxed">
+            Nền tảng giúp tra cứu dịch vụ, kiểm duyệt thông tin và theo dõi tiến trình làm việc.
           </p>
           <motion.a
-            href="#"
+            href="/services"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="mt-8 inline-flex items-center rounded-xl bg-foreground px-6 py-3 text-sm font-semibold text-background transition-colors hover:bg-foreground/90"
+            className="bg-accent text-white hover:bg-accent/90 mt-8 inline-flex items-center rounded-xl px-6 py-3 text-sm font-semibold transition-colors"
           >
-            Schedule kickoff
+            Xem dịch vụ
           </motion.a>
         </div>
 
         <div className="relative">
-          <div className="absolute left-6 top-6 h-[calc(100%-6rem)] w-0.5 -translate-x-1/2 bg-foreground/10" aria-hidden="true">
+          <div
+            className="bg-foreground/10 absolute top-6 left-6 h-[calc(100%-6rem)] w-0.5 -translate-x-1/2"
+            aria-hidden="true"
+          >
             <motion.div
               style={{ height: lineHeight, willChange: "height" }}
-              className="w-full bg-accent"
+              className="bg-accent w-full"
             />
           </div>
 
-          <ol className="relative list-none p-0 m-0">
+          <ol className="relative m-0 list-none p-0">
             {steps.map((step, index) => (
               <li key={step.title}>
-                <StepItem
-                  step={step}
-                  isLast={index === steps.length - 1}
-                />
+                <StepItem step={step} isLast={index === steps.length - 1} />
               </li>
             ))}
           </ol>

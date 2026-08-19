@@ -1,46 +1,83 @@
 "use client";
 
+import {
+  ArrowUpRight,
+  Check,
+  FileText,
+  Search,
+  Store,
+  type LucideIcon,
+} from "lucide-react";
 import { motion } from "motion/react";
-import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 
-const plans = [
+const marketplacePaths: Array<{
+  audience: string;
+  name: string;
+  description: string;
+  features: string[];
+  cta: string;
+  href: string;
+  icon: LucideIcon;
+  featured: boolean;
+}> = [
   {
-    name: "Starter",
-    price: 24,
-    monthlyPrice: 40,
-    description: "Perfect for small teams getting started",
-    features: ["2 Team Members", "10GB Storage", "Basic Analytics", "Email Support"],
-    popular: false,
+    audience: "Dành cho khách hàng",
+    name: "Tìm giải pháp sản xuất",
+    description:
+      "Khám phá thiết bị, đội ngũ sản xuất, studio và dịch vụ livestream đang được đăng trên LiveHub.",
+    features: [
+      "Khám phá các tin dịch vụ công khai",
+      "Xem chi tiết tin đăng và khoảng giá",
+      "Gửi yêu cầu thuê dịch vụ",
+    ],
+    cta: "Khám phá dịch vụ",
+    href: "https://livehub-main.vercel.app/services",
+    icon: Search,
+    featured: true,
   },
   {
-    name: "Premium",
-    price: 99,
-    monthlyPrice: 120,
-    description: "Best for growing teams with advanced needs",
-    features: ["10 Team Members", "50GB Storage", "Advanced Analytics", "Priority Support"],
-    popular: true,
+    audience: "Dành cho nhà cung cấp",
+    name: "Đăng dịch vụ của bạn",
+    description:
+      "Giới thiệu thiết bị, studio, đội ngũ sản xuất hoặc năng lực sản xuất tới người đang chuẩn bị một sự kiện livestream.",
+    features: [
+      "Tạo tin dịch vụ kèm hình ảnh",
+      "Thêm danh mục, khoảng giá và ngày khả dụng",
+      "Quản lý tin đăng trong mục Dịch vụ của tôi",
+    ],
+    cta: "Đăng dịch vụ",
+    href: "https://livehub-main.vercel.app/services/create",
+    icon: Store,
+    featured: false,
   },
   {
-    name: "Enterprise",
-    price: 125,
-    monthlyPrice: 150,
-    description: "For large organizations requiring scale",
-    features: ["Unlimited Members", "2TB Storage", "Custom Integrations", "Dedicated Support"],
-    popular: false,
+    audience: "Dành cho nhu cầu riêng",
+    name: "Đăng nhu cầu sản xuất",
+    description:
+      "Mô tả buổi phát sóng bạn đang lên kế hoạch để nhà cung cấp phù hợp có thể tìm thấy và phản hồi.",
+    features: [
+      "Nêu rõ phạm vi và chọn danh mục",
+      "Thêm ngân sách, thời gian, thông tin liên hệ và tệp đính kèm",
+      "Nhận đơn ứng tuyển qua tin nhu cầu",
+    ],
+    cta: "Đăng nhu cầu",
+    href: "https://livehub-main.vercel.app/demands/new",
+    icon: FileText,
+    featured: false,
   },
 ];
 
 const ease = [0.23, 1, 0.32, 1] as const;
 
-function PricingCard({
-  plan,
+function MarketplacePathCard({
+  path,
   index,
 }: {
-  plan: (typeof plans)[0];
+  path: (typeof marketplacePaths)[number];
   index: number;
 }): ReactNode {
-  const isPopular = plan.popular;
+  const Icon = path.icon;
 
   return (
     <motion.div
@@ -50,59 +87,73 @@ function PricingCard({
       transition={{ duration: 0.6, ease, delay: index * 0.1 }}
       className="relative"
     >
-      {isPopular && (
-        <div className="absolute -inset-1 rounded-[1.2em] bg-accent" aria-hidden="true" />
+      {path.featured && (
+        <div
+          className="bg-accent absolute -inset-1 rounded-[1.2em]"
+          aria-hidden="true"
+        />
       )}
-      
+
       <div
-        className={`relative flex h-full flex-col rounded-2xl bg-frame p-6 sm:p-8 ${
-          isPopular ? "" : "border border-border"
+        className={`bg-frame relative flex h-full flex-col rounded-2xl p-6 sm:p-8 ${
+          path.featured ? "" : "border-border border"
         }`}
       >
-        {isPopular && (
+        {path.featured && (
           <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-            <span className="inline-block rounded-full bg-accent px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-black/50">
-              Most Popular
+            <span className="bg-accent inline-block rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap text-black/80">
+              Bắt đầu tại đây
             </span>
           </div>
         )}
 
-        <h3 className="text-xl font-semibold text-foreground">{plan.name}</h3>
-
-        <div className="mt-4">
-          <div className="flex items-end gap-3">
-            <span className="text-5xl font-bold tracking-tight text-foreground">
-              ${plan.price}
-            </span>
-            <span className="mb-1 text-sm text-muted-foreground">/month</span>
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Billed annually, or ${plan.monthlyPrice}/mo billed monthly
-          </p>
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-muted-foreground text-sm font-medium">
+            {path.audience}
+          </span>
+          <span className="bg-muted text-foreground flex size-11 items-center justify-center rounded-xl">
+            <Icon className="size-5" aria-hidden="true" />
+          </span>
         </div>
 
-        <motion.button
+        <h3 className="text-foreground mt-6 text-2xl font-semibold tracking-tight">
+          {path.name}
+        </h3>
+        <p className="text-muted-foreground mt-3 min-h-20 text-sm leading-relaxed">
+          {path.description}
+        </p>
+
+        <motion.a
+          href={path.href}
+          target="_blank"
+          rel="noreferrer"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className={`mt-6 w-full rounded-xl py-3 text-sm font-semibold transition-colors ${
-            isPopular
+          className={`mt-6 flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+            path.featured
               ? "bg-foreground text-background hover:bg-foreground/90"
               : "bg-muted text-foreground hover:bg-muted/80"
           }`}
         >
-          Get Started
-        </motion.button>
+          {path.cta}
+          <ArrowUpRight className="size-4" aria-hidden="true" />
+        </motion.a>
 
-        <div className="mt-8">
-          <p className="text-sm font-medium text-muted-foreground">Includes:</p>
+        <div className="border-border mt-8 border-t pt-6">
+          <p className="text-muted-foreground text-sm font-medium">
+            Bạn có thể
+          </p>
           <ul className="mt-4 space-y-3">
-            {plan.features.map((feature) => (
-              <li key={feature} className="flex items-center gap-3">
+            {path.features.map((feature) => (
+              <li key={feature} className="flex items-start gap-3">
                 <Check
-                  className="h-4 w-4 shrink-0 text-foreground"
+                  className="text-foreground mt-0.5 h-4 w-4 shrink-0"
                   strokeWidth={2.5}
+                  aria-hidden="true"
                 />
-                <span className="text-sm text-foreground">{feature}</span>
+                <span className="text-foreground text-sm leading-relaxed">
+                  {feature}
+                </span>
               </li>
             ))}
           </ul>
@@ -114,7 +165,10 @@ function PricingCard({
 
 export function Pricing(): ReactNode {
   return (
-    <section id="pricing" className="w-full bg-background px-6 py-20 sm:py-28 scroll-mt-24">
+    <section
+      id="solutions"
+      className="bg-background w-full scroll-mt-24 px-6 py-20 sm:py-28"
+    >
       <div className="mx-auto max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -123,21 +177,21 @@ export function Pricing(): ReactNode {
           transition={{ duration: 0.6, ease }}
           className="mb-12 text-center sm:mb-16"
         >
-          <span className="text-sm font-medium text-muted-foreground">
-            Pricing
+          <span className="text-muted-foreground text-sm font-medium">
+            Ba cách tham gia
           </span>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-            Simple, transparent pricing
+          <h2 className="text-foreground mt-3 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+            Chọn cách bạn sử dụng LiveHub
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Choose the plan that works best for your team. All plans include a
-            14-day free trial.
+          <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-base sm:text-lg">
+            Tìm hỗ trợ cho buổi phát sóng sắp tới, giới thiệu năng lực sản xuất
+            hoặc đăng nhu cầu để nhà cung cấp phản hồi.
           </p>
         </motion.div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-          {plans.map((plan, index) => (
-            <PricingCard key={plan.name} plan={plan} index={index} />
+          {marketplacePaths.map((path, index) => (
+            <MarketplacePathCard key={path.name} path={path} index={index} />
           ))}
         </div>
       </div>
