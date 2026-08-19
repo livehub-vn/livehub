@@ -297,7 +297,17 @@ export function Header(): ReactNode {
                 className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <FileText className="size-3.5 shrink-0 text-orange-500" />
-                <span>Tìm dự án & Nhu cầu</span>
+                <span>Sàn nhu cầu</span>
+              </Link>
+
+              {/* SUPPLIER: SÀN DỊCH VỤ */}
+              <Link
+                href="/services"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
+              >
+                <Video className="size-3.5 shrink-0 text-orange-500" />
+                <span>Sàn dịch vụ</span>
               </Link>
 
               {/* SUPPLIER: DỊCH VỤ CỦA TÔI */}
@@ -306,7 +316,6 @@ export function Header(): ReactNode {
                 onClick={scrollToTop}
                 className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
-                <Video className="size-3.5 shrink-0 text-orange-500" />
                 <span>Dịch vụ của tôi</span>
               </Link>
 
@@ -345,10 +354,20 @@ export function Header(): ReactNode {
               <Link
                 href="/services"
                 onClick={scrollToTop}
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <Video className="size-3.5 shrink-0 text-orange-500" />
                 <span>Sàn dịch vụ</span>
+              </Link>
+
+              {/* CUSTOMER: SÀN NHU CẦU */}
+              <Link
+                href="/demands"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
+              >
+                <FileText className="size-3.5 shrink-0 text-orange-500" />
+                <span>Sàn nhu cầu</span>
               </Link>
 
               {/* CUSTOMER: NHU CẦU CỦA BẠN */}
@@ -358,7 +377,7 @@ export function Header(): ReactNode {
                 className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <Package className="size-3.5 shrink-0 text-orange-500" />
-                <span>Nhu cầu của bạn</span>
+                <span>Dự án của bạn</span>
               </Link>
 
               {/* CUSTOMER: HỢP ĐỒNG THUÊ */}
@@ -804,9 +823,21 @@ export function Header(): ReactNode {
                     >
                       <div className="flex items-center gap-2">
                         <FileText className="size-4 text-orange-500" />
-                        <span>Tìm dự án & Nhu cầu</span>
+                        <span>Sàn nhu cầu</span>
                       </div>
                       <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold text-orange-600">Nhận việc</span>
+                    </Link>
+
+                    <Link
+                      href="/services"
+                      className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
+                      onClick={closeMobile}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Video className="size-4 text-orange-500" />
+                        <span>Sàn dịch vụ & Thiết bị</span>
+                      </div>
+                      <ArrowRight className="text-muted-foreground size-4" />
                     </Link>
 
                     <Link
@@ -855,6 +886,18 @@ export function Header(): ReactNode {
                       <div className="flex items-center gap-2">
                         <Video className="size-4 text-orange-500" />
                         <span>Sàn dịch vụ & Thiết bị</span>
+                      </div>
+                      <ArrowRight className="text-muted-foreground size-4" />
+                    </Link>
+
+                    <Link
+                      href="/demands"
+                      className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
+                      onClick={closeMobile}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="size-4 text-orange-500" />
+                        <span>Sàn nhu cầu</span>
                       </div>
                       <ArrowRight className="text-muted-foreground size-4" />
                     </Link>

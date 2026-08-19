@@ -734,20 +734,18 @@ function ServicesContent() {
             })}
           </div>
         )}
-
-        {/* Inline Guest Banner at bottom of page (No intrusive full-screen flash) */}
-        {!currentUser && !loading && (
-          <div className="mt-14">
-            <UnauthenticatedBlurOverlay
-              title="Mở khóa 100+ Thiết bị & Studio Chuyên Nghiệp"
-              description="Đăng nhập để xem đầy đủ báo giá, thông tin liên hệ nhà cung cấp và đặt lịch thuê thiết bị, studio livestream ngay."
-              loginUrl="/services"
-              badgeText="Mở khóa Bảng giá & Nhà cung cấp"
-            />
-          </div>
-        )}
       </main>
       </div>
+
+      {/* Centered In-Viewport Unlock Modal Overlay for Guests */}
+      {!currentUser && !loading && (
+        <UnauthenticatedBlurOverlay
+          title="Mở khóa 100+ Thiết bị & Studio Chuyên Nghiệp"
+          description="Đăng nhập để xem đầy đủ báo giá, thông tin liên hệ nhà cung cấp và đặt lịch thuê thiết bị, studio livestream ngay."
+          loginUrl="/services"
+          badgeText="Mở khóa Bảng giá & Nhà cung cấp"
+        />
+      )}
     </div>
   );
 }

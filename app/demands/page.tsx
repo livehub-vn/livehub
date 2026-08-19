@@ -607,20 +607,18 @@ export default function DemandsPage() {
             })}
           </div>
         )}
-
-        {/* Inline Guest Banner at bottom of page (No intrusive full-screen flash) */}
-        {!currentUser && !loading && (
-          <div className="mt-14">
-            <UnauthenticatedBlurOverlay
-              title="Mở khóa 100+ Dự án Livestream Đang Cần Ekip"
-              description="Đăng nhập để nhận thông tin liên hệ trực tiếp từ thương hiệu và gửi báo giá chốt show ngay hôm nay."
-              loginUrl="/demands"
-              badgeText="Mở khóa Dự án & Cơ hội Nhận việc"
-            />
-          </div>
-        )}
       </main>
       </div>
+
+      {/* Centered In-Viewport Unlock Modal Overlay for Guests */}
+      {!currentUser && !loading && (
+        <UnauthenticatedBlurOverlay
+          title="Mở khóa 100+ Dự án Livestream Đang Cần Ekip"
+          description="Đăng nhập để nhận thông tin liên hệ trực tiếp từ thương hiệu và gửi báo giá chốt show ngay hôm nay."
+          loginUrl="/demands"
+          badgeText="Mở khóa Dự án & Cơ hội Nhận việc"
+        />
+      )}
     </div>
   );
 }
