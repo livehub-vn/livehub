@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { Demand, DemandApplication } from "@/lib/types/database";
+import { getDemandImages } from "@/lib/demand-helpers";
+import { SafeImage } from "@/components/ui/safe-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Check, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -125,7 +127,7 @@ export default function MyDemandsPage() {
                 key={i}
                 className="border-border bg-card space-y-4 rounded-[2rem] border p-6 shadow-md"
               >
-                <div className="border-border/60 flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="border-border/60 -mx-6 flex flex-col gap-4 border-b px-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <Skeleton className="h-6 w-48 rounded-md" />
                     <Skeleton className="h-5 w-20 rounded-full" />
@@ -151,60 +153,74 @@ export default function MyDemandsPage() {
           </div>
         ) : (
           <div className="mt-8 space-y-6">
-            {demands.map((demand) => (
-              <div
-                key={demand.id}
-                className="border-border bg-card rounded-[2rem] border p-6 shadow-md"
-              >
-                <div className="border-border/60 -mx-6 flex flex-col gap-4 border-b px-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <h4 className="text-lg font-semibold">{demand.title}</h4>
-                      <span
-                        className={`rounded-full border px-3 py-0.5 text-[11px] font-semibold ${
-                          demand.status === "approved"
-                            ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                            : demand.status === "closed"
-                              ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-                              : demand.status === "rejected"
-                                ? "border-rose-500/20 bg-rose-500/10 text-rose-400"
-                                : "border-amber-500/20 bg-amber-500/10 text-amber-400"
-                        }`}
-                      >
-                        {demand.status === "approved"
-                          ? "Đang mở ứng tuyển"
-                          : demand.status === "closed"
-                            ? "Đã chọn nhà cung cấp"
-                            : demand.status === "rejected"
-                              ? "Từ chối"
-                              : "Chờ duyệt"}
-                      </span>
+            {demands.map((demand) => {
+              const dImages = getDemandImages(demand);
+              return (
+                <div
+                  key={demand.id}
+                  className="border-border bg-card rounded-[2rem] border p-6 shadow-md"
+                >
+                  <div className="border-border/60 -mx-6 flex flex-col gap-4 border-b px-6 pb-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-4">
+                      {/* Image Thumbnail */}
+                      <div className="relative size-18 shrink-0 overflow-hidden rounded-2xl bg-muted border border-border">
+                        <SafeImage
+                          src={dImages[0]!}
+                          alt={demand.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <h4 className="text-base sm:text-lg font-semibold">{demand.title}</h4>
+                          <span
+                            className={`rounded-full border px-3 py-0.5 text-[11px] font-semibold ${
+                              demand.status === "approved"
+                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                : demand.status === "closed"
+                                  ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                                  : demand.status === "rejected"
+                                    ? "border-rose-500/20 bg-rose-500/10 text-rose-400"
+                                    : "border-amber-500/20 bg-amber-500/10 text-amber-400"
+                            }`}
+                          >
+                            {demand.status === "approved"
+                              ? "Đang mở ứng tuyển"
+                              : demand.status === "closed"
+                                ? "Đã chọn nhà cung cấp"
+                                : demand.status === "rejected"
+                                  ? "Từ chối"
+                                  : "Chờ duyệt"}
+                          </span>
+                        </div>
+
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          Ngân sách: {Number(demand.budget).toLocaleString("vi-VN")} đ • Địa
+                          điểm: {demand.location} • Ngày:{" "}
+                          {demand.event_date || "Chưa xác định"}
+                        </p>
+                      </div>
                     </div>
 
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      Ngân sách: {demand.budget.toLocaleString("vi-VN")} đ • Địa
-                      điểm: {demand.location} • Ngày:{" "}
-                      {demand.event_date || "Chưa xác định"}
-                    </p>
-                  </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link
+                        href={`/demands/${demand.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors shadow-xs"
+                      >
+                        <span>Xem chi tiết & Tiến trình</span>
+                      </Link>
 
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/demands/${demand.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors shadow-xs"
-                    >
-                      <span>Xem chi tiết & Tiến trình</span>
-                    </Link>
-
-                    <button
-                      onClick={() => handleDelete(demand.id)}
-                      className="text-muted-foreground p-2 transition-colors hover:text-rose-500 rounded-xl hover:bg-rose-500/10"
-                      title="Xóa bài đăng"
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
+                      <button
+                        onClick={() => handleDelete(demand.id)}
+                        className="text-muted-foreground p-2 transition-colors hover:text-rose-500 rounded-xl hover:bg-rose-500/10 cursor-pointer"
+                        title="Xóa bài đăng"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
                 {/* Applications list */}
                 <div className="mt-4 pt-2">
@@ -270,7 +286,8 @@ export default function MyDemandsPage() {
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

@@ -320,43 +320,72 @@ export default function DemandsPage() {
                 </div>
               ) : (
                 <div className="grid gap-6 sm:grid-cols-2">
-                  {myDemands.map((demand) => (
-                    <Link
-                      key={demand.id}
-                      href={`/demands/${demand.id}`}
-                      className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-sm transition-all hover:border-orange-500/40 hover:shadow-md space-y-4"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                            demand.status === "approved"
-                              ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
-                              : "bg-amber-500/10 text-amber-600 border border-amber-500/20"
-                          }`}>
-                            {demand.status === "approved" ? "Đang mở ứng tuyển" : "Đang chờ duyệt"}
-                          </span>
-                          <span className="text-[11px] text-muted-foreground">{demand.location}</span>
-                        </div>
-
-                        <h4 className="font-bold text-base text-foreground line-clamp-1 group-hover:text-orange-500 transition-colors">
-                          {demand.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{demand.description}</p>
-                      </div>
-
-                      <div className="border-t border-border/70 pt-3 flex items-center justify-between">
+                  {myDemands.map((demand) => {
+                    const dImages = getDemandImages(demand);
+                    return (
+                      <Link
+                        key={demand.id}
+                        href={`/demands/${demand.id}`}
+                        className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-sm transition-all hover:border-orange-500/40 hover:shadow-md space-y-4"
+                      >
                         <div>
-                          <span className="text-[10px] text-muted-foreground block font-medium">Ngân sách dự kiến</span>
-                          <p className="text-base font-bold text-orange-600">
-                            {Number(demand.budget).toLocaleString("vi-VN")} đ
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <span
+                              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                demand.status === "approved"
+                                  ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                                  : "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                              }`}
+                            >
+                              {demand.status === "approved"
+                                ? "Đang mở ứng tuyển"
+                                : "Đang chờ duyệt"}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {demand.location}
+                            </span>
+                          </div>
+
+                          {/* Image Banner */}
+                          <div className="relative mb-3.5 h-36 w-full overflow-hidden rounded-2xl bg-muted">
+                            <SafeImage
+                              src={dImages[0]!}
+                              alt={demand.title}
+                              fill
+                              className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                            {dImages.length > 1 && (
+                              <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-lg bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
+                                <Images className="size-3" />
+                                <span>+{dImages.length - 1} ảnh</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="font-bold text-base text-foreground line-clamp-1 group-hover:text-orange-500 transition-colors">
+                            {demand.title}
+                          </h4>
+                          <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
+                            {demand.description}
                           </p>
                         </div>
-                        <span className="text-xs font-bold text-foreground group-hover:text-orange-500">
-                          Xem chi tiết & Báo giá →
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
+
+                        <div className="border-border/60 -mx-5 -mb-5 flex items-center justify-between border-t px-5 py-3.5 bg-muted/20 rounded-b-3xl">
+                          <div>
+                            <span className="text-[10px] text-muted-foreground block font-medium">
+                              Ngân sách dự kiến
+                            </span>
+                            <p className="text-base font-bold text-orange-600">
+                              {Number(demand.budget).toLocaleString("vi-VN")} đ
+                            </p>
+                          </div>
+                          <span className="text-xs font-bold text-foreground group-hover:text-orange-500">
+                            Xem chi tiết & Báo giá →
+                          </span>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>

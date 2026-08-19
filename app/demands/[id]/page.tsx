@@ -28,7 +28,6 @@ import {
   Zap,
 } from "lucide-react";
 import { SafeImage } from "@/components/ui/safe-image";
-import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -982,18 +981,12 @@ export default function DemandDetailPage() {
                             <div>
                               {/* Thumbnail & Price */}
                               <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-muted">
-                                {srv.images && srv.images.length > 0 ? (
-                                  <Image
-                                    src={srv.images[0]!}
-                                    alt={srv.title}
-                                    fill
-                                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                  />
-                                ) : (
-                                  <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
-                                    Chưa có ảnh
-                                  </div>
-                                )}
+                                <SafeImage
+                                  src={srv.images?.[0] || "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1000&auto=format&fit=crop&q=80"}
+                                  alt={srv.title}
+                                  fill
+                                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
 
                                 <div className="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-orange-500/90 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs shadow-xs">
                                   <Zap className="size-3" />
@@ -1026,12 +1019,12 @@ export default function DemandDetailPage() {
                               </div>
                             </div>
 
-                            {/* Card Footer Actions */}
-                            <div className="flex items-center justify-between gap-2 border-t border-border/70 pt-2.5">
+                            {/* Card Footer Actions (Full-Width) */}
+                            <div className="border-border/60 -mx-4 -mb-4 flex items-center justify-between gap-2 border-t px-4 py-3 bg-muted/20 rounded-b-3xl">
                               {srv.provider?.phone ? (
                                 <a
                                   href={`tel:${srv.provider.phone}`}
-                                  className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted/40 px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                  className="inline-flex items-center gap-1 rounded-xl border border-border bg-card px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
                                 >
                                   <Phone className="size-3 text-orange-500" />
                                   <span>Gọi điện</span>
@@ -1055,10 +1048,10 @@ export default function DemandDetailPage() {
 
                                 <Link
                                   href={`/services/${srv.id}`}
-                                  className="flex size-7.5 items-center justify-center rounded-xl border border-border bg-muted/40 text-foreground hover:bg-muted transition-colors"
+                                  className="flex size-7.5 items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-muted transition-colors"
                                   title="Xem chi tiết dịch vụ"
                                 >
-                                  <ArrowUpRight className="size-3.5" />
+                                  <ArrowUpRight className="size-4" />
                                 </Link>
                               </div>
                             </div>
