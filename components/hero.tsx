@@ -17,7 +17,6 @@ import {
   Send,
   Store,
   UserRoundCheck,
-  Wifi,
 } from "lucide-react";
 import { AnimatePresence, motion, useMotionValue, useSpring } from "motion/react";
 import Image from "next/image";
@@ -342,159 +341,201 @@ function MobileIphoneShowcase(): ReactNode {
   };
 
   return (
-    <Iphone className="mx-auto max-w-[320px] sm:max-w-[360px] drop-shadow-[0_25px_50px_rgba(0,0,0,0.35)]">
-      <div className="flex h-full flex-col bg-neutral-950 text-neutral-50">
-        {/* iOS Top Status Bar Area */}
-        <div className="flex items-center justify-between px-6 pt-3 pb-1 text-[11px] font-semibold text-neutral-300">
-          <span>9:41</span>
-          <div className="flex items-center gap-1.5 text-neutral-300">
-            <Wifi className="size-3" />
-            <div className="size-2 rounded-full bg-orange-500 animate-pulse" />
-          </div>
-        </div>
+    <div className="relative mx-auto flex justify-center py-2 px-2">
+      {/* Masked Half-Phone Container */}
+      <div
+        className="relative w-full max-w-[340px] xs:max-w-[370px] sm:max-w-[400px] overflow-hidden drop-shadow-xl"
+        style={{
+          maxHeight: "440px",
+          WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 68%, rgba(0,0,0,0) 100%)",
+          maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 68%, rgba(0,0,0,0) 100%)",
+        }}
+      >
+        <Iphone className="w-full">
+          <div className="flex h-full flex-col bg-white text-neutral-900">
+            {/* iOS White Status Bar - aligned with Dynamic Island */}
+            <div className="flex items-center justify-between px-6 pt-2 pb-1 text-neutral-950">
+              <span className="text-xs font-bold tracking-tight">9:41</span>
+              <div className="flex items-center gap-2">
+                {/* iOS Bold Wifi (Bigger size and thick bold stroke weight) */}
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-4 text-neutral-950"
+                  aria-hidden="true"
+                >
+                  <path d="M4.5 11.8a11.5 11.5 0 0 1 15 0" />
+                  <path d="M8.2 15.6a6.5 6.5 0 0 1 7.6 0" />
+                  <circle cx="12" cy="19.8" r="2" fill="currentColor" stroke="none" />
+                </svg>
 
-        {/* Mini App Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/brand/livehub-mark.png"
-              alt="LiveHub"
-              width={26}
-              height={26}
-              className="size-6 object-contain"
-            />
-            <span className="text-xs font-semibold tracking-tight">LiveHub</span>
-          </div>
-          <Link
-            href="/demands/new"
-            className="rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold text-neutral-950 shadow-sm"
-          >
-            Đăng nhu cầu
-          </Link>
-        </div>
-
-        {/* App Content */}
-        <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-3 no-scrollbar">
-          {/* Section Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-semibold text-orange-400 uppercase tracking-wider">
-                Dịch vụ nổi bật
-              </p>
-              <h4 className="text-sm font-semibold text-white">
-                Buổi live tiếp theo
-              </h4>
+                {/* Solid Rounded Battery (No outline) */}
+                <div className="flex items-center">
+                  <div className="h-2.5 w-5 rounded-[4px] bg-neutral-950" />
+                  <div className="h-1.5 w-0.5 rounded-r-xs bg-neutral-950 ml-[1px]" />
+                </div>
+              </div>
             </div>
-            <Link href="/services" className="text-[10px] font-medium text-orange-400">
-              Tất cả →
-            </Link>
-          </div>
 
-          {/* 1 Single Card Block Responsive */}
-          <div className="relative">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCard}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden rounded-2xl border border-orange-500/30 bg-neutral-900/90 p-3 shadow-md"
+            {/* App Header */}
+            <div className="flex items-center justify-between border-b border-neutral-100 bg-white/95 px-4 py-2.5 backdrop-blur-md">
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/brand/livehub-mark.png"
+                  alt="LiveHub"
+                  width={26}
+                  height={26}
+                  className="size-6 object-contain"
+                />
+                <span className="text-xs font-bold tracking-tight text-neutral-950">
+                  LiveHub
+                </span>
+              </div>
+              <Link
+                href="/demands/new"
+                className="rounded-lg bg-accent px-3 py-1 text-[11px] font-bold text-neutral-950 shadow-sm transition-transform active:scale-95"
               >
-                <div
-                  className="relative mb-2.5 flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-white/10 to-neutral-950 p-2"
-                  style={{
-                    boxShadow: `0 4px 20px ${currentCard.glow}`,
-                  }}
+                Đăng nhu cầu
+              </Link>
+            </div>
+
+            {/* App Content */}
+            <div className="flex-1 overflow-y-auto p-3.5 space-y-3 no-scrollbar">
+              {/* Section Header */}
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-[10px] font-bold tracking-wider text-orange-600 uppercase">
+                    Dịch vụ đã duyệt
+                  </p>
+                  <h4 className="text-sm font-bold text-neutral-950">
+                    Dịch vụ cho buổi live tiếp theo
+                  </h4>
+                </div>
+                <Link
+                  href="/services"
+                  className="text-[10px] font-semibold text-orange-600 hover:text-orange-700"
                 >
-                  <span className="absolute top-1.5 right-1.5 rounded-full bg-orange-500/25 px-2 py-0.5 text-[8px] font-semibold text-orange-300 border border-orange-500/30">
-                    {currentCard.tag}
-                  </span>
-                  <Image
-                    src={currentCard.image3d}
-                    alt={currentCard.title}
-                    width={160}
-                    height={110}
-                    className="h-full w-full object-contain drop-shadow-xl"
-                  />
-                </div>
-
-                <p className="text-xs font-semibold text-white leading-tight">
-                  {currentCard.title}
-                </p>
-                <p className="mt-0.5 text-[10px] text-neutral-400">
-                  {currentCard.type}
-                </p>
-
-                <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2 text-[10px]">
-                  <span className="flex items-center gap-1 text-neutral-400">
-                    <MapPin className="size-2.5 text-orange-400" />
-                    TP. Hồ Chí Minh
-                  </span>
-                  <span className="font-semibold text-orange-400">
-                    Đặt ngay →
-                  </span>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Indicator Dots & Buttons */}
-            <div className="mt-2 flex items-center justify-between px-0.5">
-              <div className="flex items-center gap-1">
-                {serviceCards.map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setActiveCard(idx)}
-                    aria-label={`Slide ${idx + 1}`}
-                    className={`h-1 rounded-full transition-all duration-300 ${
-                      idx === activeCard ? "w-4 bg-orange-400" : "w-1 bg-white/20"
-                    }`}
-                  />
-                ))}
+                  Tất cả →
+                </Link>
               </div>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={prevCard}
-                  aria-label="Trước"
-                  className="flex size-5 items-center justify-center rounded border border-white/10 bg-white/5 text-neutral-300 active:scale-95"
-                >
-                  <ChevronLeft className="size-2.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={nextCard}
-                  aria-label="Sau"
-                  className="flex size-5 items-center justify-center rounded border border-white/10 bg-white/5 text-neutral-300 active:scale-95"
-                >
-                  <ChevronRight className="size-2.5" />
-                </button>
+
+              {/* 1 Single Responsive 3D Card Block */}
+              <div className="relative">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeCard}
+                    initial={{ opacity: 0, scale: 0.96, y: 6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96, y: -6 }}
+                    transition={{ duration: 0.22 }}
+                    className="overflow-hidden rounded-2xl border border-neutral-200/80 bg-neutral-50/50 p-3.5 shadow-xs"
+                  >
+                    <div
+                      className="relative mb-2.5 flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-white to-neutral-100/80 p-2.5"
+                      style={{
+                        boxShadow: `0 8px 24px ${currentCard.glow}`,
+                      }}
+                    >
+                      <span className="absolute top-2 right-2 rounded-full bg-orange-500/10 px-2 py-0.5 text-[9px] font-bold text-orange-600 border border-orange-500/25 backdrop-blur-sm">
+                        {currentCard.tag}
+                      </span>
+                      <Image
+                        src={currentCard.image3d}
+                        alt={currentCard.title}
+                        width={180}
+                        height={120}
+                        className="h-full w-full object-contain drop-shadow-xl transition-transform duration-300 hover:scale-105"
+                      />
+                    </div>
+
+                    <p className="text-xs font-bold text-neutral-950 leading-snug">
+                      {currentCard.title}
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-neutral-500">
+                      {currentCard.type}
+                    </p>
+
+                    <div className="mt-2.5 flex items-center justify-between border-t border-neutral-200/60 pt-2 text-[10px]">
+                      <span className="flex items-center gap-1 text-neutral-500">
+                        <MapPin className="size-2.5 text-orange-500" />
+                        TP. Hồ Chí Minh
+                      </span>
+                      <Link
+                        href="/services"
+                        className="font-bold text-orange-600 hover:text-orange-700"
+                      >
+                        Xem dịch vụ →
+                      </Link>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Indicators & Prev/Next Arrows */}
+                <div className="mt-2.5 flex items-center justify-between px-0.5">
+                  <div className="flex items-center gap-1.5">
+                    {serviceCards.map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setActiveCard(idx)}
+                        aria-label={`Slide ${idx + 1}`}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          idx === activeCard
+                            ? "w-5 bg-orange-500"
+                            : "w-1.5 bg-neutral-300 hover:bg-neutral-400"
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={prevCard}
+                      aria-label="Trước"
+                      className="flex size-6 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 shadow-xs active:scale-95"
+                    >
+                      <ChevronLeft className="size-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={nextCard}
+                      aria-label="Sau"
+                      className="flex size-6 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 shadow-xs active:scale-95"
+                    >
+                      <ChevronRight className="size-3" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sample Demand Card */}
+              <div className="rounded-2xl border border-orange-200/80 bg-orange-50/70 p-3 shadow-xs">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="font-bold text-orange-700">Nhu cầu mẫu</span>
+                  <span className="size-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
+                </div>
+                <p className="mt-1 text-xs font-bold text-neutral-900">
+                  Livestream ra mắt sản phẩm 4K
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-1.5 text-[9px] text-neutral-600">
+                  <div className="rounded-lg bg-white/90 border border-orange-100 px-2 py-1">
+                    Hình thức: <span className="font-bold text-neutral-900">Trọn gói</span>
+                  </div>
+                  <div className="rounded-lg bg-white/90 border border-orange-100 px-2 py-1">
+                    Ngân sách: <span className="font-bold text-orange-600">Linh hoạt</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Mini Flow Block */}
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-            <div className="flex items-center justify-between text-[10px]">
-              <span className="font-medium text-orange-400">Nhu cầu đang tìm</span>
-              <span className="size-1.5 rounded-full bg-emerald-400 animate-ping" />
-            </div>
-            <p className="mt-1 text-xs font-semibold text-neutral-200">
-              Livestream ra mắt sản phẩm 4K
-            </p>
-            <div className="mt-2 grid grid-cols-2 gap-1.5 text-[9px] text-neutral-400">
-              <div className="rounded bg-black/40 px-2 py-1">
-                Lịch: <span className="text-white">Linh hoạt</span>
-              </div>
-              <div className="rounded bg-black/40 px-2 py-1">
-                Hồ sơ: <span className="text-orange-400 font-semibold">5 ứng tuyển</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        </Iphone>
       </div>
-    </Iphone>
+    </div>
   );
 }
 
