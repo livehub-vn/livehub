@@ -9,7 +9,6 @@ import {
   ArrowRight,
   Camera,
   ChevronDown,
-  Compass,
   FileText,
   Layers,
   LayoutDashboard,
@@ -270,276 +269,195 @@ export function Header(): ReactNode {
 
         {/* Desktop Navigation */}
         <nav className="flex items-center gap-1 max-[1024px]:hidden xl:gap-2">
-          {/* SÀN DỊCH VỤ DROPDOWN */}
-          <div
-            className="relative"
-            onMouseEnter={() => setActiveMenu("services")}
-            onMouseLeave={() => setActiveMenu(null)}
-          >
-            <Link
-              href="/services"
-              className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
-            >
-              <span>Sàn dịch vụ</span>
-              <ChevronDown className="size-3.5 shrink-0 opacity-70" />
-            </Link>
+          {profile?.role === "provider" ? (
+            <>
+              {/* SUPPLIER: TÌM DỰ ÁN & NHU CẦU */}
+              <Link
+                href="/demands"
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm"
+              >
+                <FileText className="size-3.5 shrink-0 text-orange-500" />
+                <span>Tìm dự án & Nhu cầu</span>
+                <span className="rounded-full bg-orange-500/10 px-1.5 py-0.5 text-[9px] font-bold text-orange-600 dark:text-orange-400">
+                  Nhận việc
+                </span>
+              </Link>
 
-            <AnimatePresence>
-              {activeMenu === "services" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                  transition={{ duration: 0.2, ease }}
-                  className="absolute top-full left-0 w-80 pt-2"
+              {/* SUPPLIER: DỊCH VỤ CỦA TÔI */}
+              <Link
+                href="/services/my"
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm"
+              >
+                <Video className="size-3.5 shrink-0 text-orange-500" />
+                <span>Dịch vụ của tôi</span>
+              </Link>
+
+              {/* SUPPLIER: ĐƠN THUÊ */}
+              <Link
+                href="/rentals"
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm"
+              >
+                <ShoppingBag className="size-3.5 shrink-0 text-orange-500" />
+                <span>Đơn thuê</span>
+              </Link>
+
+              {/* SUPPLIER: BẢNG GIÁ VIP */}
+              <Link
+                href="/pricing"
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm"
+              >
+                <span>Hạng VIP Partner</span>
+              </Link>
+
+              {/* SUPPLIER: GÓI GIẢI PHÁP */}
+              <Link
+                href="/packages"
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm"
+              >
+                <Sparkles className="size-3.5 shrink-0 text-orange-500" />
+                <span>Gói trọn gói</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              {/* CUSTOMER & GUEST: SÀN DỊCH VỤ DROPDOWN */}
+              <div
+                className="relative"
+                onMouseEnter={() => setActiveMenu("services")}
+                onMouseLeave={() => setActiveMenu(null)}
+              >
+                <Link
+                  href="/services"
+                  className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
                 >
-                  <div className="bg-frame border-border overflow-hidden rounded-2xl border p-2 shadow-2xl backdrop-blur-xl">
-                    <Link
-                      href="/services"
-                      className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
+                  <span>Sàn dịch vụ</span>
+                  <ChevronDown className="size-3.5 shrink-0 opacity-70" />
+                </Link>
+
+                <AnimatePresence>
+                  {activeMenu === "services" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.2, ease }}
+                      className="absolute top-full left-0 w-80 pt-2"
                     >
-                      <Video className="mt-0.5 size-4 shrink-0 text-orange-500" />
-                      <div>
-                        <p className="text-foreground text-sm font-semibold">
-                          Tất cả dịch vụ
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Khám phá toàn bộ thiết bị & studio
-                        </p>
+                      <div className="bg-frame border-border overflow-hidden rounded-2xl border p-2 shadow-2xl backdrop-blur-xl">
+                        <Link
+                          href="/services"
+                          className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
+                        >
+                          <Video className="mt-0.5 size-4 shrink-0 text-orange-500" />
+                          <div>
+                            <p className="text-foreground text-sm font-semibold">
+                              Tất cả dịch vụ
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              Khám phá toàn bộ thiết bị & studio
+                            </p>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/services?category=equipment"
+                          className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
+                        >
+                          <Camera className="mt-0.5 size-4 shrink-0 text-orange-500" />
+                          <div>
+                            <p className="text-foreground text-sm font-semibold">
+                              Thiết bị Livestream
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              Máy quay 4K, switcher, micro, đèn
+                            </p>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/services?category=studio"
+                          className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
+                        >
+                          <Radio className="mt-0.5 size-4 shrink-0 text-orange-500" />
+                          <div>
+                            <p className="text-foreground text-sm font-semibold">
+                              Studio & Phòng quay
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              Phông xanh, phòng thu cách âm
+                            </p>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/services?category=crew"
+                          className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
+                        >
+                          <Sparkles className="mt-0.5 size-4 shrink-0 text-orange-500" />
+                          <div>
+                            <p className="text-foreground text-sm font-semibold">
+                              Ekip sản xuất
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              Đạo diễn, kỹ thuật viên livestream
+                            </p>
+                          </div>
+                        </Link>
                       </div>
-                    </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
-                    <Link
-                      href="/services?category=equipment"
-                      className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
-                    >
-                      <Camera className="mt-0.5 size-4 shrink-0 text-orange-500" />
-                      <div>
-                        <p className="text-foreground text-sm font-semibold">
-                          Thiết bị Livestream
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Máy quay 4K, switcher, micro, đèn
-                        </p>
-                      </div>
-                    </Link>
+              {profile?.role === "customer" ? (
+                <>
+                  {/* CUSTOMER: DỰ ÁN CỦA TÔI */}
+                  <Link
+                    href="/demands/my"
+                    className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                  >
+                    <Package className="size-3.5 shrink-0 text-orange-500" />
+                    <span>Dự án của tôi</span>
+                  </Link>
 
-                    <Link
-                      href="/services?category=studio"
-                      className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
-                    >
-                      <Radio className="mt-0.5 size-4 shrink-0 text-orange-500" />
-                      <div>
-                        <p className="text-foreground text-sm font-semibold">
-                          Studio & Phòng quay
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Phông xanh, phòng thu cách âm
-                        </p>
-                      </div>
-                    </Link>
-
-                    <Link
-                      href="/services?category=crew"
-                      className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
-                    >
-                      <Sparkles className="mt-0.5 size-4 shrink-0 text-orange-500" />
-                      <div>
-                        <p className="text-foreground text-sm font-semibold">
-                          Ekip sản xuất
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Đạo diễn, kỹ thuật viên livestream
-                        </p>
-                      </div>
-                    </Link>
-
-                    <div className="border-border my-1 border-t" />
-
-                    <Link
-                      href="/services/new"
-                      className="flex items-start gap-3 rounded-xl p-3 text-orange-500 transition-colors hover:bg-orange-500/10"
-                    >
-                      <PlusCircle className="mt-0.5 size-4 shrink-0" />
-                      <div>
-                        <p className="text-sm font-semibold">
-                          Đăng dịch vụ mới
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Dành cho Nhà cung cấp đăng thiết bị
-                        </p>
-                      </div>
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* SÀN NHU CẦU DROPDOWN */}
-          <div
-            className="relative"
-            onMouseEnter={() => setActiveMenu("demands")}
-            onMouseLeave={() => setActiveMenu(null)}
-          >
-            <Link
-              href="/demands"
-              className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
-            >
-              <span>Sàn nhu cầu</span>
-              <ChevronDown className="size-3.5 shrink-0 opacity-70" />
-            </Link>
-
-            <AnimatePresence>
-              {activeMenu === "demands" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                  transition={{ duration: 0.2, ease }}
-                  className="absolute top-full left-0 w-80 pt-2"
+                  {/* CUSTOMER: HỢP ĐỒNG THUÊ */}
+                  <Link
+                    href="/rentals"
+                    className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                  >
+                    <ShoppingBag className="size-3.5 shrink-0 text-orange-500" />
+                    <span>Hợp đồng thuê</span>
+                  </Link>
+                </>
+              ) : (
+                /* GUEST: SÀN NHU CẦU */
+                <Link
+                  href="/demands"
+                  className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
                 >
-                  <div className="bg-frame border-border overflow-hidden rounded-2xl border p-2 shadow-2xl backdrop-blur-xl">
-                    <Link
-                      href="/demands"
-                      className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
-                    >
-                      <FileText className="mt-0.5 size-4 shrink-0 text-orange-500" />
-                      <div>
-                        <p className="text-foreground text-sm font-semibold">
-                          Nhu cầu dự án
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Danh sách yêu cầu tìm kiếm ekip
-                        </p>
-                      </div>
-                    </Link>
-
-                    <Link
-                      href="/demands/new"
-                      className="flex items-start gap-3 rounded-xl p-3 text-orange-500 transition-colors hover:bg-orange-500/10"
-                    >
-                      <PlusCircle className="mt-0.5 size-4 shrink-0" />
-                      <div>
-                        <p className="text-sm font-semibold">
-                          Đăng nhu cầu mới
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Tạo yêu cầu thuê & nhận báo giá
-                        </p>
-                      </div>
-                    </Link>
-
-                    <Link
-                      href="/demands/my"
-                      className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
-                    >
-                      <Package className="mt-0.5 size-4 shrink-0 text-orange-500" />
-                      <div>
-                        <p className="text-foreground text-sm font-semibold">
-                          Nhu cầu của tôi
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Quản lý bài đăng & ứng tuyển
-                        </p>
-                      </div>
-                    </Link>
-                  </div>
-                </motion.div>
+                  <FileText className="size-3.5 shrink-0 text-orange-500" />
+                  <span>Sàn nhu cầu</span>
+                </Link>
               )}
-            </AnimatePresence>
-          </div>
 
-          {/* DỊCH VỤ TRỌN GÓI */}
-          <Link
-            href="/packages"
-            className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
-          >
-            <Sparkles className="size-3.5 shrink-0 text-orange-500" />
-            <span>Dịch vụ trọn gói</span>
-          </Link>
+              {/* DỊCH VỤ TRỌN GÓI */}
+              <Link
+                href="/packages"
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+              >
+                <Sparkles className="size-3.5 shrink-0 text-orange-500" />
+                <span>Gói trọn gói</span>
+              </Link>
 
-          {/* BẢNG GIÁ THÀNH VIÊN */}
-          <Link
-            href="/pricing"
-            className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
-          >
-            <span>Bảng giá</span>
-          </Link>
-
-          {/* KHÁM PHÁ DROPDOWN */}
-          <div
-            className="relative"
-            onMouseEnter={() => setActiveMenu("explore")}
-            onMouseLeave={() => setActiveMenu(null)}
-          >
-            <Link
-              href="/explore"
-              className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
-            >
-              <span>Khám phá</span>
-              <ChevronDown className="size-3.5 shrink-0 opacity-70" />
-            </Link>
-
-            <AnimatePresence>
-              {activeMenu === "explore" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                  transition={{ duration: 0.2, ease }}
-                  className="absolute top-full left-0 w-80 pt-2"
-                >
-                  <div className="bg-frame border-border overflow-hidden rounded-2xl border p-2 shadow-2xl backdrop-blur-xl">
-                    <Link
-                      href="/packages"
-                      className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
-                    >
-                      <Sparkles className="mt-0.5 size-4 shrink-0 text-orange-500" />
-                      <div>
-                        <p className="text-foreground text-sm font-semibold">
-                          Dịch vụ livestream trọn gói
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Setup từ A-Z: E-commerce, talkshow, concert
-                        </p>
-                      </div>
-                    </Link>
-
-                    <Link
-                      href="/pricing"
-                      className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
-                    >
-                      <Layers className="mt-0.5 size-4 shrink-0 text-orange-500" />
-                      <div>
-                        <p className="text-foreground text-sm font-semibold">
-                          Phân hạng gói thành viên
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Miễn phí 02 tháng dùng thử - Nâng cấp Basic/Pro
-                        </p>
-                      </div>
-                    </Link>
-
-                    <Link
-                      href="/explore#studios"
-                      className="hover:bg-muted flex items-start gap-3 rounded-xl p-3 transition-colors"
-                    >
-                      <Compass className="mt-0.5 size-4 shrink-0 text-orange-500" />
-                      <div>
-                        <p className="text-foreground text-sm font-semibold">
-                          Studio & Đối tác nổi bật
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Top không gian và studio uy tín
-                        </p>
-                      </div>
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+              {/* BẢNG GIÁ THÀNH VIÊN */}
+              <Link
+                href="/pricing"
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+              >
+                <span>Bảng giá VIP</span>
+              </Link>
+            </>
+          )}
         </nav>
 
         {/* Right Side: Logged-in Hub or Single Join Button */}
@@ -547,151 +465,200 @@ export function Header(): ReactNode {
           <RealtimeNotifications isAdmin={false} />
 
           {profile ? (
-            <div className="relative" ref={userDropdownRef}>
-              <button
-                type="button"
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="border-border bg-card text-foreground flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold whitespace-nowrap shadow-sm transition-all hover:border-orange-500"
-              >
-                {profile.avatar_url ? (
-                  <Image
-                    src={profile.avatar_url}
-                    alt=""
-                    width={24}
-                    height={24}
-                    className="border-border size-6 shrink-0 rounded-full border object-cover"
-                  />
-                ) : (
-                  <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-500">
-                    <User className="size-3.5" />
-                  </div>
-                )}
-                <span className="max-w-[100px] truncate">
-                  {profile.full_name || "Tài khoản"}
-                </span>
-                {profile.membership_tier &&
-                  profile.membership_tier !== "free_trial" ? (
-                  <MembershipBadge
-                    tier={profile.membership_tier}
-                    status={profile.membership_status}
-                    compact
-                  />
-                ) : (
-                  <span className="shrink-0 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap text-orange-500">
-                    {roleLabelMap[profile.role] || "Thành viên"}
-                  </span>
-                )}
-                <ChevronDown className="size-3 shrink-0 opacity-60" />
-              </button>
+            <div className="flex items-center gap-2">
+              {/* Role-Specific Quick Action Button */}
+              {profile.role === "provider" ? (
+                <Link
+                  href="/services/new"
+                  className="inline-flex items-center gap-1.5 rounded-2xl bg-orange-500 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-orange-500/25 hover:bg-orange-600 transition-all cursor-pointer"
+                >
+                  <PlusCircle className="size-3.5" />
+                  <span>Đăng dịch vụ</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/demands/new"
+                  className="inline-flex items-center gap-1.5 rounded-2xl bg-orange-500 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-orange-500/25 hover:bg-orange-600 transition-all cursor-pointer"
+                >
+                  <PlusCircle className="size-3.5" />
+                  <span>Đăng nhu cầu</span>
+                </Link>
+              )}
 
-              {/* User Dropdown Menu */}
-              <AnimatePresence>
-                {userDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                    transition={{ duration: 0.15, ease }}
-                    className="border-border bg-card absolute top-full right-0 mt-2 w-64 rounded-2xl border p-2 shadow-2xl backdrop-blur-xl"
-                  >
-                    <div className="border-border/70 border-b px-3 py-2">
-                      <p className="text-foreground truncate text-xs font-bold">
-                        {profile.full_name}
-                      </p>
-                      <p className="text-muted-foreground truncate text-[11px]">
-                        {profile.email}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        <MembershipBadge
-                          tier={profile.membership_tier}
-                          status={profile.membership_status}
-                        />
-                      </div>
+              <div className="relative" ref={userDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="border-border bg-card text-foreground flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold whitespace-nowrap shadow-sm transition-all hover:border-orange-500"
+                >
+                  {profile.avatar_url ? (
+                    <Image
+                      src={profile.avatar_url}
+                      alt=""
+                      width={24}
+                      height={24}
+                      className="border-border size-6 shrink-0 rounded-full border object-cover"
+                    />
+                  ) : (
+                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-500">
+                      <User className="size-3.5" />
                     </div>
+                  )}
+                  <span className="max-w-[100px] truncate">
+                    {profile.full_name || "Tài khoản"}
+                  </span>
+                  {profile.membership_tier &&
+                  profile.membership_tier !== "free_trial" ? (
+                    <MembershipBadge
+                      tier={profile.membership_tier}
+                      status={profile.membership_status}
+                      compact
+                    />
+                  ) : (
+                    <span className="shrink-0 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap text-orange-500">
+                      {roleLabelMap[profile.role] || "Thành viên"}
+                    </span>
+                  )}
+                  <ChevronDown className="size-3 shrink-0 opacity-60" />
+                </button>
 
-                    <div className="mt-1 space-y-0.5">
-                      {/* Customer / Provider common link */}
-                      <Link
-                        href="/rentals"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
-                      >
-                        <ShoppingBag className="size-4 text-orange-500" />
-                        <span>Đơn thuê của tôi</span>
-                      </Link>
+                {/* User Dropdown Menu */}
+                <AnimatePresence>
+                  {userDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.15, ease }}
+                      className="border-border bg-card absolute top-full right-0 mt-2 w-64 rounded-2xl border p-2 shadow-2xl backdrop-blur-xl"
+                    >
+                      <div className="border-border/70 border-b px-3 py-2">
+                        <p className="text-foreground truncate text-xs font-bold">
+                          {profile.full_name}
+                        </p>
+                        <p className="text-muted-foreground truncate text-[11px]">
+                          {profile.email}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          <MembershipBadge
+                            tier={profile.membership_tier}
+                            status={profile.membership_status}
+                          />
+                        </div>
+                      </div>
 
-                      {/* Provider specific */}
-                      {profile.role === "provider" && (
+                      <div className="mt-1 space-y-0.5">
+                        {profile.role === "provider" ? (
+                          <>
+                            <Link
+                              href="/demands"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            >
+                              <FileText className="size-4 text-orange-500" />
+                              <span>Tìm dự án & Báo giá</span>
+                            </Link>
+
+                            <Link
+                              href="/services/my"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            >
+                              <Video className="size-4 text-orange-500" />
+                              <span>Dịch vụ của tôi</span>
+                            </Link>
+
+                            <Link
+                              href="/rentals"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            >
+                              <ShoppingBag className="size-4 text-orange-500" />
+                              <span>Đơn thuê nhận được</span>
+                            </Link>
+                          </>
+                        ) : (
+                          <>
+                            <Link
+                              href="/services"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            >
+                              <Video className="size-4 text-orange-500" />
+                              <span>Sàn dịch vụ & Thiết bị</span>
+                            </Link>
+
+                            <Link
+                              href="/demands/my"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            >
+                              <Package className="size-4 text-orange-500" />
+                              <span>Dự án của tôi</span>
+                            </Link>
+
+                            <Link
+                              href="/rentals"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            >
+                              <ShoppingBag className="size-4 text-orange-500" />
+                              <span>Hợp đồng thuê của tôi</span>
+                            </Link>
+                          </>
+                        )}
+
+                        {/* Admin Link */}
+                        {isAdminEmail(profile.email) && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-orange-500 hover:bg-orange-500/10"
+                          >
+                            <LayoutDashboard className="size-4" />
+                            <span>Bảng quản trị Admin</span>
+                          </Link>
+                        )}
+
                         <Link
-                          href="/services/my"
+                          href="/pricing"
                           onClick={() => setUserDropdownOpen(false)}
                           className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
                         >
-                          <Video className="size-4 text-orange-500" />
-                          <span>Dịch vụ của tôi</span>
+                          <Layers className="size-4 text-orange-500" />
+                          <span>Hạng thành viên & Bảng giá</span>
                         </Link>
-                      )}
 
-                      {/* Customer / Demands */}
-                      <Link
-                        href="/demands/my"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
-                      >
-                        <Package className="size-4 text-orange-500" />
-                        <span>Nhu cầu của tôi</span>
-                      </Link>
-
-                      {/* Admin Link */}
-                      {isAdminEmail(profile.email) && (
                         <Link
-                          href="/admin"
+                          href="/profile"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-orange-500 hover:bg-orange-500/10"
+                          className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
                         >
-                          <LayoutDashboard className="size-4" />
-                          <span>Bảng quản trị Admin</span>
+                          <Settings className="text-muted-foreground size-4" />
+                          <span>Hồ sơ tài khoản</span>
                         </Link>
-                      )}
 
-                      <Link
-                        href="/pricing"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
-                      >
-                        <Layers className="size-4 text-orange-500" />
-                        <span>Gói thành viên & Bảng giá</span>
-                      </Link>
+                        <div className="border-border/70 my-1 border-t" />
 
-                      <Link
-                        href="/profile"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
-                      >
-                        <Settings className="text-muted-foreground size-4" />
-                        <span>Hồ sơ tài khoản</span>
-                      </Link>
-
-                      <div className="border-border/70 my-1 border-t" />
-
-                      <button
-                        type="button"
-                        onClick={handleSignOut}
-                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-500 hover:bg-rose-500/10"
-                      >
-                        <LogOut className="size-4" />
-                        <span>Đăng xuất</span>
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        <button
+                          type="button"
+                          onClick={handleSignOut}
+                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                        >
+                          <LogOut className="size-4" />
+                          <span>Đăng xuất</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           ) : (
             <button
               type="button"
               onClick={handleDirectGoogleLogin}
-              className="group relative inline-flex items-center"
+              className="group relative inline-flex items-center cursor-pointer"
             >
               <span className="bg-accent absolute inset-y-0 right-0 w-[calc(100%-1.5rem)] rounded-2xl" />
               <span className="bg-foreground text-background relative z-10 rounded-2xl px-5 py-3 text-sm font-medium">
@@ -731,23 +698,111 @@ export function Header(): ReactNode {
           >
             <div className="space-y-4 px-6 pt-2 pb-6">
               <div className="space-y-1">
-                <Link
-                  href="/services"
-                  className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
-                  onClick={closeMobile}
-                >
-                  <span>Sàn dịch vụ</span>
-                  <ArrowRight className="text-muted-foreground size-4" />
-                </Link>
+                {profile?.role === "provider" ? (
+                  <>
+                    <Link
+                      href="/demands"
+                      className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
+                      onClick={closeMobile}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="size-4 text-orange-500" />
+                        <span>Tìm dự án & Nhu cầu</span>
+                      </div>
+                      <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold text-orange-600">Nhận việc</span>
+                    </Link>
 
-                <Link
-                  href="/demands"
-                  className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
-                  onClick={closeMobile}
-                >
-                  <span>Sàn nhu cầu</span>
-                  <ArrowRight className="text-muted-foreground size-4" />
-                </Link>
+                    <Link
+                      href="/services/my"
+                      className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
+                      onClick={closeMobile}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Video className="size-4 text-orange-500" />
+                        <span>Dịch vụ của tôi</span>
+                      </div>
+                      <ArrowRight className="text-muted-foreground size-4" />
+                    </Link>
+
+                    <Link
+                      href="/services/new"
+                      className="text-orange-600 dark:text-orange-400 bg-orange-500/10 flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold"
+                      onClick={closeMobile}
+                    >
+                      <div className="flex items-center gap-2">
+                        <PlusCircle className="size-4" />
+                        <span>+ Đăng dịch vụ mới</span>
+                      </div>
+                      <ArrowRight className="size-4" />
+                    </Link>
+
+                    <Link
+                      href="/rentals"
+                      className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
+                      onClick={closeMobile}
+                    >
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="size-4 text-orange-500" />
+                        <span>Đơn thuê</span>
+                      </div>
+                      <ArrowRight className="text-muted-foreground size-4" />
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/services"
+                      className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
+                      onClick={closeMobile}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Video className="size-4 text-orange-500" />
+                        <span>Sàn dịch vụ & Thiết bị</span>
+                      </div>
+                      <ArrowRight className="text-muted-foreground size-4" />
+                    </Link>
+
+                    {profile?.role === "customer" && (
+                      <>
+                        <Link
+                          href="/demands/my"
+                          className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
+                          onClick={closeMobile}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Package className="size-4 text-orange-500" />
+                            <span>Dự án của tôi</span>
+                          </div>
+                          <ArrowRight className="text-muted-foreground size-4" />
+                        </Link>
+
+                        <Link
+                          href="/demands/new"
+                          className="text-orange-600 dark:text-orange-400 bg-orange-500/10 flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold"
+                          onClick={closeMobile}
+                        >
+                          <div className="flex items-center gap-2">
+                            <PlusCircle className="size-4" />
+                            <span>+ Đăng nhu cầu tìm ekip</span>
+                          </div>
+                          <ArrowRight className="size-4" />
+                        </Link>
+
+                        <Link
+                          href="/rentals"
+                          className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
+                          onClick={closeMobile}
+                        >
+                          <div className="flex items-center gap-2">
+                            <ShoppingBag className="size-4 text-orange-500" />
+                            <span>Hợp đồng thuê</span>
+                          </div>
+                          <ArrowRight className="text-muted-foreground size-4" />
+                        </Link>
+                      </>
+                    )}
+                  </>
+                )}
 
                 <Link
                   href="/packages"
@@ -766,16 +821,10 @@ export function Header(): ReactNode {
                   className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
                   onClick={closeMobile}
                 >
-                  <span>Bảng giá thành viên</span>
-                  <ArrowRight className="text-muted-foreground size-4" />
-                </Link>
-
-                <Link
-                  href="/explore"
-                  className="text-foreground hover:bg-muted flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold"
-                  onClick={closeMobile}
-                >
-                  <span>Khám phá</span>
+                  <div className="flex items-center gap-2">
+                    <Layers className="size-4 text-orange-500" />
+                    <span>Bảng giá VIP</span>
+                  </div>
                   <ArrowRight className="text-muted-foreground size-4" />
                 </Link>
               </div>
@@ -795,35 +844,6 @@ export function Header(): ReactNode {
                       compact
                     />
                   </div>
-
-                  <Link
-                    href="/rentals"
-                    className="text-foreground hover:bg-muted flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium"
-                    onClick={closeMobile}
-                  >
-                    <ShoppingBag className="size-4 text-orange-500" />
-                    <span>Đơn thuê của tôi</span>
-                  </Link>
-
-                  {profile.role === "provider" && (
-                    <Link
-                      href="/services/my"
-                      className="text-foreground hover:bg-muted flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium"
-                      onClick={closeMobile}
-                    >
-                      <Video className="size-4 text-orange-500" />
-                      <span>Dịch vụ của tôi</span>
-                    </Link>
-                  )}
-
-                  <Link
-                    href="/demands/my"
-                    className="text-foreground hover:bg-muted flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium"
-                    onClick={closeMobile}
-                  >
-                    <Package className="size-4 text-orange-500" />
-                    <span>Nhu cầu của tôi</span>
-                  </Link>
 
                   <Link
                     href="/profile"
@@ -851,7 +871,7 @@ export function Header(): ReactNode {
                       closeMobile();
                       handleSignOut();
                     }}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-rose-500 hover:bg-rose-500/10"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-rose-500 hover:bg-rose-500/10 cursor-pointer"
                   >
                     <LogOut className="size-4" />
                     <span>Đăng xuất</span>

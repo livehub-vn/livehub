@@ -270,9 +270,15 @@ function ServicesContent() {
                 </p>
               </div>
 
-              <div className="flex shrink-0 items-center gap-3">
-                {currentUser ? (
+              <div className="flex shrink-0 items-center gap-3 flex-wrap">
+                {currentUser?.role === "provider" ? (
                   <>
+                    <Link
+                      href="/demands"
+                      className="border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 rounded-xl border px-4 py-2.5 text-xs font-bold transition-colors"
+                    >
+                      Duyệt dự án khách hàng →
+                    </Link>
                     <Link
                       href="/services/my"
                       className="border-border bg-background hover:bg-muted rounded-xl border px-4 py-2.5 text-xs font-semibold transition-colors"
@@ -281,28 +287,37 @@ function ServicesContent() {
                     </Link>
                     <Link
                       href="/services/new"
-                      className="bg-accent inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-orange-600"
+                      className="bg-orange-500 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-orange-600 cursor-pointer"
                     >
                       <Plus className="size-4" />
                       <span>Đăng dịch vụ</span>
+                    </Link>
+                  </>
+                ) : currentUser ? (
+                  <>
+                    <Link
+                      href="/demands/my"
+                      className="border-border bg-background hover:bg-muted rounded-xl border px-4 py-2.5 text-xs font-semibold transition-colors"
+                    >
+                      Nhu cầu của tôi
+                    </Link>
+                    <Link
+                      href="/demands/new"
+                      className="bg-orange-500 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-orange-600 cursor-pointer"
+                    >
+                      <Plus className="size-4" />
+                      <span>Đăng nhu cầu tìm ekip</span>
                     </Link>
                   </>
                 ) : (
                   <>
                     <button
                       type="button"
-                      onClick={() => loginWithGoogle("/services/my")}
-                      className="border-border bg-background hover:bg-muted rounded-xl border px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                      Dịch vụ của tôi
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => loginWithGoogle("/services/new")}
-                      className="bg-accent inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-orange-600 cursor-pointer"
+                      onClick={() => loginWithGoogle("/demands/new")}
+                      className="bg-orange-500 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-orange-600 cursor-pointer"
                     >
                       <Plus className="size-4" />
-                      <span>Đăng dịch vụ</span>
+                      <span>Đăng nhu cầu tìm ekip</span>
                     </button>
                   </>
                 )}

@@ -484,7 +484,7 @@ export default function DemandDetailPage() {
 
         {/* 1. INTERACTIVE PROJECT PROGRESS TRACKER (Tiến trình dự án livestream) */}
         <div className="border-border bg-card rounded-[2.5rem] border p-6 sm:p-8 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6 -mx-6 sm:-mx-8 px-6 sm:px-8">
             <div className="space-y-1">
               <span className="text-[11px] font-bold tracking-wider text-orange-600 dark:text-orange-400 ">
                 Tiến trình dự án livestream
@@ -698,7 +698,7 @@ export default function DemandDetailPage() {
               })()}
 
               {/* Meta information */}
-              <div className="flex flex-wrap gap-4 text-xs text-muted-foreground border-y border-border py-4">
+              <div className="flex flex-wrap gap-4 text-xs text-muted-foreground border-y border-border py-4 -mx-6 sm:-mx-8 px-6 sm:px-8">
                 <span className="flex items-center gap-1.5">
                   <MapPin className="size-4 text-orange-500" />
                   <span>Địa điểm:</span> <strong className="text-foreground">{demand.location}</strong>
@@ -752,7 +752,7 @@ export default function DemandDetailPage() {
             {/* 3. CONSOLIDATED PROPOSALS & AI MATCHING HUB (Gộp Danh sách báo giá & Gợi ý đối tác) */}
             <div className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
               {/* Tab Navigation */}
-              <div className="flex items-center justify-between border-b border-border pb-4 flex-wrap gap-3">
+              <div className="flex items-center justify-between border-b border-border pb-4 -mx-6 sm:-mx-8 px-6 sm:px-8 flex-wrap gap-3">
                 <div className="flex items-center gap-2 p-1 rounded-2xl bg-muted/60 text-xs">
                   <button
                     type="button"
@@ -811,7 +811,7 @@ export default function DemandDetailPage() {
                           }`}
                         >
                           {/* Provider Header & Proposed Price */}
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/70 pb-3.5">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/70 pb-3.5 -mx-5 px-5">
                             <div className="flex items-center gap-3">
                               <div className="flex size-11 items-center justify-center rounded-2xl bg-orange-500 text-white font-bold text-sm shadow-xs">
                                 {app.provider?.full_name?.[0] || "P"}
@@ -1024,7 +1024,7 @@ export default function DemandDetailPage() {
           {/* Right Sidebar (Sticky on Scroll) */}
           <div className="lg:col-span-1 sticky top-28 self-start z-20">
             <div className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6">
-              <div className="border-b border-border pb-5">
+              <div className="border-b border-border pb-5 -mx-6 sm:-mx-8 px-6 sm:px-8">
                 <span className="text-xs text-muted-foreground">Ngân sách dự kiến của dự án</span>
                 <p className="mt-1 text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400">
                   {Number(demand.budget).toLocaleString("vi-VN")} đ
