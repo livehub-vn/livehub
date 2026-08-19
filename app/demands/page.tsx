@@ -4,6 +4,7 @@ import { GoldenTicketBadge, getTierPriorityWeight, getTierCardStyle } from "@/co
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { loginWithGoogle } from "@/lib/auth-client";
+import { getDemandImages } from "@/lib/demand-helpers";
 import { SEED_DEMANDS } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/client";
 import type { Demand } from "@/lib/types/database";
@@ -492,22 +493,26 @@ export default function DemandsPage() {
                     </div>
 
                     {/* Image Preview Banner if available */}
-                    {demand.images && demand.images.length > 0 && (
-                      <div className="relative mt-3.5 h-36 w-full overflow-hidden rounded-2xl bg-muted">
-                        <Image
-                          src={demand.images[0]!}
-                          alt={demand.title}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        {demand.images.length > 1 && (
-                          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-lg bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
-                            <Images className="size-3" />
-                            <span>+{demand.images.length - 1} ảnh</span>
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {(() => {
+                      const dImages = getDemandImages(demand);
+                      if (dImages.length === 0) return null;
+                      return (
+                        <div className="relative mt-3.5 h-36 w-full overflow-hidden rounded-2xl bg-muted">
+                          <Image
+                            src={dImages[0]!}
+                            alt={demand.title}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          {dImages.length > 1 && (
+                            <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-lg bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
+                              <Images className="size-3" />
+                              <span>+{dImages.length - 1} ảnh</span>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     <h3 className="mt-3.5 text-base font-semibold leading-snug transition-colors group-hover:text-accent">
                       {demand.title}

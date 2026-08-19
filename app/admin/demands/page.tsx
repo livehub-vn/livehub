@@ -3,6 +3,7 @@
 import { GoldenTicketBadge } from "@/components/golden-ticket-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminFetch } from "@/lib/admin/client";
+import { getDemandImages } from "@/lib/demand-helpers";
 import type { Demand } from "@/lib/types/database";
 import {
   AlertCircle,
@@ -328,24 +329,28 @@ export default function AdminDemandsPage() {
                   {demand.title}
                 </h2>
                 {/* Optional Image Preview in Admin Card */}
-                {demand.images && demand.images.length > 0 && (
-                  <div className="mt-3 flex items-center gap-2">
-                    <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200">
-                      <Image
-                        src={demand.images[0]!}
-                        alt=""
-                        fill
-                        sizes="56px"
-                        className="object-cover"
-                      />
+                {(() => {
+                  const adminImages = getDemandImages(demand);
+                  if (adminImages.length === 0) return null;
+                  return (
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200">
+                        <Image
+                          src={adminImages[0]!}
+                          alt=""
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
+                      </div>
+                      {adminImages.length > 1 && (
+                        <span className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600">
+                          +{adminImages.length - 1} ảnh đính kèm
+                        </span>
+                      )}
                     </div>
-                    {demand.images.length > 1 && (
-                      <span className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600">
-                        +{demand.images.length - 1} ảnh đính kèm
-                      </span>
-                    )}
-                  </div>
-                )}
+                  );
+                })()}
 
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <div className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200/60 px-3 py-2 text-[11px] font-medium text-slate-600">

@@ -3,6 +3,7 @@
 import {
   addDays,
   addMonths,
+  differenceInCalendarDays,
   eachDayOfInterval,
   endOfMonth,
   format,
@@ -19,6 +20,7 @@ import { vi } from "date-fns/locale";
 import {
   Calendar as CalendarIcon,
   CalendarRange,
+  Check,
   ChevronLeft,
   ChevronRight,
   RotateCcw,
@@ -54,24 +56,37 @@ export function DateRangePicker({
   const [mode, setMode] = useState<"single" | "range">(isRange ? "range" : "single");
 
   // Parse state dates
-  const [startDate, setStartDate] = useState<Date | undefined>(() => {
-    if (!value) return undefined;
-    if (value.includes(" - ")) {
-      const parts = value.split(" - ");
+  const parseStartDate = (val: string): Date | undefined => {
+    if (!val) return undefined;
+    if (val.includes(" - ")) {
+      const parts = val.split(" - ");
       return parts[0] ? parseISO(parts[0]) : undefined;
     }
-    return parseISO(value);
-  });
+    return parseISO(val);
+  };
 
-  const [endDate, setEndDate] = useState<Date | undefined>(() => {
-    if (!value || !value.includes(" - ")) return undefined;
-    const parts = value.split(" - ");
+  const parseEndDate = (val: string): Date | undefined => {
+    if (!val || !val.includes(" - ")) return undefined;
+    const parts = val.split(" - ");
     return parts[1] ? parseISO(parts[1]) : undefined;
-  });
+  };
 
-  const [currentMonth, setCurrentMonth] = useState<Date>(
-    startDate || new Date()
-  );
+  const [tempStartDate, setTempStartDate] = useState<Date | undefined>(() => parseStartDate(value));
+  const [tempEndDate, setTempEndDate] = useState<Date | undefined>(() => parseEndDate(value));
+  const [hoveredDate, setHoveredDate] = useState<Date | undefined>(undefined);
+
+  // Always default to CURRENT MONTH
+  const [currentMonth, setCurrentMonth] = useState<Date>(() => startOfMonth(new Date()));
+
+  // Sync temp dates when popover opens
+  useEffect(() => {
+    if (isOpen) {
+      setTempStartDate(parseStartDate(value));
+      setTempEndDate(parseEndDate(value));
+      // Always focus on current month when opened
+      setCurrentMonth(startOfMonth(new Date()));
+    }
+  }, [isOpen, value]);
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -101,67 +116,100 @@ export function DateRangePicker({
 
   const handleSelectDay = (day: Date) => {
     if (mode === "single") {
-      setStartDate(day);
-      setEndDate(undefined);
-      const formatted = format(day, "yyyy-MM-dd");
-      onChange(formatted);
-      setIsOpen(false);
+      setTempStartDate(day);
+      setTempEndDate(undefined);
     } else {
       // Range mode
-      if (!startDate || (startDate && endDate)) {
-        // Start new range selection
-        setStartDate(day);
-        setEndDate(undefined);
-      } else if (startDate && !endDate) {
-        if (isBefore(day, startDate)) {
-          // If clicked before start, make it new start
-          setStartDate(day);
-          setEndDate(undefined);
+      if (!tempStartDate || (tempStartDate && tempEndDate)) {
+        // Start picking new range
+        setTempStartDate(day);
+        setTempEndDate(undefined);
+      } else if (tempStartDate && !tempEndDate) {
+        if (isBefore(day, tempStartDate)) {
+          // If clicked day is before start date, make it the new start date
+          setTempStartDate(day);
+          setTempEndDate(undefined);
         } else {
-          // Complete the range
-          setEndDate(day);
-          const startStr = format(startDate, "yyyy-MM-dd");
-          const endStr = format(day, "yyyy-MM-dd");
-          onChange(`${startStr} - ${endStr}`);
-          setIsOpen(false);
+          // Select end date (DO NOT AUTO-CLOSE - wait for OK confirm)
+          setTempEndDate(day);
         }
       }
     }
   };
 
+  const handleConfirm = () => {
+    if (mode === "single") {
+      if (tempStartDate) {
+        onChange(format(tempStartDate, "yyyy-MM-dd"));
+      } else {
+        onChange("");
+      }
+    } else {
+      if (tempStartDate && tempEndDate) {
+        onChange(`${format(tempStartDate, "yyyy-MM-dd")} - ${format(tempEndDate, "yyyy-MM-dd")}`);
+      } else if (tempStartDate) {
+        onChange(format(tempStartDate, "yyyy-MM-dd"));
+      } else {
+        onChange("");
+      }
+    }
+    setIsOpen(false);
+  };
+
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setStartDate(undefined);
-    setEndDate(undefined);
+    setTempStartDate(undefined);
+    setTempEndDate(undefined);
     onChange("");
   };
 
   const handlePreset = (start: Date, end?: Date) => {
     if (end) {
       setMode("range");
-      setStartDate(start);
-      setEndDate(end);
-      onChange(`${format(start, "yyyy-MM-dd")} - ${format(end, "yyyy-MM-dd")}`);
+      setTempStartDate(start);
+      setTempEndDate(end);
     } else {
       setMode("single");
-      setStartDate(start);
-      setEndDate(undefined);
-      onChange(format(start, "yyyy-MM-dd"));
+      setTempStartDate(start);
+      setTempEndDate(undefined);
     }
-    setIsOpen(false);
   };
 
   const weekDayLabels = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
-  // Format trigger label text
+  // Display label on trigger button
   const getDisplayLabel = () => {
-    if (startDate && endDate) {
-      return `${format(startDate, "dd/MM/yyyy")} - ${format(endDate, "dd/MM/yyyy")}`;
+    const savedStart = parseStartDate(value);
+    const savedEnd = parseEndDate(value);
+
+    if (savedStart && savedEnd) {
+      return `${format(savedStart, "dd/MM/yyyy")} - ${format(savedEnd, "dd/MM/yyyy")}`;
     }
-    if (startDate) {
-      return format(startDate, "dd/MM/yyyy (EEEE)", { locale: vi });
+    if (savedStart) {
+      return format(savedStart, "dd/MM/yyyy (EEEE)", { locale: vi });
     }
     return placeholder;
+  };
+
+  // Preview helper in popover
+  const getPreviewText = () => {
+    if (mode === "single") {
+      if (tempStartDate) {
+        return format(tempStartDate, "dd/MM/yyyy (EEEE)", { locale: vi });
+      }
+      return "Chưa chọn ngày";
+    }
+
+    if (tempStartDate && tempEndDate) {
+      const days = differenceInCalendarDays(tempEndDate, tempStartDate) + 1;
+      return `${format(tempStartDate, "dd/MM/yyyy")} → ${format(tempEndDate, "dd/MM/yyyy")} (${days} ngày)`;
+    }
+
+    if (tempStartDate) {
+      return `Bắt đầu: ${format(tempStartDate, "dd/MM/yyyy")} (Hãy chọn ngày kết thúc)`;
+    }
+
+    return "Hãy chọn ngày bắt đầu và ngày kết thúc";
   };
 
   return (
@@ -172,16 +220,16 @@ export function DateRangePicker({
         </label>
       )}
 
-      {/* Trigger Button (shadcn popover trigger) */}
+      {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`flex w-full items-center justify-between rounded-xl border border-border bg-background px-4 py-3 text-left text-xs transition-all hover:border-orange-500/50 focus:border-orange-500 focus:outline-none cursor-pointer ${
-          startDate ? "text-foreground font-semibold" : "text-muted-foreground"
+          value ? "text-foreground font-semibold" : "text-muted-foreground"
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          {mode === "range" ? (
+          {isRange ? (
             <CalendarRange className="size-4 text-orange-500 shrink-0" />
           ) : (
             <CalendarIcon className="size-4 text-orange-500 shrink-0" />
@@ -189,7 +237,7 @@ export function DateRangePicker({
           <span className="truncate">{getDisplayLabel()}</span>
         </div>
 
-        {startDate ? (
+        {value ? (
           <span
             onClick={handleClear}
             className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
@@ -204,16 +252,16 @@ export function DateRangePicker({
         )}
       </button>
 
-      {/* Calendar Popover Dialog */}
+      {/* Popover Calendar with OK Confirm Button */}
       {isOpen && (
-        <div className="absolute top-full left-0 z-50 mt-2 w-72 sm:w-84 rounded-2xl border border-border bg-card p-4 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 text-foreground">
+        <div className="absolute top-full left-0 z-50 mt-2 w-76 sm:w-88 rounded-2xl border border-border bg-card p-4 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 text-foreground">
           {/* Mode Switch Tabs */}
           <div className="flex items-center gap-1.5 p-1 rounded-xl bg-muted/50 mb-3 text-xs">
             <button
               type="button"
               onClick={() => {
                 setMode("single");
-                setEndDate(undefined);
+                setTempEndDate(undefined);
               }}
               className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                 mode === "single"
@@ -222,7 +270,7 @@ export function DateRangePicker({
               }`}
             >
               <CalendarIcon className="size-3.5" />
-              <span>1 ngày</span>
+              <span>1 ngày cụ thể</span>
             </button>
             <button
               type="button"
@@ -238,7 +286,7 @@ export function DateRangePicker({
             </button>
           </div>
 
-          {/* Month Header Navigation */}
+          {/* Month Header Navigation (Default to Current Month) */}
           <div className="flex items-center justify-between pb-2 border-b border-border">
             <h4 className="text-xs font-bold capitalize text-foreground">
               {format(currentMonth, "MMMM yyyy", { locale: vi })}
@@ -253,7 +301,7 @@ export function DateRangePicker({
               </button>
               <button
                 type="button"
-                onClick={() => setCurrentMonth(new Date())}
+                onClick={() => setCurrentMonth(startOfMonth(new Date()))}
                 className="flex size-7 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
                 title="Về tháng hiện tại"
               >
@@ -287,12 +335,20 @@ export function DateRangePicker({
 
             {/* Days in Month */}
             {daysInMonth.map((day, i) => {
-              const isStart = startDate && isSameDay(day, startDate);
-              const isEnd = endDate && isSameDay(day, endDate);
+              const isStart = tempStartDate && isSameDay(day, tempStartDate);
+              const isEnd = tempEndDate && isSameDay(day, tempEndDate);
               const isInRange =
-                startDate &&
-                endDate &&
-                isWithinInterval(day, { start: startDate, end: endDate });
+                tempStartDate &&
+                tempEndDate &&
+                isWithinInterval(day, { start: tempStartDate, end: tempEndDate });
+
+              const isHoverRange =
+                mode === "range" &&
+                tempStartDate &&
+                !tempEndDate &&
+                hoveredDate &&
+                isBefore(tempStartDate, hoveredDate) &&
+                isWithinInterval(day, { start: tempStartDate, end: hoveredDate });
 
               const isCurrentDay = isToday(day);
               const isDisabled =
@@ -306,7 +362,7 @@ export function DateRangePicker({
               } else if (isStart || isEnd) {
                 dayClasses =
                   "bg-orange-500 text-white font-bold shadow-md shadow-orange-500/30 scale-105";
-              } else if (isInRange) {
+              } else if (isInRange || isHoverRange) {
                 dayClasses = "bg-orange-500/20 text-orange-600 dark:text-orange-400 font-semibold";
               } else if (isCurrentDay) {
                 dayClasses = "border border-orange-500/50 text-orange-500 font-bold";
@@ -317,8 +373,9 @@ export function DateRangePicker({
                   key={i}
                   type="button"
                   disabled={isDisabled}
+                  onMouseEnter={() => mode === "range" && setHoveredDate(day)}
                   onClick={() => handleSelectDay(day)}
-                  className={`flex size-8 sm:size-8.5 items-center justify-center rounded-xl text-xs font-medium transition-all cursor-pointer ${dayClasses}`}
+                  className={`flex size-8 sm:size-9 items-center justify-center rounded-xl text-xs font-medium transition-all cursor-pointer ${dayClasses}`}
                 >
                   {format(day, "d")}
                 </button>
@@ -326,8 +383,8 @@ export function DateRangePicker({
             })}
           </div>
 
-          {/* Preset Shortcuts Footer */}
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-1.5 border-t border-border pt-2.5 text-[10px] font-semibold text-muted-foreground">
+          {/* Quick Presets */}
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-1.5 border-t border-border pt-2 text-[10px] font-semibold text-muted-foreground">
             <button
               type="button"
               onClick={() => handlePreset(new Date())}
@@ -356,6 +413,37 @@ export function DateRangePicker({
             >
               7 ngày tới
             </button>
+          </div>
+
+          {/* Selection Status & OK Confirm Button Footer */}
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3 bg-muted/20 -mx-4 -mb-4 p-3 rounded-b-2xl">
+            <div className="min-w-0 flex-1">
+              <span className="text-[9px] font-bold text-orange-500 uppercase tracking-wider block">
+                Đã chọn:
+              </span>
+              <p className="text-[11px] font-bold text-foreground truncate">
+                {getPreviewText()}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={!tempStartDate}
+                className="inline-flex items-center gap-1 rounded-xl bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 disabled:opacity-40 transition-colors cursor-pointer"
+              >
+                <Check className="size-3.5" />
+                <span>Xác nhận OK</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -3,6 +3,7 @@
 import { AiSmartMatch } from "@/components/ai-smart-match";
 import { GoldenTicketBadge } from "@/components/golden-ticket-badge";
 import { createClient } from "@/lib/supabase/client";
+import { getDemandImages } from "@/lib/demand-helpers";
 import { SEED_DEMANDS } from "@/lib/mock-data";
 import type { Demand, DemandApplication } from "@/lib/types/database";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -197,7 +198,7 @@ export default function DemandDetailPage() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase
+      let { error } = await supabase
         .from("demands")
         .update({
           title: editTitle,
@@ -206,8 +207,24 @@ export default function DemandDetailPage() {
           event_date: editEventDate,
           description: editDescription,
           images: editImages,
+          requirements: { ...(demand.requirements || {}), images: editImages },
         })
         .eq("id", demand.id);
+
+      if (error && (error.message?.includes("images") || error.code === "PGRST204")) {
+        const fallback = await supabase
+          .from("demands")
+          .update({
+            title: editTitle,
+            budget: price,
+            location: editLocation,
+            event_date: editEventDate,
+            description: editDescription,
+            requirements: { ...(demand.requirements || {}), images: editImages },
+          })
+          .eq("id", demand.id);
+        error = fallback.error;
+      }
 
       if (error) {
         throw error;
@@ -454,35 +471,35 @@ export default function DemandDetailPage() {
           <div className="lg:col-span-2 space-y-8">
             <div className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
               {/* Multiple Images Gallery */}
-              {demand.images && demand.images.length > 0 && (
-                <div className="space-y-3">
-                  <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-muted shadow-md">
-                    <Image
-                      src={demand.images[0]!}
-                      alt={demand.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  {demand.images.length > 1 && (
-                    <div className="grid grid-cols-3 gap-3">
-                      {demand.images.slice(1).map((img, idx) => (
-                        <div
-                          key={idx}
-                          className="relative aspect-video overflow-hidden rounded-xl bg-muted shadow-xs"
-                        >
-                          <Image
-                            src={img}
-                            alt=""
-                            fill
-                            className="object-cover transition-transform hover:scale-105"
-                          />
-                        </div>
-                      ))}
+              {(() => {
+                const detailImages = getDemandImages(demand);
+                if (detailImages.length === 0) return null;
+                return (
+                  <div className="space-y-3">
+                    <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-muted shadow-md">
+                      <Image
+                        src={detailImages[0]!}
+                        alt={demand.title}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
-                  )}
-                </div>
-              )}
+
+                    {detailImages.length > 1 && (
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                        {detailImages.slice(1).map((img, idx) => (
+                          <div
+                            key={idx}
+                            className="relative aspect-square overflow-hidden rounded-xl border border-border bg-muted shadow-xs hover:border-orange-500 transition-colors"
+                          >
+                            <Image src={img} alt="" fill className="object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Meta information */}
               <div className="flex flex-wrap gap-4 text-xs text-muted-foreground border-y border-border py-4">

@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS public.demands (
     status TEXT NOT NULL DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'rejected', 'closed')),
     rejection_reason TEXT,
     requirements JSONB DEFAULT '{}'::jsonb,
+    images TEXT[] DEFAULT ARRAY[]::TEXT[],
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
