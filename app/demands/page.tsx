@@ -616,7 +616,6 @@ export default function DemandsPage() {
           title="Mở khóa 100+ Dự án Livestream Đang Cần Ekip"
           description="Đăng nhập để nhận thông tin liên hệ trực tiếp từ thương hiệu và gửi báo giá chốt show ngay hôm nay."
           loginUrl="/demands"
-          badgeText="Mở khóa Dự án & Cơ hội Nhận việc"
         />
       )}
     </div>

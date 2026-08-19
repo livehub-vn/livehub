@@ -2,31 +2,24 @@
 
 import { AuroraText } from "@/components/ui/aurora-text";
 import { loginWithGoogle } from "@/lib/auth-client";
-import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface UnauthenticatedBlurOverlayProps {
   title?: string;
   description?: string;
   loginUrl?: string;
-  badgeText?: string;
 }
 
 export function UnauthenticatedBlurOverlay({
   title = "Mở khóa 100+ Thiết bị & Dự án Livestream",
   description = "Đăng nhập để xem đầy đủ báo giá, thông tin liên hệ nhà cung cấp và nộp báo giá trực tiếp ngay.",
   loginUrl = "/services",
-  badgeText = "Mở khóa Dữ liệu & Cơ hội",
 }: UnauthenticatedBlurOverlayProps): ReactNode {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-background/50 backdrop-blur-md animate-in fade-in duration-300">
       {/* Centered In-Viewport Unlock Card */}
       <div className="relative z-50 mx-auto w-full max-w-lg rounded-[2.5rem] border border-orange-500/40 bg-card/95 p-6 sm:p-10 shadow-2xl backdrop-blur-2xl text-center ring-1 ring-orange-500/25 animate-in zoom-in-95 duration-300">
-        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 mb-4 shadow-xs">
-          <Sparkles className="size-4 text-orange-500" />
-          <span>{badgeText}</span>
-        </div>
-
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-tight">
           <AuroraText>{title}</AuroraText>
         </h2>

@@ -743,7 +743,6 @@ function ServicesContent() {
           title="Mở khóa 100+ Thiết bị & Studio Chuyên Nghiệp"
           description="Đăng nhập để xem đầy đủ báo giá, thông tin liên hệ nhà cung cấp và đặt lịch thuê thiết bị, studio livestream ngay."
           loginUrl="/services"
-          badgeText="Mở khóa Bảng giá & Nhà cung cấp"
         />
       )}
     </div>

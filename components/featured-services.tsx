@@ -184,11 +184,6 @@ export function FeaturedServices() {
             {!currentUser && (
               <div className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-background/35 backdrop-blur-[2px] rounded-3xl">
                 <div className="w-full max-w-lg rounded-[2.5rem] border border-orange-500/40 bg-card/95 p-6 sm:p-8 shadow-2xl backdrop-blur-2xl text-center ring-1 ring-orange-500/20 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 mb-3 shadow-xs">
-                    <Sparkles className="size-4 text-orange-500" />
-                    <span>Mở khóa Bảng giá & Nhà cung cấp</span>
-                  </div>
-
                   <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
                     <AuroraText>Mở khóa 100+ Thiết bị & Studio Chuyên Nghiệp</AuroraText>
                   </h3>
