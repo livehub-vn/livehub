@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS public.demands (
     budget NUMERIC NOT NULL DEFAULT 0,
     location TEXT NOT NULL DEFAULT 'Hồ Chí Minh',
     event_date TEXT,
-    status TEXT NOT NULL DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'rejected', 'closed')),
+    status TEXT NOT NULL DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'rejected', 'in_progress', 'completed', 'closed')),
     rejection_reason TEXT,
     requirements JSONB DEFAULT '{}'::jsonb,
     images TEXT[] DEFAULT ARRAY[]::TEXT[],

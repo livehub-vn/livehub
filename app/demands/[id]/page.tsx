@@ -1,34 +1,36 @@
 "use client";
 
-import { AiSmartMatch } from "@/components/ai-smart-match";
 import { GoldenTicketBadge } from "@/components/golden-ticket-badge";
-import { createClient } from "@/lib/supabase/client";
-import { getDemandImages } from "@/lib/demand-helpers";
-import { SEED_DEMANDS } from "@/lib/mock-data";
-import type { Demand, DemandApplication } from "@/lib/types/database";
+import { LocationPickerDialog } from "@/components/location-picker-dialog";
+import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getDemandImages } from "@/lib/demand-helpers";
+import { SEED_DEMANDS, SEED_SERVICES } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/client";
+import type { Demand, DemandApplication, Service } from "@/lib/types/database";
 import {
   ArrowLeft,
+  ArrowUpRight,
   Calendar,
   Check,
   CheckCircle2,
   Clock,
+  Edit3,
   MapPin,
+  PartyPopper,
   Phone,
+  RotateCcw,
   Send,
   ShieldCheck,
+  Sparkles,
   Users,
+  X,
+  Zap,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-import { ImageUploaderDialog } from "@/components/image-uploader-dialog";
-import { LocationPickerDialog } from "@/components/location-picker-dialog";
-import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
-import type { Service } from "@/lib/types/database";
-import { Edit3, X } from "lucide-react";
 
 export default function DemandDetailPage() {
   const params = useParams();
@@ -40,6 +42,9 @@ export default function DemandDetailPage() {
   const [recommendedServices, setRecommendedServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Tab state: "proposals" | "recommendations"
+  const [activeTab, setActiveTab] = useState<"proposals" | "recommendations">("proposals");
 
   // Proposal submit state (for providers applying)
   const [proposedPrice, setProposedPrice] = useState("");
@@ -53,7 +58,6 @@ export default function DemandDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [editMapOpen, setEditMapOpen] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editBudget, setEditBudget] = useState("");
@@ -61,6 +65,9 @@ export default function DemandDetailPage() {
   const [editEventDate, setEditEventDate] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editImages, setEditImages] = useState<string[]>([]);
+
+  // Invited services list
+  const [invitedServiceIds, setInvitedServiceIds] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchDemand() {
@@ -102,16 +109,18 @@ export default function DemandDetailPage() {
           }
         }
 
-        // Fetch real matching services from Supabase for owner recommendations
+        // Fetch real matching services from Supabase
         const { data: recData } = await supabase
           .from("services")
           .select("*, provider:profiles(*)")
           .eq("status", "approved")
           .order("created_at", { ascending: false })
-          .limit(4);
+          .limit(8);
 
         if (recData && recData.length > 0) {
           setRecommendedServices(recData as Service[]);
+        } else {
+          setRecommendedServices(SEED_SERVICES);
         }
 
         // Fetch applications for this demand
@@ -182,16 +191,16 @@ export default function DemandDetailPage() {
     fetchDemand();
   }, [demandId]);
 
+  // Handle Edit Demand
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!demand) return;
-
     setEditLoading(true);
     setEditError(null);
 
     const price = parseFloat(editBudget);
     if (isNaN(price) || price <= 0) {
-      setEditError("Ngân sách không hợp lệ");
+      setEditError("Ngân sách dự kiến không hợp lệ");
       setEditLoading(false);
       return;
     }
@@ -229,13 +238,14 @@ export default function DemandDetailPage() {
       );
       setEditOpen(false);
       setActionSuccessMsg("Đã cập nhật thông tin nhu cầu dự án thành công!");
-    } catch (err: any) {
-      setEditError(err.message || "Không thể cập nhật nhu cầu");
+    } catch (err: unknown) {
+      setEditError((err as Error).message || "Không thể cập nhật nhu cầu");
     } finally {
       setEditLoading(false);
     }
   };
 
+  // Provider submits proposal
   const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!demand) return;
@@ -260,30 +270,40 @@ export default function DemandDetailPage() {
       return;
     }
 
-    const { error } = await supabase.from("demand_applications").insert({
-      demand_id: demand.id,
-      provider_id: user.id,
-      proposed_price: price,
-      proposal_note: proposalNote,
-      status: "pending",
-    });
+    const { data: newApp, error } = await supabase
+      .from("demand_applications")
+      .insert({
+        demand_id: demand.id,
+        provider_id: user.id,
+        proposed_price: price,
+        proposal_note: proposalNote,
+        status: "pending",
+      })
+      .select("*, provider:profiles(*)")
+      .single();
 
     if (error) {
       setApplyError(error.message);
     } else {
       setApplySuccess(true);
+      if (newApp) {
+        setApplications((prev) => [newApp as DemandApplication, ...prev]);
+      }
+      setActionSuccessMsg("Nộp báo giá thành công! Khách hàng sẽ nhận được thông báo.");
     }
     setApplyLoading(false);
   };
 
+  // Owner accepts proposal & initiates Escrow
   const handleAcceptProposal = async (appId: string) => {
     const targetApp = applications.find((a) => a.id === appId);
     if (!targetApp || !demand) return;
 
+    // Update state: target app approved, others kept as pending/selectable
     setApplications((prev) =>
-      prev.map((a) => (a.id === appId ? { ...a, status: "approved" } : a))
+      prev.map((a) => (a.id === appId ? { ...a, status: "approved" } : { ...a, status: "pending" }))
     );
-    setDemand((prev) => (prev ? { ...prev, status: "closed" } : null));
+    setDemand((prev) => (prev ? { ...prev, status: "in_progress" } : null));
 
     const supabase = createClient();
     await supabase
@@ -293,12 +313,69 @@ export default function DemandDetailPage() {
 
     await supabase
       .from("demands")
-      .update({ status: "closed" })
+      .update({ status: "in_progress" })
       .eq("id", demand.id);
 
     setActionSuccessMsg(
-      `Đã chấp nhận báo giá từ "${targetApp.provider?.full_name || "Đối tác"}"! Hợp đồng dự án đang được khởi tạo.`
+      `Đã chọn đối tác "${targetApp.provider?.full_name || "Đối tác"}"! Tiến trình dự án đã chuyển sang giai đoạn Ký cọc Escrow & Chuẩn bị phiên live.`
     );
+  };
+
+  // Owner switches / un-selects partner before completion
+  const handleSwitchPartner = async () => {
+    if (!demand) return;
+
+    setApplications((prev) => prev.map((a) => ({ ...a, status: "pending" })));
+    setDemand((prev) => (prev ? { ...prev, status: "approved" } : null));
+
+    const supabase = createClient();
+    await supabase
+      .from("demand_applications")
+      .update({ status: "pending" })
+      .eq("demand_id", demand.id);
+
+    await supabase
+      .from("demands")
+      .update({ status: "approved" })
+      .eq("id", demand.id);
+
+    setActionSuccessMsg("Đã mở lại danh sách báo giá. Bạn có thể chọn lại đối tác khác phù hợp hơn.");
+  };
+
+  // Owner completes / finishes project (End-to-End completion)
+  const handleCompleteProject = async () => {
+    if (!demand) return;
+
+    setDemand((prev) => (prev ? { ...prev, status: "completed" } : null));
+
+    const supabase = createClient();
+    await supabase
+      .from("demands")
+      .update({ status: "completed" })
+      .eq("id", demand.id);
+
+    setActionSuccessMsg("Chúc mừng! Dự án livestream đã được nghiệm thu và hoàn tất thành công. Escrow đã được giải ngân an toàn.");
+  };
+
+  // Re-open project if closed
+  const handleReopenProject = async () => {
+    if (!demand) return;
+
+    setDemand((prev) => (prev ? { ...prev, status: "approved" } : null));
+
+    const supabase = createClient();
+    await supabase
+      .from("demands")
+      .update({ status: "approved" })
+      .eq("id", demand.id);
+
+    setActionSuccessMsg("Đã mở lại dự án để tiếp tục nhận báo giá.");
+  };
+
+  // Invite service handler
+  const handleInviteService = (serviceId: string) => {
+    setInvitedServiceIds((prev) => [...prev, serviceId]);
+    setActionSuccessMsg("Đã gửi lời mời tham gia báo giá đến nhà cung cấp dịch vụ này.");
   };
 
   if (loading) {
@@ -328,8 +405,29 @@ export default function DemandDetailPage() {
   }
 
   const isOwner = currentUserId === demand.customer_id;
-  const isClosed = demand.status === "closed";
-  const stepIndex = isClosed ? 3 : applications.length > 0 ? 2 : 1;
+  const approvedApp = applications.find((a) => a.status === "approved");
+  const isCompleted = demand.status === "completed";
+  const isInProgress = demand.status === "in_progress" || Boolean(approvedApp && !isCompleted);
+
+  // Stepper state
+  let currentStep = 1;
+  if (isCompleted) {
+    currentStep = 4;
+  } else if (isInProgress) {
+    currentStep = 3;
+  } else if (applications.length > 0) {
+    currentStep = 2;
+  }
+
+  // Filter AI recommendations to exclude providers that already applied
+  const appliedProviderIds = applications.map((a) => a.provider_id);
+  const matchedServices = recommendedServices
+    .filter(
+      (srv) =>
+        srv.provider_id !== demand.customer_id &&
+        !appliedProviderIds.includes(srv.provider_id)
+    )
+    .slice(0, 4);
 
   return (
     <div className="min-h-screen bg-background px-4 pt-28 pb-14 sm:px-6 sm:pt-32 text-foreground">
@@ -341,7 +439,7 @@ export default function DemandDetailPage() {
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-xs font-semibold transition-colors"
           >
             <ArrowLeft className="size-3.5" />
-            <span>Quay lại Sàn nhu cầu</span>
+            <span>Quay lại sàn nhu cầu</span>
           </Link>
 
           {isOwner && (
@@ -349,10 +447,10 @@ export default function DemandDetailPage() {
               <button
                 type="button"
                 onClick={() => setEditOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3.5 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors shadow-xs"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3.5 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors shadow-xs cursor-pointer"
               >
                 <Edit3 className="size-3.5" />
-                <span>Chỉnh sửa nhu cầu</span>
+                <span>Chỉnh sửa thông tin nhu cầu</span>
               </button>
 
               <Link
@@ -360,18 +458,35 @@ export default function DemandDetailPage() {
                 className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-foreground hover:bg-muted transition-colors shadow-xs"
               >
                 <Users className="size-3.5 text-orange-500" />
-                <span>Quản lý dự án của tôi</span>
+                <span>Dự án của tôi</span>
               </Link>
             </div>
           )}
         </div>
 
-        {/* 1. PROJECT PROGRESS TRACKER */}
-        <div className="border-border bg-card rounded-[2.5rem] border p-6 sm:p-8 shadow-sm">
+        {/* Action success alert */}
+        {actionSuccessMsg && (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs font-bold text-emerald-800 dark:text-emerald-300 animate-in fade-in duration-200">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span>{actionSuccessMsg}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActionSuccessMsg(null)}
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+
+        {/* 1. INTERACTIVE PROJECT PROGRESS TRACKER (Tiến trình dự án livestream) */}
+        <div className="border-border bg-card rounded-[2.5rem] border p-6 sm:p-8 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold tracking-wider text-orange-600 uppercase">
-                Tiến trình dự án Livestream
+              <span className="text-[11px] font-bold tracking-wider text-orange-600 dark:text-orange-400 uppercase">
+                Tiến trình dự án livestream
               </span>
               <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                 {demand.title}
@@ -379,81 +494,173 @@ export default function DemandDetailPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              {isOwner && (
-                <button
-                  type="button"
-                  onClick={() => setEditOpen(true)}
-                  className="rounded-xl border border-border bg-muted/60 px-3 py-1 text-xs font-bold hover:bg-muted text-foreground transition-colors"
-                >
-                  Sửa thông tin
-                </button>
-              )}
               <span
                 className={`rounded-full border px-3.5 py-1 text-xs font-bold ${
-                  demand.status === "approved"
-                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : demand.status === "closed"
-                      ? "border-sky-500/20 bg-sky-500/10 text-sky-600 dark:text-sky-400"
-                      : "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                  isCompleted
+                    ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                    : isInProgress
+                      ? "border-sky-500/30 bg-sky-500/15 text-sky-700 dark:text-sky-300"
+                      : "border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-300"
                 }`}
               >
-                {demand.status === "approved"
-                  ? "Đang mở ứng tuyển"
-                  : demand.status === "closed"
-                    ? "Đã chọn đối tác"
-                    : "Chờ duyệt"}
+                {isCompleted
+                  ? "✓ Đã hoàn tất & Nghiệm thu"
+                  : isInProgress
+                    ? "Đang chuẩn bị phiên live"
+                    : "Đang nhận báo giá"}
               </span>
             </div>
           </div>
 
-          {/* 4-Step Progress Visual */}
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {/* 4-Step Interactive Stepper */}
+          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
             {[
-              { title: "1. Đăng tuyển & Phê duyệt", desc: "LiveHub xác thực yêu cầu", done: stepIndex >= 1 },
-              { title: "2. Nhận báo giá & Review", desc: `${applications.length} nhà cung cấp ứng tuyển`, done: stepIndex >= 2 },
-              { title: "3. Chọn đối tác & Cọc Escrow", desc: "Tạo hợp đồng bảo đảm an toàn", done: stepIndex >= 3 },
-              { title: "4. Triển khai & Nghiệm thu", desc: "Hoàn tất buổi livestream", done: stepIndex >= 4 },
-            ].map((st, i) => (
+              {
+                step: 1,
+                title: "1. Đăng tuyển & Xác thực",
+                desc: "Yêu cầu kỹ thuật đã duyệt",
+                done: currentStep >= 1,
+                active: currentStep === 1,
+              },
+              {
+                step: 2,
+                title: "2. Nhận & Duyệt báo giá",
+                desc: `${applications.length} đối tác đã nộp báo giá`,
+                done: currentStep >= 2,
+                active: currentStep === 2,
+              },
+              {
+                step: 3,
+                title: "3. Ký cọc & Chuẩn bị",
+                desc: approvedApp ? `Đã chọn ${approvedApp.provider?.full_name}` : "Bảo đảm ký quỹ Escrow",
+                done: currentStep >= 3,
+                active: currentStep === 3,
+              },
+              {
+                step: 4,
+                title: "4. Lên sóng & Nghiệm thu",
+                desc: isCompleted ? "Giải ngân an toàn 100%" : "Kết thúc & nghiệm thu dự án",
+                done: currentStep >= 4,
+                active: currentStep === 4,
+              },
+            ].map((st) => (
               <div
-                key={i}
+                key={st.step}
                 className={`relative rounded-2xl border p-4 transition-all ${
                   st.done
-                    ? "border-emerald-500/40 bg-emerald-500/5 text-foreground"
-                    : "border-border bg-muted/20 text-muted-foreground"
+                    ? "border-emerald-500/40 bg-emerald-500/5 text-foreground shadow-xs"
+                    : st.active
+                      ? "border-orange-500/50 bg-orange-500/5 text-foreground ring-1 ring-orange-500/30"
+                      : "border-border bg-muted/20 text-muted-foreground"
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <div
-                    className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
-                      st.done ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
+                    className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      st.done
+                        ? "bg-emerald-500 text-white"
+                        : st.active
+                          ? "bg-orange-500 text-white"
+                          : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    {st.done ? "✓" : i + 1}
+                    {st.done ? "✓" : st.step}
                   </div>
-                  <span className="text-xs font-bold">{st.title}</span>
+                  <span className="text-xs font-bold truncate">{st.title}</span>
                 </div>
-                <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{st.desc}</p>
+                <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground line-clamp-2">
+                  {st.desc}
+                </p>
               </div>
             ))}
           </div>
+
+          {/* ACTIVE IN-PROGRESS / COMPLETION CONTROL BAR (End-to-End Actions) */}
+          {isOwner && isInProgress && approvedApp && (
+            <div className="rounded-2xl border border-sky-500/30 bg-sky-500/10 p-5 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-500 text-white font-bold text-base shadow-xs">
+                    {approvedApp.provider?.full_name?.[0] || "P"}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-foreground">
+                        Đối tác đã chọn: <strong>{approvedApp.provider?.full_name}</strong>
+                      </span>
+                      {approvedApp.provider?.membership_tier && (
+                        <GoldenTicketBadge tier={approvedApp.provider.membership_tier} variant="badge" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Báo giá đã chốt: <strong className="text-orange-600">{Number(approvedApp.proposed_price).toLocaleString("vi-VN")} đ</strong> • SĐT: {approvedApp.provider?.phone || "0908889999"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <a
+                    href={`tel:${approvedApp.provider?.phone || "0908889999"}`}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                  >
+                    <Phone className="size-3.5 text-orange-500" />
+                    <span>Gọi điện trao đổi</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={handleSwitchPartner}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                    title="Hủy lựa chọn hiện tại để chọn đối tác khác"
+                  >
+                    <RotateCcw className="size-3.5" />
+                    <span>Đổi đối tác khác</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCompleteProject}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition-colors cursor-pointer"
+                  >
+                    <Check className="size-3.5" />
+                    <span>Nghiệm thu & Hoàn tất dự án</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PROJECT COMPLETED BANNER */}
+          {isCompleted && (
+            <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white">
+                  <PartyPopper className="size-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                    Dự án livestream đã nghiệm thu & hoàn tất thành công!
+                  </h4>
+                  <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80">
+                    Toàn bộ phiên livestream đã lên sóng thuận lợi. Ký quỹ Escrow đã được thanh toán an toàn cho đối tác thực hiện.
+                  </p>
+                </div>
+              </div>
+
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={handleReopenProject}
+                  className="rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
+                >
+                  Mở lại dự án
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Action success alert */}
-        {actionSuccessMsg && (
-          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs font-bold text-emerald-800 dark:text-emerald-300">
-            <CheckCircle2 className="size-5 shrink-0 text-emerald-600" />
-            <span>{actionSuccessMsg}</span>
-          </div>
-        )}
-
-        {/* 2. AI SMART MATCH ENGINE (Full width, unified, distinct recommendations) */}
-        <AiSmartMatch
-          demand={demand}
-          availableServices={recommendedServices}
-          appliedProviderIds={applications.map((a) => a.provider_id)}
-        />
-
-        {/* 3. MAIN DETAILS & PROPOSALS HUB GRID */}
+        {/* 2. MAIN DETAILS & PROPOSALS HUB GRID */}
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Demand Specs (2 cols) */}
           <div className="lg:col-span-2 space-y-8">
@@ -541,120 +748,273 @@ export default function DemandDetailPage() {
               )}
             </div>
 
-            {/* 4. PROPOSALS HUB (DANH SÁCH BÁO GIÁ ỨNG TUYỂN) */}
+            {/* 3. CONSOLIDATED PROPOSALS & AI MATCHING HUB (Gộp Danh sách báo giá & Gợi ý đối tác) */}
             <div className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
-              <div className="flex items-center justify-between border-b border-border pb-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex size-8 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600">
-                    <Users className="size-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-foreground">
-                      Danh sách báo giá từ nhà cung cấp ({applications.length})
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                      Xem báo giá, hồ sơ năng lực và duyệt đối tác thực hiện dự án
-                    </p>
-                  </div>
+              {/* Tab Navigation */}
+              <div className="flex items-center justify-between border-b border-border pb-4 flex-wrap gap-3">
+                <div className="flex items-center gap-2 p-1 rounded-2xl bg-muted/60 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("proposals")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
+                      activeTab === "proposals"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Users className="size-4 text-orange-500" />
+                    <span>Báo giá đã nhận ({applications.length})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("recommendations")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
+                      activeTab === "recommendations"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Sparkles className="size-4 text-amber-500" />
+                    <span>Dịch vụ & đối tác gợi ý ({matchedServices.length})</span>
+                  </button>
                 </div>
+
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  {activeTab === "proposals"
+                    ? "Duyệt hồ sơ & chốt đối tác"
+                    : "Đối tác sẵn sàng nhận việc"}
+                </span>
               </div>
 
-              {applications.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground space-y-2">
-                  <Clock className="mx-auto size-8 text-muted-foreground/50" />
-                  <p className="font-semibold text-foreground">Chưa có báo giá ứng tuyển nào</p>
-                  <p>Hệ thống AI đang gửi thông báo tới các đối tác phù hợp tại khu vực của bạn.</p>
-                </div>
-              ) : (
+              {/* TAB 1: PROPOSALS (BÁO GIÁ ĐÃ NHẬN) */}
+              {activeTab === "proposals" && (
                 <div className="space-y-4">
-                  {applications.map((app) => (
-                    <div
-                      key={app.id}
-                      className="group rounded-3xl border border-border bg-muted/20 p-5 transition-all hover:border-orange-500/40 hover:shadow-md space-y-4"
-                    >
-                      {/* Provider Header & Proposed Price */}
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/70 pb-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-11 items-center justify-center rounded-2xl bg-orange-500 text-white font-bold text-sm shadow-xs">
-                            {app.provider?.full_name?.[0] || "P"}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-bold text-foreground">
-                                {app.provider?.full_name || "Nhà cung cấp đối tác"}
-                              </h4>
-                              {app.provider?.membership_tier && (
-                                <GoldenTicketBadge
-                                  tier={app.provider.membership_tier}
-                                  variant="badge"
-                                />
-                              )}
+                  {applications.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground space-y-2">
+                      <Clock className="mx-auto size-8 text-muted-foreground/50" />
+                      <p className="font-semibold text-foreground">Chưa có báo giá ứng tuyển nào</p>
+                      <p>Bạn có thể duyệt qua tab &quot;Dịch vụ & đối tác gợi ý&quot; để chủ động mời các nhà cung cấp uy tín.</p>
+                    </div>
+                  ) : (
+                    applications.map((app) => {
+                      const isSelectedApp = app.status === "approved";
+
+                      return (
+                        <div
+                          key={app.id}
+                          className={`group rounded-3xl border p-5 transition-all space-y-4 ${
+                            isSelectedApp
+                              ? "border-emerald-500/50 bg-emerald-500/5 shadow-md ring-1 ring-emerald-500/30"
+                              : "border-border bg-muted/20 hover:border-orange-500/40 hover:shadow-md"
+                          }`}
+                        >
+                          {/* Provider Header & Proposed Price */}
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/70 pb-3.5">
+                            <div className="flex items-center gap-3">
+                              <div className="flex size-11 items-center justify-center rounded-2xl bg-orange-500 text-white font-bold text-sm shadow-xs">
+                                {app.provider?.full_name?.[0] || "P"}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h4 className="text-sm font-bold text-foreground">
+                                    {app.provider?.full_name || "Nhà cung cấp đối tác"}
+                                  </h4>
+                                  {app.provider?.membership_tier && (
+                                    <GoldenTicketBadge
+                                      tier={app.provider.membership_tier}
+                                      variant="badge"
+                                    />
+                                  )}
+                                  {isSelectedApp && (
+                                    <span className="rounded-md bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                                      Đối tác đã chọn
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-muted-foreground">
+                                  {app.provider?.email} • SĐT: {app.provider?.phone || "090 ••• ••••"}
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-[11px] text-muted-foreground">
-                              {app.provider?.email} • SĐT: {app.provider?.phone || "090 ••• ••••"}
+
+                            <div className="sm:text-right">
+                              <span className="text-[10px] text-muted-foreground block font-medium">
+                                Báo giá đề xuất
+                              </span>
+                              <p className="text-base font-bold text-orange-600 dark:text-orange-400">
+                                {Number(app.proposed_price).toLocaleString("vi-VN")} đ
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Proposal Note */}
+                          <div className="rounded-2xl border border-border/80 bg-card p-4 text-xs space-y-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                              Phương án kỹ thuật & cam kết
+                            </span>
+                            <p className="leading-relaxed text-foreground whitespace-pre-line">
+                              {app.proposal_note}
                             </p>
                           </div>
-                        </div>
 
-                        <div className="sm:text-right">
-                          <span className="text-[10px] text-muted-foreground block font-medium">
-                            Báo giá đề xuất
-                          </span>
-                          <p className="text-base font-bold text-orange-600">
-                            {Number(app.proposed_price).toLocaleString("vi-VN")} đ
-                          </p>
-                        </div>
-                      </div>
+                          {/* Action Buttons */}
+                          <div className="border-border/60 -mx-5 -mb-5 flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3.5 bg-card rounded-b-3xl">
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <Clock className="size-3.5" />
+                              <span>Gửi {new Date(app.created_at).toLocaleDateString("vi-VN")}</span>
+                            </div>
 
-                      {/* Proposal Note */}
-                      <div className="rounded-2xl border border-border/80 bg-card p-4 text-xs space-y-1.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Phương án kỹ thuật & cam kết
-                        </span>
-                        <p className="leading-relaxed text-foreground">
-                          {app.proposal_note}
-                        </p>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="border-border/60 -mx-5 -mb-5 flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3.5 bg-card rounded-b-3xl">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Clock className="size-3.5" />
-                          <span>Gửi {new Date(app.created_at).toLocaleDateString("vi-VN")}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {app.status === "approved" ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                              <Check className="size-3.5" />
-                              <span>Đã chọn đối tác này</span>
-                            </span>
-                          ) : (
-                            <>
-                              <a
-                                href={`tel:${app.provider?.phone || "0908889999"}`}
-                                className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
-                              >
-                                <Phone className="size-3.5 text-orange-500" />
-                                <span>Liên hệ</span>
-                              </a>
+                            <div className="flex items-center gap-2">
+                              {app.provider?.phone && (
+                                <a
+                                  href={`tel:${app.provider.phone}`}
+                                  className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                >
+                                  <Phone className="size-3.5 text-orange-500" />
+                                  <span>Gọi điện</span>
+                                </a>
+                              )}
 
                               {isOwner && (
+                                <>
+                                  {isSelectedApp ? (
+                                    <button
+                                      type="button"
+                                      onClick={handleSwitchPartner}
+                                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-muted/60 px-3.5 py-2 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                    >
+                                      <RotateCcw className="size-3.5" />
+                                      <span>Đổi đối tác khác</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAcceptProposal(app.id)}
+                                      disabled={isCompleted}
+                                      className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 disabled:opacity-50 transition-colors cursor-pointer"
+                                    >
+                                      <Check className="size-3.5" />
+                                      <span>Chấp nhận & Ký cọc Escrow</span>
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {/* TAB 2: AI MATCHED RECOMMENDATIONS (GỢI Ý ĐỐI TÁC PHÙ HỢP) */}
+              {activeTab === "recommendations" && (
+                <div className="space-y-4">
+                  {matchedServices.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground space-y-2">
+                      <p className="font-semibold text-foreground">Tất cả đối tác phù hợp đã nộp báo giá cho dự án của bạn!</p>
+                      <p>Hãy xem lại tab &quot;Báo giá đã nhận&quot; để chọn đơn vị thực hiện.</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {matchedServices.map((srv) => {
+                        const isInvited = invitedServiceIds.includes(srv.id);
+
+                        return (
+                          <div
+                            key={srv.id}
+                            className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-4 transition-all duration-200 hover:border-orange-500/40 hover:shadow-md space-y-3"
+                          >
+                            <div>
+                              {/* Thumbnail & Price */}
+                              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-muted">
+                                {srv.images && srv.images.length > 0 ? (
+                                  <Image
+                                    src={srv.images[0]!}
+                                    alt={srv.title}
+                                    fill
+                                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                  />
+                                ) : (
+                                  <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
+                                    Chưa có ảnh
+                                  </div>
+                                )}
+
+                                <div className="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-orange-500/90 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs shadow-xs">
+                                  <Zap className="size-3" />
+                                  <span>Phù hợp dự án</span>
+                                </div>
+                              </div>
+
+                              {/* Title & Provider */}
+                              <div className="mt-3 space-y-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[11px] font-medium text-muted-foreground truncate">
+                                    {srv.provider?.full_name || "Nhà cung cấp"}
+                                  </span>
+                                  {srv.provider?.membership_tier && (
+                                    <GoldenTicketBadge
+                                      tier={srv.provider.membership_tier}
+                                      variant="badge"
+                                    />
+                                  )}
+                                </div>
+
+                                <h4 className="line-clamp-2 text-xs font-bold text-foreground group-hover:text-orange-500 transition-colors">
+                                  {srv.title}
+                                </h4>
+
+                                <p className="text-[11px] font-bold text-orange-600 dark:text-orange-400">
+                                  {Number(srv.price_per_day).toLocaleString("vi-VN")} đ
+                                  <span className="text-[10px] font-normal text-muted-foreground">/ngày</span>
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Card Footer Actions */}
+                            <div className="flex items-center justify-between gap-2 border-t border-border/70 pt-2.5">
+                              {srv.provider?.phone ? (
+                                <a
+                                  href={`tel:${srv.provider.phone}`}
+                                  className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted/40 px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                >
+                                  <Phone className="size-3 text-orange-500" />
+                                  <span>Gọi điện</span>
+                                </a>
+                              ) : (
+                                <div />
+                              )}
+
+                              <div className="flex items-center gap-1.5">
                                 <button
                                   type="button"
-                                  onClick={() => handleAcceptProposal(app.id)}
-                                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-colors"
+                                  onClick={() => handleInviteService(srv.id)}
+                                  className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                                    isInvited
+                                      ? "bg-emerald-600 text-white"
+                                      : "bg-orange-500 text-white hover:bg-orange-600"
+                                  }`}
                                 >
-                                  <Check className="size-3.5" />
-                                  <span>Chấp nhận & Ký cọc Escrow</span>
+                                  {isInvited ? "✓ Đã mời" : "Mời báo giá"}
                                 </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
+
+                                <Link
+                                  href={`/services/${srv.id}`}
+                                  className="flex size-7.5 items-center justify-center rounded-xl border border-border bg-muted/40 text-foreground hover:bg-muted transition-colors"
+                                  title="Xem chi tiết dịch vụ"
+                                >
+                                  <ArrowUpRight className="size-3.5" />
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
             </div>
@@ -665,7 +1025,7 @@ export default function DemandDetailPage() {
             <div className="sticky top-28 rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6">
               <div className="border-b border-border pb-5">
                 <span className="text-xs text-muted-foreground">Ngân sách dự kiến của dự án</span>
-                <p className="mt-1 text-2xl sm:text-3xl font-bold text-orange-600">
+                <p className="mt-1 text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400">
                   {Number(demand.budget).toLocaleString("vi-VN")} đ
                 </p>
               </div>
@@ -678,7 +1038,11 @@ export default function DemandDetailPage() {
                       Bảng điều khiển người tạo
                     </span>
                     <p className="text-xs text-foreground font-semibold">
-                      Dự án đang nhận được {applications.length} báo giá ứng tuyển.
+                      {isCompleted
+                        ? "Dự án đã hoàn tất nghiệm thu."
+                        : isInProgress
+                          ? "Dự án đang trong giai đoạn triển khai."
+                          : `Dự án đang nhận được ${applications.length} báo giá ứng tuyển.`}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
                       Bạn có thể chỉnh sửa thông tin dự án bất cứ lúc nào hoặc lựa chọn đối tác phù hợp nhất.
@@ -688,11 +1052,22 @@ export default function DemandDetailPage() {
                   <button
                     type="button"
                     onClick={() => setEditOpen(true)}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 py-3 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 transition-colors"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 py-3 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 transition-colors cursor-pointer"
                   >
                     <Edit3 className="size-3.5" />
                     <span>Chỉnh sửa thông tin nhu cầu</span>
                   </button>
+
+                  {isInProgress && (
+                    <button
+                      type="button"
+                      onClick={handleCompleteProject}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition-colors cursor-pointer"
+                    >
+                      <Check className="size-3.5" />
+                      <span>Nghiệm thu & Hoàn tất dự án</span>
+                    </button>
+                  )}
                 </div>
               ) : applySuccess ? (
                 <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center shadow-sm space-y-3">
@@ -721,11 +1096,10 @@ export default function DemandDetailPage() {
                     <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
                       Báo giá đề xuất (VNĐ)
                     </label>
-                    <input
-                      type="number"
+                    <FormattedCurrencyInput
                       value={proposedPrice}
-                      onChange={(e) => setProposedPrice(e.target.value)}
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+                      onChange={setProposedPrice}
+                      placeholder="VD: 3.500.000"
                       required
                     />
                   </div>
@@ -746,38 +1120,39 @@ export default function DemandDetailPage() {
 
                   <button
                     type="submit"
-                    disabled={applyLoading || isClosed}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 py-3 text-xs font-bold text-white shadow-md shadow-orange-500/20 transition-opacity hover:opacity-90 disabled:opacity-50"
+                    disabled={applyLoading || isCompleted}
+                    className="w-full rounded-xl bg-orange-500 py-3 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 disabled:opacity-50 transition-colors cursor-pointer"
                   >
-                    <Send className="size-3.5" />
-                    <span>{applyLoading ? "Đang gửi báo giá..." : isClosed ? "Dự án đã đóng" : "Gửi báo giá ngay"}</span>
+                    {applyLoading ? "Đang gửi báo giá..." : "Gửi báo giá cho khách hàng"}
                   </button>
                 </form>
               )}
+
+              {/* Escrow Guarantee Box */}
+              <div className="rounded-2xl border border-border bg-muted/40 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                  <ShieldCheck className="size-4 text-emerald-500" />
+                  <span>Bảo đảm giao dịch qua Escrow</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Toàn bộ tiền đặt cọc được giữ an toàn tại LiveHub và chỉ giải ngân cho đối tác sau khi khách hàng nghiệm thu phiên livestream thành công.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Owner Edit Demand Modal */}
+      {/* Edit Demand Modal Dialog */}
       {editOpen && (
-        <div
-          className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2rem] border border-border bg-card p-6 sm:p-8 shadow-2xl space-y-6 text-foreground">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs">
+          <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-[2rem] border border-border bg-card p-6 sm:p-8 shadow-2xl space-y-5 text-foreground">
             <div className="flex items-center justify-between border-b border-border pb-4">
-              <div className="flex items-center gap-2">
-                <div className="flex size-8 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
-                  <Edit3 className="size-4" />
-                </div>
-                <h3 className="text-base font-bold text-foreground">Chỉnh sửa thông tin nhu cầu</h3>
-              </div>
+              <h3 className="text-base font-bold">Chỉnh sửa thông tin nhu cầu</h3>
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}
-                className="rounded-lg border border-border p-1.5 text-muted-foreground hover:text-foreground"
+                className="rounded-lg p-1 text-muted-foreground hover:bg-muted"
               >
                 <X className="size-4" />
               </button>
@@ -824,13 +1199,24 @@ export default function DemandDetailPage() {
                     <button
                       type="button"
                       onClick={() => setEditMapOpen(true)}
-                      className="inline-flex items-center gap-1 rounded-xl border border-orange-500/30 bg-orange-500/10 px-2.5 py-2 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors shrink-0"
+                      className="inline-flex items-center gap-1 rounded-xl border border-orange-500/30 bg-orange-500/10 px-2.5 py-2 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors shrink-0 cursor-pointer"
                     >
                       <MapPin className="size-3.5" />
-                      <span className="text-[11px]">Map</span>
+                      <span className="text-[11px]">Bản đồ</span>
                     </button>
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold">Ngày dự kiến diễn ra</label>
+                <input
+                  type="text"
+                  value={editEventDate}
+                  onChange={(e) => setEditEventDate(e.target.value)}
+                  placeholder="VD: 25/08/2026 hoặc 25/08 - 28/08/2026"
+                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs focus:border-orange-500 focus:outline-none"
+                />
               </div>
 
               <div>
@@ -844,47 +1230,18 @@ export default function DemandDetailPage() {
                 />
               </div>
 
-              {/* Image Manager for Edit */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold">Hình ảnh minh họa ({editImages.length})</label>
-                  <button
-                    type="button"
-                    onClick={() => setUploadDialogOpen(true)}
-                    className="text-xs font-bold text-orange-500 hover:underline"
-                  >
-                    + Tải ảnh mới
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {editImages.map((img, i) => (
-                    <div key={i} className="relative size-16 overflow-hidden rounded-xl border border-border bg-muted">
-                      <Image src={img} alt="" fill className="object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setEditImages(editImages.filter((_, idx) => idx !== i))}
-                        className="absolute top-0.5 right-0.5 rounded-full bg-rose-600 p-0.5 text-white"
-                      >
-                        <X className="size-2.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setEditOpen(false)}
-                  className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted"
+                  className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={editLoading}
-                  className="rounded-xl bg-orange-500 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 disabled:opacity-50"
+                  className="rounded-xl bg-orange-500 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 disabled:opacity-50 cursor-pointer"
                 >
                   {editLoading ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>
@@ -893,19 +1250,6 @@ export default function DemandDetailPage() {
           </div>
         </div>
       )}
-
-      {/* Image Uploader Modal Dialog */}
-      <ImageUploaderDialog
-        open={uploadDialogOpen}
-        onClose={() => setUploadDialogOpen(false)}
-        onImagesSelected={(urls) => {
-          setEditImages(urls);
-        }}
-        initialImages={editImages}
-        bucketName="demands"
-        title="Cập nhật hình ảnh nhu cầu dự án"
-        maxImages={6}
-      />
 
       {/* Goong Map Location Picker Modal Dialog */}
       <LocationPickerDialog
@@ -917,4 +1261,3 @@ export default function DemandDetailPage() {
     </div>
   );
 }
-

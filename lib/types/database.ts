@@ -1,6 +1,6 @@
 export type UserRole = "customer" | "provider" | "admin";
 export type ServiceCategory = "equipment" | "studio" | "crew" | "operator";
-export type ListingStatus = "pending" | "approved" | "rejected" | "closed";
+export type ListingStatus = "pending" | "approved" | "rejected" | "in_progress" | "completed" | "closed";
 export type RentalStatus =
   | "pending"
   | "approved"
