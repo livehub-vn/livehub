@@ -66,8 +66,8 @@ export default function PostNewDemandPage() {
       // 1. Upload any pending local image files to Supabase Storage
       const uploadedUrls = await uploadPendingImages(imagePreviews, "demands");
 
-      // 2. Insert demand record into database with automatic schema fallback
-      let { data: newDemand, error } = await supabase
+      // 2. Insert demand record into database
+      const { data: newDemand, error } = await supabase
         .from("demands")
         .insert({
           customer_id: user.id,
@@ -77,32 +77,10 @@ export default function PostNewDemandPage() {
           event_date: eventDate,
           description,
           images: uploadedUrls,
-          requirements: { images: uploadedUrls },
           status: "pending",
         })
         .select()
         .single();
-
-      // If remote Supabase lacks 'images' column in schema cache, fallback to storing in requirements JSONB
-      if (error && (error.message?.includes("images") || error.code === "PGRST204")) {
-        const fallback = await supabase
-          .from("demands")
-          .insert({
-            customer_id: user.id,
-            title,
-            budget: budgetVal,
-            location,
-            event_date: eventDate,
-            description,
-            requirements: { images: uploadedUrls },
-            status: "pending",
-          })
-          .select()
-          .single();
-
-        newDemand = fallback.data;
-        error = fallback.error;
-      }
 
       if (error) {
         setErrorMsg(error.message);

@@ -441,7 +441,7 @@ export function DateRangePicker({
                 className="inline-flex items-center gap-1 rounded-xl bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 disabled:opacity-40 transition-colors cursor-pointer"
               >
                 <Check className="size-3.5" />
-                <span>Xác nhận OK</span>
+                <span>Xác nhận</span>
               </button>
             </div>
           </div>

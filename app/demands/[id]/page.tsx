@@ -28,7 +28,7 @@ import { ImageUploaderDialog } from "@/components/image-uploader-dialog";
 import { LocationPickerDialog } from "@/components/location-picker-dialog";
 import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
 import type { Service } from "@/lib/types/database";
-import { Edit3, ExternalLink, Sparkles, X } from "lucide-react";
+import { Edit3, X } from "lucide-react";
 
 export default function DemandDetailPage() {
   const params = useParams();
@@ -198,7 +198,7 @@ export default function DemandDetailPage() {
 
     try {
       const supabase = createClient();
-      let { error } = await supabase
+      const { error } = await supabase
         .from("demands")
         .update({
           title: editTitle,
@@ -207,24 +207,8 @@ export default function DemandDetailPage() {
           event_date: editEventDate,
           description: editDescription,
           images: editImages,
-          requirements: { ...(demand.requirements || {}), images: editImages },
         })
         .eq("id", demand.id);
-
-      if (error && (error.message?.includes("images") || error.code === "PGRST204")) {
-        const fallback = await supabase
-          .from("demands")
-          .update({
-            title: editTitle,
-            budget: price,
-            location: editLocation,
-            event_date: editEventDate,
-            description: editDescription,
-            requirements: { ...(demand.requirements || {}), images: editImages },
-          })
-          .eq("id", demand.id);
-        error = fallback.error;
-      }
 
       if (error) {
         throw error;
@@ -462,8 +446,12 @@ export default function DemandDetailPage() {
           </div>
         )}
 
-        {/* 2. AI SMART MATCH ENGINE */}
-        <AiSmartMatch demand={demand} />
+        {/* 2. AI SMART MATCH ENGINE (Full width, unified, distinct recommendations) */}
+        <AiSmartMatch
+          demand={demand}
+          availableServices={recommendedServices}
+          appliedProviderIds={applications.map((a) => a.provider_id)}
+        />
 
         {/* 3. MAIN DETAILS & PROPOSALS HUB GRID */}
         <div className="grid gap-8 lg:grid-cols-3">
@@ -505,11 +493,11 @@ export default function DemandDetailPage() {
               <div className="flex flex-wrap gap-4 text-xs text-muted-foreground border-y border-border py-4">
                 <span className="flex items-center gap-1.5">
                   <MapPin className="size-4 text-orange-500" />
-                  Địa điểm: <strong>{demand.location}</strong>
+                  <span>Địa điểm:</span> <strong className="text-foreground">{demand.location}</strong>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Calendar className="size-4 text-amber-500" />
-                  Ngày diễn ra: <strong>{demand.event_date ? new Date(demand.event_date).toLocaleDateString("vi-VN") : "Chưa xác định"}</strong>
+                  <span>Ngày diễn ra:</span> <strong className="text-foreground">{demand.event_date || "Chưa xác định"}</strong>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="size-4 text-emerald-500" />
@@ -552,76 +540,6 @@ export default function DemandDetailPage() {
                 </div>
               )}
             </div>
-
-            {/* REAL SUPPLIER RECOMMENDATIONS (Exclusively for Demand Owner) */}
-            {isOwner && (
-              <div className="rounded-[2.5rem] border border-orange-500/30 bg-orange-500/5 p-6 sm:p-8 shadow-sm space-y-6">
-                <div className="flex items-center justify-between border-b border-orange-500/20 pb-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="size-5 text-orange-500" />
-                    <div>
-                      <h3 className="text-base font-bold text-foreground">
-                        Gợi ý Nhà cung cấp & Ekip thực tế phù hợp (Chỉ bạn thấy)
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        Hệ thống đối chiếu ngân sách {Number(demand.budget).toLocaleString("vi-VN")} đ và địa điểm {demand.location}
-                      </p>
-                    </div>
-                  </div>
-                  <Link href="/services" className="text-xs font-bold text-orange-500 hover:underline">
-                    Xem tất cả ({recommendedServices.length}) →
-                  </Link>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {recommendedServices.map((srv) => (
-                    <div
-                      key={srv.id}
-                      className="group rounded-3xl border border-border bg-card p-4 shadow-sm transition-all hover:border-orange-500/50 hover:shadow-md space-y-3"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex size-9 items-center justify-center rounded-xl bg-orange-500 text-white font-bold text-xs">
-                            {srv.provider?.full_name?.[0] || "P"}
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-foreground line-clamp-1">{srv.provider?.full_name || "Nhà cung cấp"}</h4>
-                            <p className="text-[10px] text-muted-foreground">{srv.location}</p>
-                          </div>
-                        </div>
-                        {srv.provider?.membership_tier && (
-                          <GoldenTicketBadge tier={srv.provider.membership_tier} variant="badge" />
-                        )}
-                      </div>
-
-                      <div className="border-t border-border/60 pt-2 space-y-1">
-                        <p className="text-xs font-bold text-foreground line-clamp-1">{srv.title}</p>
-                        <p className="text-[11px] text-orange-600 font-bold">
-                          {Number(srv.price_per_day).toLocaleString("vi-VN")} đ/ngày
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 pt-1">
-                        <a
-                          href={`tel:${srv.provider?.phone || "0908889999"}`}
-                          className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted/50 px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted transition-colors"
-                        >
-                          <Phone className="size-3 text-orange-500" />
-                          <span>Gọi điện</span>
-                        </a>
-                        <Link
-                          href={`/services/${srv.id}`}
-                          className="inline-flex items-center gap-1 rounded-xl bg-orange-500 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-orange-600 transition-colors"
-                        >
-                          <span>Thuê ngay</span>
-                          <ExternalLink className="size-3" />
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* 4. PROPOSALS HUB (DANH SÁCH BÁO GIÁ ỨNG TUYỂN) */}
             <div className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
@@ -691,7 +609,7 @@ export default function DemandDetailPage() {
                       {/* Proposal Note */}
                       <div className="rounded-2xl border border-border/80 bg-card p-4 text-xs space-y-1.5">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Phương án kỹ thuật & Cam kết
+                          Phương án kỹ thuật & cam kết
                         </span>
                         <p className="leading-relaxed text-foreground">
                           {app.proposal_note}
@@ -814,7 +732,7 @@ export default function DemandDetailPage() {
 
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                      Giải pháp kỹ thuật & Cam kết
+                      Giải pháp kỹ thuật & cam kết
                     </label>
                     <textarea
                       rows={4}

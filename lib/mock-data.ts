@@ -58,7 +58,7 @@ export const SEED_SERVICES: Service[] = [
   {
     id: "s0000001-0000-0000-0000-000000000001",
     provider_id: p1.id,
-    title: "Gói Máy Quay Cinema Sony FX3 + Lens GM II + Truyền Hình Ảnh Không Dây Hollyland 4K",
+    title: "Gói máy quay Cinema Sony FX3 + Lens GM II + Truyền hình ảnh không dây Hollyland 4K",
     description: "Trọn bộ máy quay Full-frame Sony FX3 cảm biến 4K 120fps, kèm ống kính Sony FE 24-70mm f/2.8 GM II và FE 70-200mm f/2.8 GM OSS II. Bộ truyền hình ảnh không dây Hollyland Mars 4K độ trễ cực thấp dưới 0.06s, hỗ trợ livestream trực tiếp với chất lượng màu sắc chuẩn S-Cinetone.",
     category: "equipment",
     price_per_day: 1800000,
@@ -82,7 +82,7 @@ export const SEED_SERVICES: Service[] = [
   {
     id: "s0000001-0000-0000-0000-000000000002",
     provider_id: p1.id,
-    title: "Phim Trường Livestream Cách Âm E-Commerce & Talkshow Chuẩn 4K Chuyên Nghiệp",
+    title: "Phim trường livestream cách âm E-Commerce & Talkshow chuẩn 4K chuyên nghiệp",
     description: "Phòng quay 60m² cách âm tiêu chuẩn phát thanh, trang bị sẵn 3 góc máy Sony 4K, bàn trộn Blackmagic ATEM Mini Extreme ISO, hệ thống đèn trần Nanlite FS-300B và màn hình nhắc lời Teleprompter 22 inch. Thích hợp livestream bán hàng TikTok Shop, Shopee và talkshow thương hiệu.",
     category: "studio",
     price_per_day: 4500000,
@@ -106,7 +106,7 @@ export const SEED_SERVICES: Service[] = [
   {
     id: "s0000001-0000-0000-0000-000000000003",
     provider_id: p2.id,
-    title: "Ekip Sản Xuất Livestream Sự Kiện & Hội Nghị Đa Máy Quay (3-4 Máy 4K)",
+    title: "Ekip sản xuất livestream sự kiện & hội nghị đa máy quay (3-4 máy 4K)",
     description: "Cung cấp trọn gói đội ngũ nhân sự gồm: 1 Đạo diễn hình ảnh (Switcher), 3 Quay phim chuyên nghiệp, 1 Kỹ sư âm thanh (Audio Engineer). Đầy đủ thiết bị bàn trộn, màn hình Multiview, hệ thống liên lạc nội bộ Intercom Hollyland Solidcom C1.",
     category: "crew",
     price_per_day: 8500000,
@@ -128,7 +128,7 @@ export const SEED_SERVICES: Service[] = [
   {
     id: "s0000001-0000-0000-0000-000000000004",
     provider_id: p2.id,
-    title: "Kỹ Thuật Viên Vmix / OBS & Vận Hành Bàn Trộn ATEM Livestream",
+    title: "Kỹ thuật viên vMix / OBS & Vận hành bàn trộn ATEM livestream",
     description: "Kỹ thuật viên hơn 5 năm kinh nghiệm setup hệ thống livestream phức tạp, xử lý đồ họa hạ tầng lower-third, scoreboard, video intro/outro, kết nối cầu truyền hình vMix Call / Zoom không độ trễ, kiểm soát bitrate đường truyền an toàn tuyệt đối.",
     category: "operator",
     price_per_day: 1500000,
@@ -149,7 +149,7 @@ export const SEED_SERVICES: Service[] = [
   {
     id: "s0000001-0000-0000-0000-000000000005",
     provider_id: p1.id,
-    title: "Bộ Đèn Studio Chuyên Nghiệp Aputure 600d Pro + Nanlite Forza + Softbox Lantern",
+    title: "Bộ đèn studio chuyên nghiệp Aputure 600d Pro + Nanlite Forza + Softbox Lantern",
     description: "Gói ánh sáng cao cấp dành cho phim trường & livestream chuyên nghiệp gồm: 1x Aputure LS 600d Pro (nguồn sáng chính cực mạnh), 2x Nanlite Forza 300B Bi-color, 2x Đèn led thanh Nanlite Pavotube II 30C RGBWW, đầy đủ chân C-stand, tạ cát và ngàm Bowens.",
     category: "equipment",
     price_per_day: 2200000,
