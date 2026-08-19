@@ -43,8 +43,8 @@ export default function DemandDetailPage() {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Tab state: "proposals" | "recommendations"
-  const [activeTab, setActiveTab] = useState<"proposals" | "recommendations">("proposals");
+  // Tab state: "recommendations" | "proposals"
+  const [activeTab, setActiveTab] = useState<"recommendations" | "proposals">("recommendations");
 
   // Proposal submit state (for providers applying)
   const [proposedPrice, setProposedPrice] = useState("");
@@ -801,9 +801,25 @@ export default function DemandDetailPage() {
 
             {/* 3. CONSOLIDATED PROPOSALS & AI MATCHING HUB (Gộp Danh sách báo giá & Gợi ý đối tác) */}
             <div className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
-              {/* Tab Navigation */}
+              {/* Tab Navigation (Gợi ý đối tác được ưu tiên hàng đầu) */}
               <div className="flex items-center justify-between border-b border-border pb-4 -mx-6 sm:-mx-8 px-6 sm:px-8 flex-wrap gap-3">
                 <div className="flex items-center gap-2 p-1 rounded-2xl bg-muted/60 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("recommendations")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
+                      activeTab === "recommendations"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Sparkles className="size-4 text-amber-500" />
+                    <span>Gợi ý đối tác & Ekip phù hợp ({matchedServices.length})</span>
+                    <span className="rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-[9px] font-extrabold">
+                      Ưu tiên
+                    </span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setActiveTab("proposals")}
@@ -816,36 +832,126 @@ export default function DemandDetailPage() {
                     <Users className="size-4 text-orange-500" />
                     <span>Báo giá đã nhận ({applications.length})</span>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("recommendations")}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
-                      activeTab === "recommendations"
-                        ? "bg-card text-foreground shadow-xs"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Sparkles className="size-4 text-amber-500" />
-                    <span>Dịch vụ & đối tác gợi ý ({matchedServices.length})</span>
-                  </button>
                 </div>
 
                 <span className="text-xs text-muted-foreground hidden sm:inline">
-                  {activeTab === "proposals"
-                    ? "Duyệt hồ sơ & chốt đối tác"
-                    : "Đối tác sẵn sàng nhận việc"}
+                  {activeTab === "recommendations"
+                    ? "Đối tác có sẵn năng lực & thiết bị phù hợp"
+                    : "Duyệt hồ sơ & chốt đối tác"}
                 </span>
               </div>
 
-              {/* TAB 1: PROPOSALS (BÁO GIÁ ĐÃ NHẬN) */}
+              {/* TAB 1 (ƯU TIÊN): AI MATCHED RECOMMENDATIONS (GỢI Ý ĐỐI TÁC PHÙ HỢP) */}
+              {activeTab === "recommendations" && (
+                <div className="space-y-4">
+                  {matchedServices.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground space-y-2">
+                      <p className="font-semibold text-foreground">Tất cả đối tác phù hợp đã nộp báo giá cho dự án của bạn!</p>
+                      <p>Hãy xem lại tab &quot;Báo giá đã nhận&quot; để chọn đơn vị thực hiện.</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {matchedServices.map((srv) => {
+                        const isInvited = invitedServiceIds.includes(srv.id);
+
+                        return (
+                          <div
+                            key={srv.id}
+                            className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-4 transition-all duration-200 hover:border-orange-500/40 hover:shadow-md space-y-3"
+                          >
+                            <div>
+                              {/* Thumbnail & Price */}
+                              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-muted">
+                                <SafeImage
+                                  src={srv.images?.[0] || "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1000&auto=format&fit=crop&q=80"}
+                                  alt={srv.title}
+                                  fill
+                                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+
+                                <div className="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-orange-500/90 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs shadow-xs">
+                                  <Zap className="size-3" />
+                                  <span>Phù hợp dự án</span>
+                                </div>
+                              </div>
+
+                              {/* Title & Provider */}
+                              <div className="mt-3 space-y-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[11px] font-medium text-muted-foreground truncate">
+                                    {srv.provider?.full_name || "Nhà cung cấp"}
+                                  </span>
+                                  {srv.provider?.membership_tier && (
+                                    <GoldenTicketBadge
+                                      tier={srv.provider.membership_tier}
+                                      variant="badge"
+                                    />
+                                  )}
+                                </div>
+
+                                <h4 className="line-clamp-2 text-xs font-bold text-foreground group-hover:text-orange-500 transition-colors">
+                                  {srv.title}
+                                </h4>
+
+                                <p className="text-[11px] font-bold text-orange-600 dark:text-orange-400">
+                                  {Number(srv.price_per_day).toLocaleString("vi-VN")} đ
+                                  <span className="text-[10px] font-normal text-muted-foreground">/ngày</span>
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Card Footer Actions (Full-Width) */}
+                            <div className="border-border/60 -mx-4 -mb-4 flex items-center justify-between gap-2 border-t px-4 py-3 bg-muted/20 rounded-b-3xl">
+                              {srv.provider?.phone ? (
+                                <a
+                                  href={`tel:${srv.provider.phone}`}
+                                  className="inline-flex items-center gap-1 rounded-xl border border-border bg-card px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                >
+                                  <Phone className="size-3 text-orange-500" />
+                                  <span>Gọi điện</span>
+                                </a>
+                              ) : (
+                                <div />
+                              )}
+
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleInviteService(srv.id)}
+                                  className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                                    isInvited
+                                      ? "bg-emerald-600 text-white"
+                                      : "bg-orange-500 text-white hover:bg-orange-600"
+                                  }`}
+                                >
+                                  {isInvited ? "✓ Đã mời" : "Mời báo giá"}
+                                </button>
+
+                                <Link
+                                  href={`/services/${srv.id}`}
+                                  className="flex size-7.5 items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                                  title="Xem chi tiết dịch vụ"
+                                >
+                                  <ArrowUpRight className="size-4" />
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 2: PROPOSALS (BÁO GIÁ ĐÃ NHẬN) */}
               {activeTab === "proposals" && (
                 <div className="space-y-4">
                   {applications.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground space-y-2">
                       <Clock className="mx-auto size-8 text-muted-foreground/50" />
                       <p className="font-semibold text-foreground">Chưa có báo giá ứng tuyển nào</p>
-                      <p>Bạn có thể duyệt qua tab &quot;Dịch vụ & đối tác gợi ý&quot; để chủ động mời các nhà cung cấp uy tín.</p>
+                      <p>Bạn có thể duyệt qua tab &quot;Gợi ý đối tác & Ekip phù hợp&quot; để chủ động mời các nhà cung cấp uy tín.</p>
                     </div>
                   ) : (
                     applications.map((app) => {
@@ -959,114 +1065,11 @@ export default function DemandDetailPage() {
                   )}
                 </div>
               )}
-
-              {/* TAB 2: AI MATCHED RECOMMENDATIONS (GỢI Ý ĐỐI TÁC PHÙ HỢP) */}
-              {activeTab === "recommendations" && (
-                <div className="space-y-4">
-                  {matchedServices.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground space-y-2">
-                      <p className="font-semibold text-foreground">Tất cả đối tác phù hợp đã nộp báo giá cho dự án của bạn!</p>
-                      <p>Hãy xem lại tab &quot;Báo giá đã nhận&quot; để chọn đơn vị thực hiện.</p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {matchedServices.map((srv) => {
-                        const isInvited = invitedServiceIds.includes(srv.id);
-
-                        return (
-                          <div
-                            key={srv.id}
-                            className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-4 transition-all duration-200 hover:border-orange-500/40 hover:shadow-md space-y-3"
-                          >
-                            <div>
-                              {/* Thumbnail & Price */}
-                              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-muted">
-                                <SafeImage
-                                  src={srv.images?.[0] || "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1000&auto=format&fit=crop&q=80"}
-                                  alt={srv.title}
-                                  fill
-                                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                />
-
-                                <div className="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-orange-500/90 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs shadow-xs">
-                                  <Zap className="size-3" />
-                                  <span>Phù hợp dự án</span>
-                                </div>
-                              </div>
-
-                              {/* Title & Provider */}
-                              <div className="mt-3 space-y-1.5">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="text-[11px] font-medium text-muted-foreground truncate">
-                                    {srv.provider?.full_name || "Nhà cung cấp"}
-                                  </span>
-                                  {srv.provider?.membership_tier && (
-                                    <GoldenTicketBadge
-                                      tier={srv.provider.membership_tier}
-                                      variant="badge"
-                                    />
-                                  )}
-                                </div>
-
-                                <h4 className="line-clamp-2 text-xs font-bold text-foreground group-hover:text-orange-500 transition-colors">
-                                  {srv.title}
-                                </h4>
-
-                                <p className="text-[11px] font-bold text-orange-600 dark:text-orange-400">
-                                  {Number(srv.price_per_day).toLocaleString("vi-VN")} đ
-                                  <span className="text-[10px] font-normal text-muted-foreground">/ngày</span>
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Card Footer Actions (Full-Width) */}
-                            <div className="border-border/60 -mx-4 -mb-4 flex items-center justify-between gap-2 border-t px-4 py-3 bg-muted/20 rounded-b-3xl">
-                              {srv.provider?.phone ? (
-                                <a
-                                  href={`tel:${srv.provider.phone}`}
-                                  className="inline-flex items-center gap-1 rounded-xl border border-border bg-card px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
-                                >
-                                  <Phone className="size-3 text-orange-500" />
-                                  <span>Gọi điện</span>
-                                </a>
-                              ) : (
-                                <div />
-                              )}
-
-                              <div className="flex items-center gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => handleInviteService(srv.id)}
-                                  className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
-                                    isInvited
-                                      ? "bg-emerald-600 text-white"
-                                      : "bg-orange-500 text-white hover:bg-orange-600"
-                                  }`}
-                                >
-                                  {isInvited ? "✓ Đã mời" : "Mời báo giá"}
-                                </button>
-
-                                <Link
-                                  href={`/services/${srv.id}`}
-                                  className="flex size-7.5 items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-muted transition-colors"
-                                  title="Xem chi tiết dịch vụ"
-                                >
-                                  <ArrowUpRight className="size-4" />
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Right Sidebar (Sticky on Scroll) */}
-          <div className="lg:col-span-1 sticky top-28 self-start z-20">
+          {/* Right Sidebar (Sticky on Scroll - follows smoothly) */}
+          <div className="lg:col-span-1 lg:sticky lg:top-28 self-start z-10 space-y-6">
             <div className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6">
               <div className="border-b border-border pb-5 -mx-6 sm:-mx-8 px-6 sm:px-8">
                 <span className="text-xs text-muted-foreground">Ngân sách dự kiến của dự án</span>
