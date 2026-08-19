@@ -5,7 +5,7 @@ export const siteConfig = {
   description:
     "LiveHub kết nối khách hàng với nhà cung cấp dịch vụ livestream có kiểm duyệt.",
   url: "https://we-livehub.vercel.app",
-  ogImage: "/brand/livehub-social-card.jpg",
+  ogImage: "https://we-livehub.vercel.app/brand/livehub-social-card.jpg",
   creator: "LiveHub",
   authors: [
     {
@@ -62,8 +62,10 @@ export const baseMetadata: Metadata = {
     images: [
       {
         url: siteConfig.ogImage,
+        secureUrl: siteConfig.ogImage,
         width: 1200,
         height: 630,
+        type: "image/jpeg",
         alt: "LiveHub - Nền tảng kết nối dịch vụ livestream",
       },
     ],
@@ -111,13 +113,16 @@ export function createMetadata({
       images: [
         {
           url: ogImage,
+          secureUrl: ogImage,
           width: 1200,
           height: 630,
+          type: "image/jpeg",
           alt: title ?? siteConfig.name,
         },
       ],
     },
     twitter: {
+      card: "summary_large_image",
       title: title ?? siteConfig.name,
       description: description ?? siteConfig.description,
       images: [ogImage],
