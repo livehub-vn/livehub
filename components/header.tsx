@@ -192,7 +192,16 @@ export function Header(): ReactNode {
     router.push("/");
   };
 
-  const closeMobile = () => setMobileMenuOpen(false);
+  const scrollToTop = () => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const closeMobile = () => {
+    setMobileMenuOpen(false);
+    scrollToTop();
+  };
 
   if (pathname.startsWith("/admin")) {
     return null;
@@ -247,7 +256,8 @@ export function Header(): ReactNode {
         {/* Brand Logo */}
         <Link
           href="/"
-          className="ml-2 flex shrink-0 items-center gap-1.5 max-[1024px]:ml-0"
+          onClick={scrollToTop}
+          className="ml-2 flex shrink-0 items-center gap-1.5 max-[1024px]:ml-0 cursor-pointer"
           aria-label="Trang chủ sàn dịch vụ LiveHub"
         >
           <Image
@@ -271,7 +281,8 @@ export function Header(): ReactNode {
               {/* SUPPLIER: TÌM DỰ ÁN & NHU CẦU */}
               <Link
                 href="/demands"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <FileText className="size-3.5 shrink-0 text-orange-500" />
                 <span>Tìm dự án & Nhu cầu</span>
@@ -283,7 +294,8 @@ export function Header(): ReactNode {
               {/* SUPPLIER: DỊCH VỤ CỦA TÔI */}
               <Link
                 href="/services/my"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <Video className="size-3.5 shrink-0 text-orange-500" />
                 <span>Dịch vụ của tôi</span>
@@ -292,7 +304,8 @@ export function Header(): ReactNode {
               {/* SUPPLIER: ĐƠN THUÊ */}
               <Link
                 href="/rentals"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <ShoppingBag className="size-3.5 shrink-0 text-orange-500" />
                 <span>Đơn thuê</span>
@@ -301,7 +314,8 @@ export function Header(): ReactNode {
               {/* SUPPLIER: GÓI TRỌN GÓI */}
               <Link
                 href="/packages"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <Sparkles className="size-3.5 shrink-0 text-orange-500" />
                 <span>Gói trọn gói</span>
@@ -310,7 +324,8 @@ export function Header(): ReactNode {
               {/* SUPPLIER: BẢNG GIÁ VIP */}
               <Link
                 href="/pricing"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <span>Bảng giá VIP</span>
               </Link>
@@ -320,7 +335,8 @@ export function Header(): ReactNode {
               {/* CUSTOMER: SÀN DỊCH VỤ */}
               <Link
                 href="/services"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <Video className="size-3.5 shrink-0 text-orange-500" />
                 <span>Sàn dịch vụ</span>
@@ -329,7 +345,8 @@ export function Header(): ReactNode {
               {/* CUSTOMER: NHU CẦU CỦA BẠN */}
               <Link
                 href="/demands/my"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <Package className="size-3.5 shrink-0 text-orange-500" />
                 <span>Nhu cầu của bạn</span>
@@ -338,7 +355,8 @@ export function Header(): ReactNode {
               {/* CUSTOMER: HỢP ĐỒNG THUÊ */}
               <Link
                 href="/rentals"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <ShoppingBag className="size-3.5 shrink-0 text-orange-500" />
                 <span>Hợp đồng thuê</span>
@@ -347,7 +365,8 @@ export function Header(): ReactNode {
               {/* DỊCH VỤ TRỌN GÓI */}
               <Link
                 href="/packages"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <Sparkles className="size-3.5 shrink-0 text-orange-500" />
                 <span>Gói trọn gói</span>
@@ -356,7 +375,8 @@ export function Header(): ReactNode {
               {/* BẢNG GIÁ VIP */}
               <Link
                 href="/pricing"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <span>Bảng giá VIP</span>
               </Link>
@@ -366,7 +386,8 @@ export function Header(): ReactNode {
               {/* GUEST: SÀN DỊCH VỤ */}
               <Link
                 href="/services"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <span>Sàn dịch vụ</span>
               </Link>
@@ -374,7 +395,8 @@ export function Header(): ReactNode {
               {/* GUEST: SÀN NHU CẦU */}
               <Link
                 href="/demands"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <FileText className="size-3.5 shrink-0 text-orange-500" />
                 <span>Sàn nhu cầu</span>
@@ -383,7 +405,8 @@ export function Header(): ReactNode {
               {/* GUEST: GÓI TRỌN GÓI */}
               <Link
                 href="/packages"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <Sparkles className="size-3.5 shrink-0 text-orange-500" />
                 <span>Gói trọn gói</span>
@@ -392,7 +415,8 @@ export function Header(): ReactNode {
               {/* GUEST: BẢNG GIÁ VIP */}
               <Link
                 href="/pricing"
-                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm"
+                onClick={scrollToTop}
+                className="text-foreground/80 hover:text-foreground hover:bg-foreground/5 flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors xl:text-sm cursor-pointer"
               >
                 <span>Bảng giá VIP</span>
               </Link>
@@ -469,8 +493,11 @@ export function Header(): ReactNode {
                         <>
                           <Link
                             href="/demands"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
                           >
                             <FileText className="size-4 text-orange-500" />
                             <span>Tìm dự án & Báo giá</span>
@@ -478,8 +505,11 @@ export function Header(): ReactNode {
 
                           <Link
                             href="/services/my"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
                           >
                             <Video className="size-4 text-orange-500" />
                             <span>Dịch vụ của tôi</span>
@@ -487,8 +517,11 @@ export function Header(): ReactNode {
 
                           <Link
                             href="/services/new"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="text-orange-600 dark:text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-orange-600 dark:text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold cursor-pointer"
                           >
                             <PlusCircle className="size-4" />
                             <span>+ Đăng dịch vụ mới</span>
@@ -496,8 +529,11 @@ export function Header(): ReactNode {
 
                           <Link
                             href="/rentals"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
                           >
                             <ShoppingBag className="size-4 text-orange-500" />
                             <span>Đơn thuê nhận được</span>
@@ -507,8 +543,11 @@ export function Header(): ReactNode {
                         <>
                           <Link
                             href="/demands/my"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
                           >
                             <Package className="size-4 text-orange-500" />
                             <span>Dự án của tôi</span>
@@ -516,8 +555,11 @@ export function Header(): ReactNode {
 
                           <Link
                             href="/demands/new"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="text-orange-600 dark:text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-orange-600 dark:text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold cursor-pointer"
                           >
                             <PlusCircle className="size-4" />
                             <span>+ Đăng nhu cầu tìm ekip</span>
@@ -525,8 +567,11 @@ export function Header(): ReactNode {
 
                           <Link
                             href="/rentals"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              scrollToTop();
+                            }}
+                            className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
                           >
                             <ShoppingBag className="size-4 text-orange-500" />
                             <span>Hợp đồng thuê của tôi</span>
@@ -538,8 +583,11 @@ export function Header(): ReactNode {
                       {isAdminEmail(profile.email) && (
                         <Link
                           href="/admin"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-orange-500 hover:bg-orange-500/10"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            scrollToTop();
+                          }}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-orange-500 hover:bg-orange-500/10 cursor-pointer"
                         >
                           <LayoutDashboard className="size-4" />
                           <span>Bảng quản trị Admin</span>
@@ -548,8 +596,11 @@ export function Header(): ReactNode {
 
                       <Link
                         href="/pricing"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          scrollToTop();
+                        }}
+                        className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
                       >
                         <Layers className="size-4 text-orange-500" />
                         <span>Hạng thành viên & Bảng giá</span>
@@ -557,8 +608,11 @@ export function Header(): ReactNode {
 
                       <Link
                         href="/profile"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium"
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          scrollToTop();
+                        }}
+                        className="text-foreground hover:bg-muted flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
                       >
                         <Settings className="text-muted-foreground size-4" />
                         <span>Hồ sơ tài khoản</span>
