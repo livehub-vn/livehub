@@ -1,6 +1,6 @@
 "use client";
 
-import { GoldenTicketBadge } from "@/components/golden-ticket-badge";
+import { GoldenTicketBadge, getTierPriorityWeight } from "@/components/golden-ticket-badge";
 import { LocationPickerDialog } from "@/components/location-picker-dialog";
 import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -470,14 +470,24 @@ export default function DemandDetailPage() {
     currentStep = 2;
   }
 
-  // Filter AI recommendations to exclude providers that already applied
+  // Filter & sort AI recommendations to prioritize Premium / Golden Ticket VIP partners
   const appliedProviderIds = applications.map((a) => a.provider_id);
-  const matchedServices = recommendedServices
+  const matchedServices = [...recommendedServices]
     .filter(
       (srv) =>
         srv.provider_id !== demand.customer_id &&
         !appliedProviderIds.includes(srv.provider_id)
     )
+    .sort((a, b) => {
+      const weightA = getTierPriorityWeight(a.provider?.membership_tier);
+      const weightB = getTierPriorityWeight(b.provider?.membership_tier);
+      if (weightB !== weightA) {
+        return weightB - weightA;
+      }
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    })
     .slice(0, 4);
 
   return (
@@ -1069,7 +1079,10 @@ export default function DemandDetailPage() {
           </div>
 
           {/* Right Sidebar (Sticky on Scroll - follows smoothly) */}
-          <div className="lg:col-span-1 lg:sticky lg:top-28 self-start z-10 space-y-6">
+          <aside
+            style={{ position: "sticky", top: "7rem" }}
+            className="lg:col-span-1 sticky top-28 self-start z-20 space-y-6"
+          >
             <div className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6">
               <div className="border-b border-border pb-5 -mx-6 sm:-mx-8 px-6 sm:px-8">
                 <span className="text-xs text-muted-foreground">Ngân sách dự kiến của dự án</span>
@@ -1187,7 +1200,7 @@ export default function DemandDetailPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
 
