@@ -6,17 +6,20 @@ import { AuroraText } from "@/components/ui/aurora-text";
 import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
 import { uploadPendingImages } from "@/lib/storage-helper";
 import { createClient } from "@/lib/supabase/client";
-import { getFallbackProfile } from "@/lib/demo-session";
+import { loginWithGoogle } from "@/lib/auth-client";
 import type { ServiceCategory } from "@/lib/types/database";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft, Lock, LogIn, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SERVICE_PRICE_PRESETS = [500000, 1000000, 2000000, 3500000, 5000000, 10000000];
 
 export default function PostNewServicePage() {
   const router = useRouter();
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
@@ -28,6 +31,28 @@ export default function PostNewServicePage() {
   const [description, setDescription] = useState("");
   const [imagePreviews, setImagePreviews] = useState<PreviewItem[]>([]);
 
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch {
+        setIsAuthenticated(false);
+      } finally {
+        setAuthLoading(false);
+      }
+    }
+    checkAuth();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -38,7 +63,14 @@ export default function PostNewServicePage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const providerId = user?.id || getFallbackProfile("provider").id;
+    if (!user) {
+      setErrorMsg("Bạn cần đăng nhập để đăng dịch vụ mới.");
+      setLoading(false);
+      router.push("/login?next=/services/new");
+      return;
+    }
+
+    const providerId = user.id;
 
     const price = parseFloat(pricePerDay);
     if (isNaN(price) || price <= 0) {
@@ -98,6 +130,62 @@ export default function PostNewServicePage() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background px-4 pt-28 pb-14 sm:px-6 sm:pt-32 text-foreground">
+        <div className="mx-auto w-full max-w-3xl space-y-4">
+          <Skeleton className="h-8 w-48 rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-3xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background px-4 pt-28 pb-14 sm:px-6 sm:pt-32 text-foreground">
+        <div className="mx-auto w-full max-w-xl">
+          <Link
+            href="/services"
+            className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span>Quay lại Sàn dịch vụ</span>
+          </Link>
+
+          <div className="rounded-[2.5rem] border border-border bg-card p-8 text-center shadow-xl sm:p-10">
+            <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/10 text-orange-500 shadow-inner">
+              <Lock className="size-7" />
+            </div>
+            <h1 className="mt-6 text-2xl font-bold tracking-tight sm:text-3xl">
+              Yêu cầu đăng nhập
+            </h1>
+            <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+              Bạn cần đăng nhập tài khoản Nhà cung cấp để đăng dịch vụ & thiết bị cho thuê trên LiveHub.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={() => loginWithGoogle("/services/new")}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-orange-500/25 transition-all hover:bg-orange-600 cursor-pointer"
+              >
+                <LogIn className="size-4" />
+                <span>Đăng nhập với Google</span>
+              </button>
+              <Link
+                href="/login?next=/services/new"
+                className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-6 py-3 text-xs font-semibold text-foreground hover:border-orange-500 transition-colors"
+              >
+                Trang đăng nhập
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background px-4 pt-28 pb-14 sm:px-6 sm:pt-32 text-foreground">
       <div className="mx-auto w-full max-w-6xl">
@@ -119,75 +207,73 @@ export default function PostNewServicePage() {
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             {errorMsg && (
-              <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs font-medium text-rose-300">
+              <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs font-medium text-rose-500">
                 {errorMsg}
               </div>
             )}
 
             <div>
-              <label className="mb-2 block text-xs font-semibold text-muted-foreground">
+              <label className="mb-2 block text-xs font-semibold">
                 Tên dịch vụ / Thiết bị <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
+                required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ví dụ: Bộ máy quay Sony FX3 + Lens 24-70mm f/2.8 GM II"
+                placeholder="VD: Cho thuê Combo Sony FX3 + Lens G-Master + Bàn Switcher Blackmagic"
                 className="w-full rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none"
-                required
               />
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-xs font-semibold text-muted-foreground">
-                  Phân loại danh mục <span className="text-rose-500">*</span>
+                <label className="mb-2 block text-xs font-semibold">
+                  Danh mục dịch vụ <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as ServiceCategory)}
                   className="w-full rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none"
                 >
-                  <option value="equipment">Thiết bị Livestream</option>
-                  <option value="studio">Studio / Phòng quay</option>
-                  <option value="crew">Ekip sản xuất</option>
-                  <option value="operator">Kỹ thuật viên / Operator</option>
+                  <option value="equipment">Thiết bị Livestream & Quay phim</option>
+                  <option value="studio">Studio & Không gian ghi hình</option>
+                  <option value="crew">Ekip trọn gói & Đạo diễn</option>
+                  <option value="operator">Kỹ thuật viên & Livestream Operator</option>
                 </select>
               </div>
 
               <div>
-                <label className="mb-2 block text-xs font-semibold text-muted-foreground">
-                  Giá thuê 1 ngày (VNĐ) <span className="text-rose-500">*</span>
+                <label className="mb-2 block text-xs font-semibold">
+                  Giá thuê theo ngày (VNĐ) <span className="text-rose-500">*</span>
                 </label>
                 <FormattedCurrencyInput
                   value={pricePerDay}
                   onChange={setPricePerDay}
                   placeholder="VD: 1.500.000"
                   presetAmounts={SERVICE_PRICE_PRESETS}
-                  unitSuffix="/ngày"
                   required
                 />
               </div>
             </div>
 
-            {/* Location with Goong Map Dialog Picker */}
             <div>
-              <label className="mb-2 block text-xs font-semibold text-muted-foreground">
-                Khu vực / Địa điểm giao nhận <span className="text-rose-500">*</span>
+              <label className="mb-2 block text-xs font-semibold">
+                Địa điểm / Khu vực cung cấp <span className="text-rose-500">*</span>
               </label>
               <div className="flex gap-2">
                 <input
                   type="text"
+                  required
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Quận 1, TP. Hồ Chí Minh"
+                  placeholder="VD: Quận Bình Thạnh, TP. Hồ Chí Minh"
                   className="flex-1 rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none"
-                  required
                 />
                 <button
                   type="button"
                   onClick={() => setMapDialogOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors cursor-pointer shrink-0"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3 py-3 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors cursor-pointer shrink-0"
                 >
                   <MapPin className="size-4" />
                   <span>Chọn trên bản đồ</span>
@@ -196,16 +282,16 @@ export default function PostNewServicePage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-semibold text-muted-foreground">
-                Mô tả chi tiết & Thông số kỹ thuật <span className="text-rose-500">*</span>
+              <label className="mb-2 block text-xs font-semibold">
+                Mô tả chi tiết thiết bị / thông số / chính sách <span className="text-rose-500">*</span>
               </label>
               <textarea
+                required
                 rows={5}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Chi tiết cấu hình, tình trạng thiết bị, phụ kiện kèm theo..."
+                placeholder="Mô tả danh sách phụ kiện đi kèm (pin, thẻ nhớ, chân máy), quy định đặt cọc, thời gian giao nhận thiết bị..."
                 className="w-full rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none"
-                required
               />
             </div>
 
@@ -214,8 +300,8 @@ export default function PostNewServicePage() {
               items={imagePreviews}
               onChange={setImagePreviews}
               maxImages={6}
-              label="Hình ảnh thực tế thiết bị / studio"
-              description="Thêm ảnh trực tiếp từ máy để tăng độ uy tín cho bài đăng (ảnh sẽ được lưu khi bấm Đăng)"
+              label="Hình ảnh dịch vụ / thiết bị thực tế"
+              description="Thêm ảnh trực tiếp từ máy (tối đa 6 ảnh, sẽ được tải lên khi nhấn Đăng)"
             />
 
             <div className="pt-4">
@@ -224,7 +310,7 @@ export default function PostNewServicePage() {
                 disabled={loading}
                 className="w-full rounded-xl bg-orange-500 py-3.5 text-xs font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 disabled:opacity-50 cursor-pointer"
               >
-                {loading ? "Đang tải ảnh & lưu dịch vụ..." : "Hoàn tất & Chuyển tới trang chi tiết dịch vụ"}
+                {loading ? "Đang tải ảnh & lưu dịch vụ..." : "Hoàn tất & Gửi duyệt dịch vụ"}
               </button>
             </div>
           </form>

@@ -7,16 +7,19 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input";
 import { uploadPendingImages } from "@/lib/storage-helper";
 import { createClient } from "@/lib/supabase/client";
-import { getFallbackProfile } from "@/lib/demo-session";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { loginWithGoogle } from "@/lib/auth-client";
+import { ArrowLeft, Lock, LogIn, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DEMAND_BUDGET_PRESETS = [3000000, 5000000, 10000000, 20000000, 50000000];
 
 export default function PostNewDemandPage() {
   const router = useRouter();
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
@@ -28,6 +31,28 @@ export default function PostNewDemandPage() {
   const [description, setDescription] = useState("");
   const [imagePreviews, setImagePreviews] = useState<PreviewItem[]>([]);
 
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch {
+        setIsAuthenticated(false);
+      } finally {
+        setAuthLoading(false);
+      }
+    }
+    checkAuth();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -38,7 +63,14 @@ export default function PostNewDemandPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const customerId = user?.id || getFallbackProfile("customer").id;
+    if (!user) {
+      setErrorMsg("Bạn cần đăng nhập để đăng bài nhu cầu.");
+      setLoading(false);
+      router.push("/login?next=/demands/new");
+      return;
+    }
+
+    const customerId = user.id;
 
     const budgetVal = parseFloat(budget);
     if (isNaN(budgetVal) || budgetVal <= 0) {
@@ -97,6 +129,62 @@ export default function PostNewDemandPage() {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background px-4 pt-28 pb-14 sm:px-6 sm:pt-32 text-foreground">
+        <div className="mx-auto w-full max-w-3xl space-y-4">
+          <Skeleton className="h-8 w-48 rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-3xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background px-4 pt-28 pb-14 sm:px-6 sm:pt-32 text-foreground">
+        <div className="mx-auto w-full max-w-xl">
+          <Link
+            href="/demands"
+            className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span>Quay lại Sàn nhu cầu</span>
+          </Link>
+
+          <div className="rounded-[2.5rem] border border-border bg-card p-8 text-center shadow-xl sm:p-10">
+            <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/10 text-orange-500 shadow-inner">
+              <Lock className="size-7" />
+            </div>
+            <h1 className="mt-6 text-2xl font-bold tracking-tight sm:text-3xl">
+              Yêu cầu đăng nhập
+            </h1>
+            <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+              Bạn cần đăng nhập tài khoản để đăng nhu cầu tìm kiếm ekip & thiết bị trên LiveHub.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={() => loginWithGoogle("/demands/new")}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-orange-500/25 transition-all hover:bg-orange-600 cursor-pointer"
+              >
+                <LogIn className="size-4" />
+                <span>Đăng nhập với Google</span>
+              </button>
+              <Link
+                href="/login?next=/demands/new"
+                className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-6 py-3 text-xs font-semibold text-foreground hover:border-orange-500 transition-colors"
+              >
+                Trang đăng nhập
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background px-4 pt-28 pb-14 sm:px-6 sm:pt-32 text-foreground">

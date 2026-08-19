@@ -10,7 +10,6 @@ import {
   MEMBERSHIP_TIERS,
   resolveMembership,
 } from "@/lib/membership";
-import { getFallbackProfile } from "@/lib/demo-session";
 import type {
   PaymentMethod,
   PaymentStatus,
@@ -96,12 +95,13 @@ export default function CheckoutPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      const activeUser = user || {
-        id: getFallbackProfile("customer").id,
-        email: getFallbackProfile("customer").email,
-        app_metadata: {},
-        user_metadata: {},
-      };
+      if (!user) {
+        const returnUrl = typeof window !== "undefined" ? window.location.pathname + window.location.search : "/";
+        router.replace(`/login?next=${encodeURIComponent(returnUrl)}`);
+        return;
+      }
+
+      const activeUser = user;
 
       if (isMembership) {
         if (!membershipPlan) {

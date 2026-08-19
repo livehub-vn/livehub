@@ -11,7 +11,6 @@ import { FormattedCurrencyInput } from "@/components/ui/formatted-currency-input
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminFetch } from "@/lib/admin/client";
 import { isAdminEmail } from "@/lib/auth";
-import { getFallbackProfile } from "@/lib/demo-session";
 import { SEED_SERVICES } from "@/lib/mock-data";
 import { uploadPendingImages } from "@/lib/storage-helper";
 import { createClient } from "@/lib/supabase/client";
@@ -29,7 +28,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 function normalizeServiceImages(images: unknown): string[] {
@@ -46,6 +45,7 @@ function normalizeServiceImages(images: unknown): string[] {
 }
 
 export default function ServiceDetailPage() {
+  const router = useRouter();
   const params = useParams();
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
@@ -190,10 +190,9 @@ export default function ServiceDetailPage() {
         const userRole = (user.user_metadata?.role as UserRole) || (isAdminEmail(user.email) ? "admin" : "customer");
         setCurrentUserRole(userRole);
       } else {
-        const fallback = getFallbackProfile();
-        setCurrentUserId(fallback.id);
-        setCurrentUserEmail(fallback.email);
-        setCurrentUserRole(fallback.role);
+        setCurrentUserId(null);
+        setCurrentUserEmail(null);
+        setCurrentUserRole(null);
       }
 
       const { data } = await supabase
@@ -277,7 +276,14 @@ export default function ServiceDetailPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const customerId = user?.id || getFallbackProfile("customer").id;
+    if (!user) {
+      setBookingError("Bạn cần đăng nhập tài khoản để thuê dịch vụ / thiết bị này.");
+      setBookingLoading(false);
+      router.push(`/login?next=/services/${params.id}`);
+      return;
+    }
+
+    const customerId = user.id;
 
     if (!service) return;
 
@@ -404,10 +410,7 @@ export default function ServiceDetailPage() {
       (isAdminEmail(currentUserEmail) || currentUserRole === "admin")
   );
   const isOwner = Boolean(
-    currentUserId &&
-      (currentUserId === service.provider_id ||
-        service.provider_id === "00000000-0000-4000-8000-000000000001" ||
-        service.provider_id === "d0000001-0000-0000-0000-000000000001")
+    currentUserId && currentUserId === service.provider_id
   );
   const canEdit = isOwner || isAdmin;
 

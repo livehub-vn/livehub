@@ -9,11 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { adminFetch } from "@/lib/admin/client";
 import { isAdminEmail } from "@/lib/auth";
 import { getDemandImages } from "@/lib/demand-helpers";
-import { getFallbackProfile } from "@/lib/demo-session";
 import { SEED_DEMANDS, SEED_SERVICES } from "@/lib/mock-data";
 import { uploadPendingImages } from "@/lib/storage-helper";
 import { createClient } from "@/lib/supabase/client";
-import type { Demand, DemandApplication, Service, UserRole } from "@/lib/types/database";
+import type { Demand, DemandApplication, Profile, Service, UserRole } from "@/lib/types/database";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -35,10 +34,11 @@ import {
 } from "lucide-react";
 import { SafeImage } from "@/components/ui/safe-image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function DemandDetailPage() {
+  const router = useRouter();
   const params = useParams();
   const demandId = params?.id as string;
 
@@ -133,10 +133,9 @@ export default function DemandDetailPage() {
           const userRole = (user.user_metadata?.role as UserRole) || (isAdminEmail(user.email) ? "admin" : "customer");
           setCurrentUserRole(userRole);
         } else {
-          const fallback = getFallbackProfile();
-          setCurrentUserId(fallback.id);
-          setCurrentUserEmail(fallback.email);
-          setCurrentUserRole(fallback.role);
+          setCurrentUserId(null);
+          setCurrentUserEmail(null);
+          setCurrentUserRole(null);
         }
 
         const { data, error } = await supabase
@@ -333,22 +332,14 @@ export default function DemandDetailPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const activeProvider = user
-      ? {
-          id: user.id,
-          email: user.email || "partner@livehub.vn",
-          full_name: (user.user_metadata?.full_name as string) || "Nhà cung cấp LiveHub",
-          phone: (user.user_metadata?.phone as string) || "0908889999",
-          avatar_url: null,
-          bio: null,
-          role: "provider" as const,
-          membership_tier: "premium" as const,
-          membership_status: "active" as const,
-          created_at: new Date().toISOString(),
-        }
-      : getFallbackProfile("provider");
+    if (!user) {
+      setApplyError("Vui lòng đăng nhập tài khoản để gửi báo giá ứng tuyển dự án.");
+      setApplyLoading(false);
+      router.push(`/login?next=/demands/${demand.id}`);
+      return;
+    }
 
-    const providerId = activeProvider.id;
+    const providerId = user.id;
 
     const price = parseFloat(proposedPrice);
     if (isNaN(price) || price <= 0) {
@@ -356,6 +347,19 @@ export default function DemandDetailPage() {
       setApplyLoading(false);
       return;
     }
+
+    const providerProfile: Profile = {
+      id: user.id,
+      email: user.email || "partner@livehub.vn",
+      full_name: (user.user_metadata?.full_name as string) || user.email?.split("@")[0] || "Nhà cung cấp LiveHub",
+      phone: (user.user_metadata?.phone as string) || "",
+      avatar_url: (user.user_metadata?.avatar_url as string) || null,
+      bio: null,
+      role: "provider",
+      membership_tier: "free_trial",
+      membership_status: "active",
+      created_at: new Date().toISOString(),
+    };
 
     try {
       const { data: newApp, error } = await supabase
@@ -380,7 +384,7 @@ export default function DemandDetailPage() {
           proposal_note: proposalNote,
           status: "pending",
           created_at: new Date().toISOString(),
-          provider: activeProvider,
+          provider: providerProfile,
         };
         setApplications((prev) => [fallbackApp, ...prev]);
         setApplySuccess(true);
@@ -401,7 +405,7 @@ export default function DemandDetailPage() {
         proposal_note: proposalNote,
         status: "pending",
         created_at: new Date().toISOString(),
-        provider: activeProvider,
+        provider: providerProfile,
       };
       setApplications((prev) => [fallbackApp, ...prev]);
       setApplySuccess(true);
@@ -525,10 +529,7 @@ export default function DemandDetailPage() {
       (isAdminEmail(currentUserEmail) || currentUserRole === "admin")
   );
   const isOwner = Boolean(
-    currentUserId === demand.customer_id ||
-    demand.customer_id === "00000000-0000-4000-8000-000000000003" ||
-    demand.customer_id === "d0000001-0000-0000-0000-000000000003" ||
-    !demand.customer_id
+    currentUserId && currentUserId === demand.customer_id
   );
   const canEdit = isOwner || isAdmin;
   const approvedApp = applications.find((a) => a.status === "approved");

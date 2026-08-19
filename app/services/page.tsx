@@ -5,7 +5,6 @@ import { AuroraText } from "@/components/ui/aurora-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UnauthenticatedBlurOverlay } from "@/components/unauthenticated-blur-overlay";
 import { loginWithGoogle } from "@/lib/auth-client";
-import { DEMO_PROFILES, getActiveDemoRole } from "@/lib/demo-session";
 import { SEED_SERVICES } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/client";
 import type { Service, ServiceCategory } from "@/lib/types/database";
@@ -56,16 +55,7 @@ function ServicesContent() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [vipOnly, setVipOnly] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ id: string; role: string; email: string } | null>(() => {
-    if (typeof window !== "undefined") {
-      const demoRole = getActiveDemoRole();
-      const demoProfile = DEMO_PROFILES[demoRole];
-      if (demoProfile) {
-        return { id: demoProfile.id, role: demoProfile.role, email: demoProfile.email };
-      }
-    }
-    return null;
-  });
+  const [currentUser, setCurrentUser] = useState<{ id: string; role: string; email: string } | null>(null);
 
   const rawCategory = searchParams.get("category");
   const selectedCategory: ServiceCategory | "all" = isServiceCategory(
@@ -147,6 +137,10 @@ function ServicesContent() {
               setRecommendedDemands(demandsData ?? []);
             }
           }
+        } else if (isCurrentRequest) {
+          setCurrentUser(null);
+          setMyServices([]);
+          setRecommendedDemands([]);
         }
 
         const { data, error } = await supabase

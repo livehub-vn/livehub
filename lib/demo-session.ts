@@ -39,7 +39,7 @@ const DEFAULT_ADMIN_PROFILE: Profile = {
   created_at: new Date().toISOString(),
 };
 
-export const DEMO_PROFILES = {
+export const DEMO_PROFILES: Record<UserRole, Profile> = {
   customer: DEFAULT_CUSTOMER_PROFILE,
   provider: DEFAULT_PROVIDER_PROFILE,
   admin: DEFAULT_ADMIN_PROFILE,
@@ -47,8 +47,8 @@ export const DEMO_PROFILES = {
 
 const STORAGE_KEY = "livehub_active_role";
 
-export function getActiveDemoRole(): UserRole {
-  if (typeof window === "undefined") return "customer";
+export function getActiveDemoRole(): UserRole | null {
+  if (typeof window === "undefined") return null;
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "provider" || saved === "customer" || saved === "admin") {
@@ -57,7 +57,7 @@ export function getActiveDemoRole(): UserRole {
   } catch {
     // Ignore localStorage errors
   }
-  return "customer";
+  return null;
 }
 
 export function setActiveDemoRole(role: UserRole): void {
@@ -70,8 +70,19 @@ export function setActiveDemoRole(role: UserRole): void {
   }
 }
 
-export function getFallbackProfile(role?: UserRole): Profile {
+export function clearActiveDemoRole(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    window.dispatchEvent(new Event("livehub:profile-updated"));
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+export function getFallbackProfile(role?: UserRole): Profile | null {
   const activeRole = role || getActiveDemoRole();
+  if (!activeRole) return null;
   if (activeRole === "admin") return DEFAULT_ADMIN_PROFILE;
   return activeRole === "provider" ? DEFAULT_PROVIDER_PROFILE : DEFAULT_CUSTOMER_PROFILE;
 }

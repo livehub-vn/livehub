@@ -24,7 +24,7 @@ import {
   Users,
   Video,
 } from "lucide-react";
-import { getFallbackProfile } from "@/lib/demo-session";
+import { clearActiveDemoRole, getFallbackProfile } from "@/lib/demo-session";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -117,7 +117,8 @@ export function Header(): ReactNode {
       if (session?.user) {
         loadProfileForUser(session.user);
       } else {
-        setProfile(getFallbackProfile());
+        const fallback = getFallbackProfile();
+        setProfile(fallback);
       }
     });
 
@@ -131,7 +132,7 @@ export function Header(): ReactNode {
       ) {
         loadProfileForUser(session.user);
       } else if (event === "SIGNED_OUT") {
-        setProfile(getFallbackProfile("customer"));
+        setProfile(null);
       }
     });
 
@@ -140,7 +141,8 @@ export function Header(): ReactNode {
         if (session?.user) {
           loadProfileForUser(session.user);
         } else {
-          setProfile(getFallbackProfile());
+          const fallback = getFallbackProfile();
+          setProfile(fallback);
         }
       });
     };
@@ -195,9 +197,11 @@ export function Header(): ReactNode {
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    clearActiveDemoRole();
     setUserDropdownOpen(false);
     setProfile(null);
     router.push("/");
+    router.refresh();
   };
 
   const scrollToTop = () => {

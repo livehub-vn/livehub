@@ -5,7 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { UnauthenticatedBlurOverlay } from "@/components/unauthenticated-blur-overlay";
 import { loginWithGoogle } from "@/lib/auth-client";
-import { DEMO_PROFILES, getActiveDemoRole } from "@/lib/demo-session";
 import { getDemandImages } from "@/lib/demand-helpers";
 import { SEED_DEMANDS } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/client";
@@ -35,16 +34,7 @@ export default function DemandsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterVipOnly, setFilterVipOnly] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ id: string; role: string; email: string } | null>(() => {
-    if (typeof window !== "undefined") {
-      const demoRole = getActiveDemoRole();
-      const demoProfile = DEMO_PROFILES[demoRole];
-      if (demoProfile) {
-        return { id: demoProfile.id, role: demoProfile.role, email: demoProfile.email };
-      }
-    }
-    return null;
-  });
+  const [currentUser, setCurrentUser] = useState<{ id: string; role: string; email: string } | null>(null);
 
   useEffect(() => {
     async function fetchDemands() {
@@ -86,12 +76,9 @@ export default function DemandsPage() {
             setRecommendedServices(servicesData ?? []);
           }
         } else {
-          // Fallback to active demo role profile
-          const demoRole = getActiveDemoRole();
-          const demoProfile = DEMO_PROFILES[demoRole];
-          if (demoProfile) {
-            setCurrentUser({ id: demoProfile.id, role: demoProfile.role, email: demoProfile.email });
-          }
+          setCurrentUser(null);
+          setMyDemands([]);
+          setRecommendedServices([]);
         }
 
         const { data, error } = await supabase

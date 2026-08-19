@@ -6,7 +6,7 @@ import {
   MEMBERSHIP_TIERS,
   withResolvedMembership,
 } from "@/lib/membership";
-import { getFallbackProfile, setActiveDemoRole } from "@/lib/demo-session";
+import { clearActiveDemoRole } from "@/lib/demo-session";
 import type { Profile } from "@/lib/types/database";
 import {
   ArrowLeft,
@@ -48,13 +48,7 @@ export default function ProfilePage() {
         } = await supabase.auth.getUser();
 
         if (!user) {
-          const fallback = getFallbackProfile();
-          setProfile(fallback);
-          setFullName(fallback.full_name || "");
-          setPhone(fallback.phone || "");
-          setBio(fallback.bio || "");
-          setRole(fallback.role === "provider" ? "provider" : "customer");
-          setLoading(false);
+          router.replace("/login?next=/profile");
           return;
         }
 
@@ -143,7 +137,6 @@ export default function ProfilePage() {
       });
       if (metadataError) throw metadataError;
 
-      setActiveDemoRole(role);
       setProfile((current) =>
         current
           ? { ...current, full_name: fullName, phone, bio, role: nextRole }
@@ -163,7 +156,9 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    clearActiveDemoRole();
     router.push("/");
+    router.refresh();
   };
 
   if (loading) {
