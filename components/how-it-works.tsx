@@ -41,12 +41,12 @@ function StepItem({
         className="bg-accent relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
         aria-hidden="true"
       >
-        <Icon className="h-5 w-5 text-black" strokeWidth={2} />
+        <Icon className="h-5 w-5 text-white" strokeWidth={2} />
       </div>
 
       <div className="pt-1">
         <h3 className="text-foreground text-xl font-semibold sm:text-2xl">
-          {step.title}
+          {step.title === "Kết nối" ? <AuroraText>{step.title}</AuroraText> : step.title}
         </h3>
         <p className="text-foreground/60 mt-2 max-w-sm text-base leading-relaxed">
           {step.description}

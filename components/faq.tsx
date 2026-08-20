@@ -1,9 +1,10 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
+import { AuroraText } from "@/components/ui/aurora-text";
 
 const faqs = [
   {
@@ -104,7 +105,7 @@ export function FAQ(): ReactNode {
             Câu hỏi thường gặp
           </span>
           <h2 className="text-foreground mt-3 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-            LiveHub, luôn sẵn sàng hỗ trợ
+            <AuroraText>LiveHub</AuroraText>, luôn sẵn sàng hỗ trợ
           </h2>
           <p className="text-muted-foreground mx-auto mt-4 max-w-xl text-base sm:text-lg">
             Ba câu trả lời trước khi bắt đầu.
@@ -113,13 +114,14 @@ export function FAQ(): ReactNode {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/services"
-              className="bg-foreground text-background hover:bg-foreground/90 inline-flex items-center rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
+              className="bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/25 inline-flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition-all hover:scale-102 active:scale-98"
             >
-              Xem dịch vụ
+              <span>Xem dịch vụ</span>
+              <ArrowRight className="size-4" />
             </Link>
             <Link
               href="/pricing"
-              className="border-border bg-frame text-foreground inline-flex items-center rounded-xl border px-6 py-2.5 text-sm font-semibold transition-colors"
+              className="border-border bg-frame text-foreground inline-flex items-center rounded-xl border px-6 py-2.5 text-sm font-semibold transition-colors hover:bg-muted"
             >
               Xem bảng giá
             </Link>
