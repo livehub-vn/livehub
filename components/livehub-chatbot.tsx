@@ -244,7 +244,7 @@ export function LiveHubChatbot() {
                 <span className="inline-block w-2.5 h-[2.5px] bg-orange-500 ml-1 mb-0.5 animate-pulse rounded-full" />
               </p>
               <span className="mt-1 block text-[11px] font-semibold text-orange-500 group-hover:underline">
-                LiveHub ngay đây ✨
+                LiveHub AI luôn sẵn sàng ✨
               </span>
             </div>
           </div>
