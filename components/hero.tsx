@@ -107,7 +107,9 @@ function MarketplacePreview(): ReactNode {
             aria-hidden="true"
           />
           <div className="leading-tight">
-            <p className="text-sm font-medium">LiveHub</p>
+            <p className="text-sm font-bold">
+              <AuroraText>LiveHub</AuroraText>
+            </p>
             <p className="text-[10px] text-neutral-500">
               Sàn dịch vụ livestream
             </p>
@@ -129,18 +131,15 @@ function MarketplacePreview(): ReactNode {
 
       <div className="grid min-h-96 gap-4 p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_17rem]">
         <div className="min-w-0">
-          <div className="mb-4 sm:mb-5 flex items-end justify-between gap-4">
+          <div className="mb-4 sm:mb-5 flex items-center justify-center text-center">
             <div>
-              <p className="mb-1 text-xs font-semibold text-orange-400">
+              <p className="mb-1 text-xs font-semibold text-orange-400 uppercase tracking-wider">
                 Dịch vụ đã được duyệt
               </p>
-              <h3 className="text-lg font-medium sm:text-2xl">
+              <h3 className="text-lg font-bold sm:text-2xl">
                 Dịch vụ cho buổi live tiếp theo
               </h3>
             </div>
-            <Link href="/services" className="hidden text-xs text-orange-400 hover:text-orange-300 sm:inline transition-colors font-medium">
-              Xem tất cả dịch vụ →
-            </Link>
           </div>
 
           {/* Desktop Grid (3 blocks) */}
@@ -392,7 +391,7 @@ function MobileIphoneShowcase(): ReactNode {
                   className="size-6 object-contain"
                 />
                 <span className="text-xs font-bold tracking-tight text-neutral-950">
-                  LiveHub
+                  <AuroraText>LiveHub</AuroraText>
                 </span>
               </div>
               <Link
@@ -405,22 +404,14 @@ function MobileIphoneShowcase(): ReactNode {
 
             {/* App Content */}
             <div className="flex-1 overflow-y-auto p-3.5 space-y-3 no-scrollbar">
-              {/* Section Header */}
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-[10px] font-bold tracking-wider text-orange-600 uppercase">
-                    Dịch vụ đã duyệt
-                  </p>
-                  <h4 className="text-sm font-bold text-neutral-950">
-                    Dịch vụ cho buổi live tiếp theo
-                  </h4>
-                </div>
-                <Link
-                  href="/services"
-                  className="text-[10px] font-semibold text-orange-600 hover:text-orange-700"
-                >
-                  Tất cả →
-                </Link>
+              {/* Section Header (Centered) */}
+              <div className="text-center space-y-0.5">
+                <p className="text-[10px] font-bold tracking-wider text-orange-600 uppercase">
+                  Dịch vụ đã duyệt
+                </p>
+                <h4 className="text-sm font-bold text-neutral-950">
+                  Dịch vụ cho buổi live tiếp theo
+                </h4>
               </div>
 
               {/* 1 Single Responsive 3D Card Block */}
@@ -632,7 +623,7 @@ export function Hero(): ReactNode {
             variants={fadeInUp}
             transition={{ duration: 0.8, ease }}
           >
-            Kết nối khách hàng với nhà cung cấp thiết bị & nhân sự livestream hàng đầu. Đăng nhu cầu, duyệt minh bạch và theo dõi dễ dàng.
+            <AuroraText className="font-semibold">Kết nối</AuroraText> khách hàng với nhà cung cấp thiết bị & nhân sự livestream hàng đầu. Đăng nhu cầu, duyệt minh bạch và theo dõi dễ dàng.
           </motion.p>
 
           <motion.div
