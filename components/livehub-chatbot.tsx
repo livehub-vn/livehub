@@ -227,6 +227,7 @@ export function LiveHubChatbot() {
   };
 
   return (
+    <>
       {/* 1. TYPING QUESTION TOOLTIP ON THE LEFT OF CHATBOT (Auto-hides with blur transition) */}
       <AnimatePresence>
         {!isOpen && showPromptTooltip && (
