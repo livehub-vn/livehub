@@ -4,6 +4,7 @@ import { FileCheck2, Handshake, Search } from "lucide-react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import type { ReactNode } from "react";
+import { AuroraText } from "@/components/ui/aurora-text";
 
 const steps = [
   {
@@ -74,7 +75,7 @@ export function HowItWorks(): ReactNode {
       <div className="mx-auto grid max-w-6xl gap-12 px-4 xl:px-0 py-20 sm:py-28 lg:grid-cols-2 lg:gap-20">
         <div className="lg:sticky lg:top-48 lg:h-fit lg:self-start">
           <h2 className="text-foreground text-2xl font-semibold whitespace-nowrap sm:text-3xl lg:text-4xl">
-            Đăng, Duyệt & Kết nối
+            Đăng, Duyệt & <AuroraText>Kết nối</AuroraText>
           </h2>
           <p className="text-foreground/60 mt-6 max-w-md text-lg leading-relaxed">
             Nền tảng giúp tra cứu dịch vụ, kiểm duyệt thông tin và theo dõi tiến trình làm việc.

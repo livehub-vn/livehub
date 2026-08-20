@@ -12,6 +12,7 @@ import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { AuroraText } from "@/components/ui/aurora-text";
 
 interface ChatMessage {
   id: string;
@@ -251,8 +252,8 @@ export function LiveHubChatbot() {
                   {/* Dash typing indicator cursor at the end */}
                   <span className="inline-block w-2.5 h-[2.5px] bg-orange-500 ml-1 mb-0.5 animate-pulse rounded-full" />
                 </p>
-                <span className="mt-1 block text-[11px] font-semibold text-orange-500 group-hover:underline">
-                  LiveHub AI luôn sẵn sàng
+                <span className="mt-1 block text-[11px] font-semibold text-foreground group-hover:underline">
+                  <AuroraText>LiveHub</AuroraText> luôn sẵn sàng hỗ trợ
                 </span>
               </div>
             </div>
@@ -299,7 +300,9 @@ export function LiveHubChatbot() {
                 <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-400 ring-2 ring-orange-500" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white tracking-tight">Trợ lý AI LiveHub 24/7</h4>
+                <h4 className="text-sm font-bold text-white tracking-tight">
+                  Trợ lý AI <AuroraText colors={["#ffffff", "#ffedd5", "#fed7aa", "#ffffff"]}>LiveHub</AuroraText> 24/7
+                </h4>
                 <p className="text-[11px] text-orange-100 flex items-center gap-1 font-medium">
                   <span className="size-1.5 rounded-full bg-emerald-300 animate-pulse" />
                   Sẵn sàng giải đáp
