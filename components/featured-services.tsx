@@ -90,7 +90,9 @@ export function FeaturedServices() {
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="flex flex-col justify-between rounded-3xl border border-border bg-card p-3.5 shadow-sm space-y-4"
+                className={`flex-col justify-between rounded-3xl border border-border bg-card p-3.5 shadow-sm space-y-4 ${
+                  i === 0 ? "flex" : i === 1 ? "hidden sm:flex" : "hidden lg:flex"
+                }`}
               >
                 <div>
                   <Skeleton className="aspect-16/10 w-full rounded-2xl" />
@@ -116,7 +118,7 @@ export function FeaturedServices() {
                   : ""
               }`}
             >
-              {services.map((service) => (
+              {services.map((service, index) => (
                 <Link
                   key={service.id}
                   href={currentUser ? `/services/${service.id}` : "#"}
@@ -127,7 +129,9 @@ export function FeaturedServices() {
                     }
                   }}
                   tabIndex={!currentUser ? -1 : 0}
-                  className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40 hover:shadow-xl hover:shadow-orange-500/5"
+                  className={`group flex-col justify-between rounded-3xl border border-border bg-card p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40 hover:shadow-xl hover:shadow-orange-500/5 ${
+                    index === 0 ? "flex" : index === 1 ? "hidden sm:flex" : "hidden lg:flex"
+                  }`}
                 >
                   <div>
                     {/* Thumbnail */}
@@ -178,6 +182,17 @@ export function FeaturedServices() {
                   </div>
                 </Link>
               ))}
+            </div>
+
+            {/* Mobile View All Button */}
+            <div className="mt-6 flex justify-center sm:hidden">
+              <Link
+                href="/services"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 py-3 text-xs font-bold text-foreground shadow-sm transition-all active:scale-[0.98] hover:border-orange-500 hover:text-orange-500"
+              >
+                <span>Xem thêm 100+ dịch vụ khác</span>
+                <ArrowRight className="size-3.5" />
+              </Link>
             </div>
 
             {/* Locked Blur Overlay for Guests */}

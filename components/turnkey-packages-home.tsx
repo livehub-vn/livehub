@@ -87,10 +87,12 @@ export function TurnkeyPackagesHome(): ReactNode {
 
         {/* 3D Package Cards Grid */}
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {turnkeyPackages.map((pkg) => (
+          {turnkeyPackages.map((pkg, index) => (
             <div
               key={pkg.id}
-              className="group flex flex-col justify-between rounded-[2.5rem] border border-border bg-card p-4 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl sm:p-5"
+              className={`group flex-col justify-between rounded-[2.5rem] border border-border bg-card p-4 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl sm:p-5 ${
+                index === 0 ? "flex" : index === 1 ? "hidden sm:flex" : "hidden lg:flex"
+              }`}
             >
               <div>
                 {/* 3D Asset Image */}
@@ -161,6 +163,17 @@ export function TurnkeyPackagesHome(): ReactNode {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Mobile View All Packages Button */}
+        <div className="mt-6 flex justify-center sm:hidden">
+          <Link
+            href="/packages"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 py-3 text-xs font-bold text-foreground shadow-sm transition-all active:scale-[0.98] hover:border-orange-500 hover:text-orange-500"
+          >
+            <span>Xem chi tiết cả 3 gói trọn gói</span>
+            <ArrowRight className="size-3.5" />
+          </Link>
         </div>
       </div>
     </section>
