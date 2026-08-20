@@ -229,3 +229,19 @@ body {
   animation: aurora 8s ease-in-out infinite;
   background-size: 200% auto;
 }
+
+/* Prevent iOS Safari auto-zoom on input focus */
+@media screen and (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+input,
+select,
+textarea,
+button {
+  touch-action: manipulation;
+}

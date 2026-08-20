@@ -70,7 +70,7 @@ export function FormattedCurrencyInput({
           onChange={handleInputChange}
           placeholder={placeholder}
           required={required}
-          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-xs focus:border-orange-500 focus:outline-none pr-16 font-semibold"
+          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base sm:text-xs focus:border-orange-500 focus:outline-none pr-16 font-semibold"
         />
         <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
           VNĐ{unitSuffix}

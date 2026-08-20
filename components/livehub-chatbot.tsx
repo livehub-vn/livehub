@@ -438,7 +438,7 @@ export function LiveHubChatbot() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Nhập câu hỏi hoặc mã đơn (LH-xxxxxx)..."
-              className="flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all"
+              className="flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all"
             />
             <button
               type="submit"
