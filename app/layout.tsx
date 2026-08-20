@@ -2,6 +2,7 @@ import { FooterWrapper } from "@/components/footer-wrapper";
 import { Header } from "@/components/header";
 import { LiveHubChatbot } from "@/components/livehub-chatbot";
 import { Providers } from "@/components/providers";
+import { ScrollToTop } from "@/components/scroll-to-top";
 import { SiteFrame } from "@/components/site-frame";
 import { SkipToContent } from "@/components/skip-to-content";
 import { ThemeSwitch } from "@/components/theme-switch";
@@ -48,6 +49,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground flex min-h-screen flex-col font-sans antialiased`}
       >
         <Providers>
+          <ScrollToTop />
           <SiteFrame />
 
           <Header />
