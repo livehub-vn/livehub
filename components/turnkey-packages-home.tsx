@@ -59,7 +59,7 @@ const turnkeyPackages = [
 
 export function TurnkeyPackagesHome(): ReactNode {
   return (
-    <section className="relative border-t border-border bg-background py-20 text-foreground">
+    <section className="relative bg-background py-20 text-foreground">
       <div className="mx-auto max-w-6xl px-4 xl:px-0">
         {/* Header */}
         <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
