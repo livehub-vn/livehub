@@ -227,30 +227,37 @@ export function LiveHubChatbot() {
   };
 
   return (
-    <>
-      {/* 1. TYPING QUESTION TOOLTIP ON THE LEFT OF CHATBOT (Auto-hides after 3s) */}
-      {!isOpen && showPromptTooltip && (
-        <div className="fixed bottom-6 right-20 sm:right-24 z-9990 flex items-center max-w-[260px] sm:max-w-[310px] animate-in fade-in slide-in-from-right-4 duration-300">
-          <div
-            onClick={() => {
-              setIsOpen(true);
-              setShowPromptTooltip(false);
-            }}
-            className="group relative cursor-pointer rounded-2xl border border-orange-500/30 bg-card/95 p-3.5 sm:py-3.5 sm:px-4.5 shadow-2xl backdrop-blur-md ring-1 ring-orange-500/20 transition-all hover:scale-102 hover:border-orange-500"
+      {/* 1. TYPING QUESTION TOOLTIP ON THE LEFT OF CHATBOT (Auto-hides with blur transition) */}
+      <AnimatePresence>
+        {!isOpen && showPromptTooltip && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 8, filter: "blur(8px)" }}
+            animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 0.92, y: 6, filter: "blur(8px)" }}
+            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+            className="fixed bottom-6 right-20 sm:right-24 z-9990 flex items-center max-w-[260px] sm:max-w-[310px]"
           >
-            <div>
-              <p className="text-xs sm:text-[13.5px] font-bold text-foreground leading-snug">
-                {typedText}
-                {/* Dash typing indicator cursor at the end */}
-                <span className="inline-block w-2.5 h-[2.5px] bg-orange-500 ml-1 mb-0.5 animate-pulse rounded-full" />
-              </p>
-              <span className="mt-1 block text-[11px] font-semibold text-orange-500 group-hover:underline">
-                LiveHub AI luôn sẵn sàng ✨
-              </span>
+            <div
+              onClick={() => {
+                setIsOpen(true);
+                setShowPromptTooltip(false);
+              }}
+              className="group relative cursor-pointer rounded-2xl border border-orange-500/30 bg-card/95 p-3.5 sm:py-3.5 sm:px-4.5 shadow-2xl backdrop-blur-md ring-1 ring-orange-500/20 transition-all hover:scale-102 hover:border-orange-500"
+            >
+              <div>
+                <p className="text-xs sm:text-[13.5px] font-bold text-foreground leading-snug">
+                  {typedText}
+                  {/* Dash typing indicator cursor at the end */}
+                  <span className="inline-block w-2.5 h-[2.5px] bg-orange-500 ml-1 mb-0.5 animate-pulse rounded-full" />
+                </p>
+                <span className="mt-1 block text-[11px] font-semibold text-orange-500 group-hover:underline">
+                  LiveHub AI luôn sẵn sàng
+                </span>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 2. FLOATING CHATBOT BUTTON (Slightly larger on mobile for easy tap) */}
       {!isOpen && (
