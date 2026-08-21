@@ -24,30 +24,61 @@ interface ChatMessage {
 
 const FAQ_KNOWLEDGE_BASE = [
   {
-    keywords: ["thuê", "thiết bị", "quy trình", "đặt cọc", "máy quay"],
+    id: "rental",
+    keywords: ["thuê thiết bị", "quy trình thuê", "đặt cọc", "máy quay", "thuê máy", "thiết bị", "thuê"],
     reply:
       "Để thuê thiết bị trên LiveHub: Bạn chỉ cần vào mục Sàn Dịch Vụ -> Chọn thiết bị mong muốn -> Chọn ngày thuê -> Bấm 'Gửi yêu cầu thuê' và thanh toán đặt cọc an toàn qua Real VietQR. Số tiền cọc được LiveHub bảo đảm 100% cho đến khi bàn giao xong.",
     actionLink: { label: "Xem Sàn Dịch Vụ", href: "/services" },
   },
   {
-    keywords: ["gói", "thành viên", "basic", "standard", "premium", "dùng thử", "60 ngày"],
-    reply:
-      "Tất cả tài khoản mới đều được tặng 02 tháng (60 ngày) dùng thử miễn phí toàn bộ tính năng. LiveHub có 3 gói thành viên chính thức: Basic (199k/tháng), Standard (499k/tháng - phổ biến nhất), và Premium (999k/tháng - VIP Pro không giới hạn bài đăng & ưu tiên hiển thị).",
-    actionLink: { label: "Xem Bảng Giá Gói", href: "/pricing" },
-  },
-  {
-    keywords: ["trọn gói", "dịch vụ trọn gói", "talkshow", "bán hàng", "sự kiện", "concert"],
+    id: "packages",
+    keywords: [
+      "trọn gói",
+      "dịch vụ trọn gói",
+      "gói trọn gói",
+      "livestream trọn gói",
+      "gói livestream",
+      "báo giá dịch vụ livestream trọn gói",
+      "talkshow",
+      "bán hàng",
+      "sự kiện",
+      "concert",
+      "mega event",
+    ],
     reply:
       "LiveHub cung cấp 3 gói Dịch Vụ Livestream Trọn Gói chuẩn chỉnh từ A-Z: Gói E-commerce Bán hàng (1-2 máy), Gói Talkshow/Hội thảo Doanh nghiệp (2-3 máy FX3/FX6 + ATEM ISO), và Gói Sự kiện Mega Event (4-6 máy + Crane + Starlink backup).",
     actionLink: { label: "Xem Dịch Vụ Trọn Gói", href: "/packages" },
   },
   {
-    keywords: ["thanh toán", "vietqr", "vnpay", "momo", "hoàn tiền", "chuyển khoản"],
+    id: "membership",
+    keywords: [
+      "gói thành viên",
+      "thành viên",
+      "bảng giá gói",
+      "bảng giá vip",
+      "bảng giá",
+      "nâng cấp tài khoản",
+      "vip",
+      "basic",
+      "standard",
+      "premium",
+      "dùng thử",
+      "60 ngày",
+      "membership",
+    ],
+    reply:
+      "Tất cả tài khoản mới đều được tặng 02 tháng (60 ngày) dùng thử miễn phí toàn bộ tính năng. LiveHub có 3 gói thành viên chính thức: Basic (199k/tháng), Standard (499k/tháng - phổ biến nhất), và Premium (999k/tháng - VIP Pro không giới hạn bài đăng & ưu tiên hiển thị).",
+    actionLink: { label: "Xem Bảng Giá Gói Thành Viên", href: "/pricing" },
+  },
+  {
+    id: "payment",
+    keywords: ["thanh toán", "vietqr", "vnpay", "momo", "hoàn tiền", "chuyển khoản", "nạp tiền", "ngân hàng"],
     reply:
       "Hệ thống hỗ trợ thanh toán Real VietQR động tự động điền đúng số tiền và cú pháp giao dịch. Bạn cũng có thể thanh toán qua VNPay, MoMo, ZaloPay hoặc Thẻ Quốc tế Visa/MasterCard. Sau khi chuyển khoản, bạn sẽ nhận được biên lai điện tử ngay lập tức.",
   },
   {
-    keywords: ["đăng bài", "tạo dịch vụ", "đăng nhu cầu", "nhận dự án"],
+    id: "post",
+    keywords: ["đăng bài", "tạo dịch vụ", "đăng nhu cầu", "nhận dự án", "đăng tin", "đăng dịch vụ"],
     reply:
       "Để đăng bài: Bạn hãy bấm 'Đăng dịch vụ' (nếu là nhà cung cấp) hoặc 'Đăng nhu cầu' (nếu là khách hàng tìm kiếm ekip). Bài đăng sẽ được ban quản trị duyệt trong vòng 15-30 phút.",
     actionLink: { label: "Đăng Dịch Vụ Mới", href: "/services/new" },
@@ -188,25 +219,34 @@ export function LiveHubChatbot() {
         }
       }
 
-      // Check keyword knowledge base
-      let matchedReply: { reply: string; actionLink?: { label: string; href: string } } | null = null;
+      // Check keyword knowledge base with specificity scoring
+      let bestMatch: (typeof FAQ_KNOWLEDGE_BASE)[0] | null = null;
+      let maxScore = 0;
 
       for (const item of FAQ_KNOWLEDGE_BASE) {
-        if (item.keywords.some((kw) => lowerQuery.includes(kw))) {
-          matchedReply = item;
-          break;
+        let score = 0;
+        for (const kw of item.keywords) {
+          const lowerKw = kw.toLowerCase();
+          if (lowerQuery.includes(lowerKw)) {
+            // Give higher score to longer/more specific keyword matches
+            score += lowerKw.length * 2;
+          }
+        }
+        if (score > maxScore) {
+          maxScore = score;
+          bestMatch = item;
         }
       }
 
-      if (matchedReply) {
+      if (bestMatch && maxScore > 0) {
         setMessages((prev) => [
           ...prev,
           {
             id: `bot-${Date.now()}`,
             sender: "bot",
-            text: matchedReply!.reply,
+            text: bestMatch!.reply,
             timestamp: "Vừa xong",
-            actionLink: matchedReply!.actionLink,
+            actionLink: bestMatch!.actionLink,
           },
         ]);
       } else {
@@ -229,63 +269,66 @@ export function LiveHubChatbot() {
 
   return (
     <>
-      {/* 1. TYPING QUESTION TOOLTIP ON THE LEFT OF CHATBOT (Auto-hides with blur transition) */}
-      <AnimatePresence>
-        {!isOpen && showPromptTooltip && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 8, filter: "blur(8px)" }}
-            animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, scale: 0.92, y: 6, filter: "blur(8px)" }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed bottom-6 right-20 sm:right-24 z-9990 flex items-center max-w-[260px] sm:max-w-[310px]"
-          >
-            <div
+      {/* 1 & 2. FLOATING CHATBOT CONTROLS & PROMPT TOOLTIP */}
+      {!isOpen && (
+        <div className="fixed bottom-6 right-4 sm:right-6 z-9990 flex items-center gap-3">
+          {/* Typing question tooltip on the left */}
+          <AnimatePresence>
+            {showPromptTooltip && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, x: 10, filter: "blur(8px)" }}
+                animate={{ opacity: 1, scale: 1, x: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, scale: 0.92, x: 10, filter: "blur(8px)" }}
+                transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+                className="flex items-center max-w-[260px] sm:max-w-[310px]"
+              >
+                <div
+                  onClick={() => {
+                    setIsOpen(true);
+                    setShowPromptTooltip(false);
+                  }}
+                  className="group relative cursor-pointer rounded-2xl border border-orange-500/30 bg-card/95 p-3.5 sm:py-3.5 sm:px-4.5 shadow-2xl backdrop-blur-md ring-1 ring-orange-500/20 transition-all hover:scale-102 hover:border-orange-500"
+                >
+                  <div>
+                    <p className="text-xs sm:text-[13.5px] font-bold text-foreground leading-snug">
+                      {typedText}
+                      {/* Dash typing indicator cursor at the end */}
+                      <span className="inline-block w-2.5 h-[2.5px] bg-orange-500 ml-1 mb-0.5 animate-pulse rounded-full" />
+                    </p>
+                    <span className="mt-1 block text-[11px] font-semibold text-foreground group-hover:underline">
+                      <AuroraText>LiveHub</AuroraText> luôn sẵn sàng hỗ trợ
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Floating trigger button */}
+          <div className="relative">
+            {/* Subtle Elegant Ping Aura */}
+            {isPinging && (
+              <span className="absolute -inset-1 rounded-full bg-orange-500/25 ring-2 ring-orange-500/35 animate-pulse duration-1000 pointer-events-none" />
+            )}
+
+            <button
+              type="button"
               onClick={() => {
                 setIsOpen(true);
                 setShowPromptTooltip(false);
               }}
-              className="group relative cursor-pointer rounded-2xl border border-orange-500/30 bg-card/95 p-3.5 sm:py-3.5 sm:px-4.5 shadow-2xl backdrop-blur-md ring-1 ring-orange-500/20 transition-all hover:scale-102 hover:border-orange-500"
+              className="relative flex size-14 sm:size-auto sm:h-auto items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 p-3 sm:px-5 sm:py-3.5 text-white shadow-2xl shadow-orange-500/40 transition-all duration-300 hover:scale-105 hover:shadow-orange-500/60 active:scale-95 cursor-pointer"
+              aria-label="Mở Trợ lý AI LiveHub 24/7"
             >
-              <div>
-                <p className="text-xs sm:text-[13.5px] font-bold text-foreground leading-snug">
-                  {typedText}
-                  {/* Dash typing indicator cursor at the end */}
-                  <span className="inline-block w-2.5 h-[2.5px] bg-orange-500 ml-1 mb-0.5 animate-pulse rounded-full" />
-                </p>
-                <span className="mt-1 block text-[11px] font-semibold text-foreground group-hover:underline">
-                  <AuroraText>LiveHub</AuroraText> luôn sẵn sàng hỗ trợ
-                </span>
+              <div className="relative flex size-7 shrink-0 items-center justify-center">
+                <Bot className="size-7 sm:size-6" />
+                <span className="absolute -top-0.5 -right-0.5 size-3 sm:size-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 2. FLOATING CHATBOT BUTTON (Slightly larger on mobile for easy tap) */}
-      {!isOpen && (
-        <div className="fixed bottom-6 right-4 sm:right-6 z-9990">
-          {/* Subtle Elegant Ping Aura (Gently pulses 2-3 times upon scrolling then stops) */}
-          {isPinging && (
-            <span className="absolute -inset-1 rounded-full bg-orange-500/25 ring-2 ring-orange-500/35 animate-pulse duration-1000 pointer-events-none" />
-          )}
-
-          <button
-            type="button"
-            onClick={() => {
-              setIsOpen(true);
-              setShowPromptTooltip(false);
-            }}
-            className="relative flex size-14 sm:size-auto sm:h-auto items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 p-3 sm:px-5 sm:py-3.5 text-white shadow-2xl shadow-orange-500/40 transition-all duration-300 hover:scale-105 hover:shadow-orange-500/60 active:scale-95 cursor-pointer"
-            aria-label="Mở Trợ lý AI LiveHub 24/7"
-          >
-            <div className="relative flex size-7 shrink-0 items-center justify-center">
-              <Bot className="size-7 sm:size-6" />
-              <span className="absolute -top-0.5 -right-0.5 size-3 sm:size-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
-            </div>
-            <span className="hidden sm:inline-block text-sm font-bold tracking-tight">
-              Trợ lý AI 24/7
-            </span>
-          </button>
+              <span className="hidden sm:inline-block text-sm font-bold tracking-tight">
+                Trợ lý AI 24/7
+              </span>
+            </button>
+          </div>
         </div>
       )}
 
